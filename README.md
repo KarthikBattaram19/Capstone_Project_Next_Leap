@@ -106,17 +106,29 @@ The frontend takes exactly one backend-related variable, and it is public, not a
 
 ### Build order
 
-The data pipeline runs **before** the app, and step 1 determines the shape of everything after it:
+The build is ordered by **what can invalidate what**, not by what is satisfying to build. Two things can still prove the design wrong, so both are settled first — **in parallel**, each behind a gate. Full detail in §9 of the specification.
 
-1. **Scrape and curate** — up to 10 listings per locality. Publish the resulting locality list, per-locality counts and total; document bengaluru.rent's availability marker, or report the gap.
-2. **Build the index** — 1–3 neighborhood documents per locality, and run the fixed OSM query set once across every listing, storing each value with its attribution and retrieval date.
-3. **Then** run the app.
+**Phase 0 — de-risk (both tracks at once)**
+
+1. **Data** — scrape and curate up to 10 listings per locality; publish the locality list, counts and total; document the availability marker and which schema fields the source actually publishes.
+   *Gate:* a missing marker or a thinner-than-assumed schema means **stop and amend the spec** — it changes the filter vocabulary, the cards and the eval coverage.
+2. **Infrastructure** — deploy a **walking skeleton** to Railway and Vercel (health check, mic WebSocket, one stub turn touching every provider) and run the **latency spike on it**, comparing candidate regions.
+   *Gate:* confirm the latency budget against measurement or renegotiate it in writing. **This has to run on real infrastructure** — measured locally it tells you nothing about the cross-provider, cross-region reality the budget is made of.
+
+**Then, in order**
+
+3. **Knowledge layer** — the listing-scoped RAG index, and the OSM query set run once across every listing with attribution and retrieval date.
+4. **Eval harness and the view-model contract** — deliberately before the features they test: Job 2 is validated *against Suite C*, so Suite C exists first, and the card/citation view-model is a contract shared by the suite, the backend and the UI.
+5. **Voice pipeline**, then **shortlist and refinement**, then **grounded explanation**.
+6. **Booking, PDF and email**, then the **UI**, then hardening and sign-off.
 
 Local development commands will be added with the scaffold.
 
 ---
 
 ## Deployment
+
+Deployment happens **twice**: a walking skeleton in Phase 0, so the latency budget can be measured on real infrastructure, and the full application later — the same two targets, promoted rather than replaced.
 
 **Backend first, frontend second** — the two hosts deploy independently, so version skew is possible in production even when CI is green. The backend exposes a contract version and the frontend pins the one it expects.
 

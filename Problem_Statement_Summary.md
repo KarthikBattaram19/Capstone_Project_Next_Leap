@@ -14,7 +14,7 @@ Tenants don't struggle to *find* listings. They struggle to judge whether a list
 |---|---|
 | City | **Bengaluru only** |
 | Listings | **Up to 10 per locality**, scraped once from bengaluru.rent |
-| Locality set | **Not pinned in advance** — whatever the source has available pins for. The list, per-locality counts and total are an **output of step 1**, documented after the scrape |
+| Locality set | **Not pinned in advance** — whatever the source has available pins for. The list, per-locality counts and total are an **output of §9.1**, documented after the scrape |
 | "Up to" | A **ceiling, not a target.** Under-supplied localities keep their real count (never padded); over-supplied ones are curated to the 10 best-populated records by a documented rule |
 | RAG corpus | **1–3 documents per *locality*** (not per listing), shared by that locality's ≤10 listings |
 
@@ -192,16 +192,39 @@ Login/accounts · post-visit feedback · cross-session history · mobile app · 
 
 ## 9. Implementation Sequence
 
-*(Sequence, not a calendar.)*
+*A sequence, not a calendar.* **Ordered by what can invalidate what.** Two things can still prove the design wrong — the dataset and the latency budget — so both are settled first, in parallel, behind explicit gates.
 
-1. **Scrape & curate** up to 10 listings per locality; **publish the locality list, counts and total**; document the availability marker or report the gap. First, because both the dataset size and the gap report can reshape everything downstream.
-2. **Build the listing-scoped RAG index** (1–3 docs per locality) and **run the OSM query set once across every listing**, storing results with attribution and retrieval date; lock the commute-method disclosure.
-3. **Voice pipeline** — Deepgram with keyterm boosting; Job 1 latency-verified; streaming TTS; **validate Job 2 against Suite C**; **run the measured latency spike and confirm or renegotiate §5.2 before the UI is built on it**.
-4. **Shortlist logic**, refinement engine, grounded explanations with citations.
-5. **Dual-calendar booking**, cancel/reschedule by code, PDF, Gmail — including the confirm-time free/busy re-check and IST-explicit slot arithmetic.
-6. **UI** including the card and citation view-models Suite C asserts against. **Deploy Railway first, then Vercel.**
-7. **Build the 60-test suites** + per-component instrumentation; publish the artefact list; iterate to sign-off.
+**Phase 0 — De-risk in parallel. Nothing downstream is safe until both gates clear.**
+
+- **9.1 Data track** — scrape and curate up to 10 per locality; **publish the locality list, counts and total**; document the availability marker and the **field-availability gap report**.
+  **Gate D:** no reliable availability marker, or a schema materially thinner than §3.1 assumes → **stop and amend the specification** before building on it. A missing field changes §3.1, §4 and Suite A — it is not something to route around later.
+- **9.2 Infrastructure track** — deploy a **walking skeleton** to Railway and Vercel (health check, mic WebSocket, one stub turn touching every provider) and run the **latency spike on it**: both turn types, real provider round trips, P1–P7 in force, candidate regions compared.
+  **Gate L:** confirm §5.2 against measurement or **renegotiate it in writing**. This must run on real infrastructure — a local measurement says nothing about the cross-provider, cross-region reality that defines L3 and L5.
+
+**Phase 1 — Foundations**
+
+- **9.3 Knowledge layer** — listing-scoped RAG index (1–3 docs per locality); **OSM query set run once across every listing**, stored with attribution and retrieval date; commute-method disclosure locked.
+- **9.4 Eval harness and the view-model contract** — *before the features they test.* Enough of Suite C to validate Job 2 must exist first, and the **card and citation view-model shape is a contract** between the suite, the backend and the UI — not something discovered while building §9.9. Backend contract version defined here too.
+
+**Phase 2 — The conversation**
+
+- **9.5 Voice pipeline (Job 1)** — Deepgram with dataset-generated keyterms; extraction at `temperature=0`; streaming TTS. **Job 1 latency check against Gate L's numbers**; drop to a lighter Groq tier if it misses.
+- **9.6 Shortlist and refinement** — filtering and edits in application code, not the LLM. **Suites A and B green.**
+- **9.7 Grounded explanation (Job 2)** — citations, gap declarations, commute labels at all three layers. **Suite C green; model ID pinned with its scores and `effort` recorded.**
+
+**Phase 3 — Completing the product**
+
+- **9.8 Booking, cancel, reschedule, PDF, email** — §6.E and §6.F in full, including the confirm-time free/busy re-check, IST-explicit slot arithmetic, and character-by-character email readback.
+- **9.9 UI** — §4 against the §9.4 view-models, including the failure states §6 requires. Promote the skeleton to the real deployment: **Railway first, Vercel second.**
+
+**Phase 4 — Sign-off**
+
+- **9.10 Harden, verify, publish** — all three suites to 20 cases, 3× in CI at 100%; full instrumentation with cold start reported separately; the **§6 walkthrough**; publish the §7.3 artefact list.
+
+**What invalidates what:** 9.1 → §1, §3.1, §4, Suite A · 9.2 → §5.1, §5.2, §5.4 · 9.3 → §3.3, §6.2, Suite C's mix · 9.7 → §5.1, or §7.2's target renegotiated openly rather than quietly lowered.
+
+**Parallelism worth taking:** 9.1 with 9.2; 9.3 with 9.4; and 9.9's UI can start against the §9.4 contract before 9.7 and 9.8 finish — that contract exists so both sides can be built independently.
 
 ---
 
-*Open item, deliberately deferred: the locality list and total listing count are produced by step 1 and must be written back into §1 and §3.1 of the full document once the scrape completes.*
+*Open item, deliberately deferred: the locality list and total listing count are produced by §9.1 and must be written back into §1 and §3.1 of the full document once the scrape completes.*

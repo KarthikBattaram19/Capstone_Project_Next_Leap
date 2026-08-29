@@ -124,7 +124,7 @@ Answers *"Why did you pick this one?"*, *"Is the commute realistic?"*, *"What's 
 
 ### 3.4 Amenities & Transit (OpenStreetMap MCP — Precomputed)
 - All amenity, transit-point, and POI claims come from the OpenStreetMap MCP (github.com/jagan-shanmugam/open-streetmap-mcp), queried around each listing's coordinates
-- **Precomputed at index time, not at query time.** Every listing-anchored OSM fact is resolved once during §9.2 and stored on the listing record. **No OSM call is made inside a tenant's turn.** This mirrors §3.3's closed RAG index: the same "resolve once, serve from local storage" discipline, for the same reason
+- **Precomputed at index time, not at query time.** Every listing-anchored OSM fact is resolved once during §9.3 and stored on the listing record. **No OSM call is made inside a tenant's turn.** This mirrors §3.3's closed RAG index: the same "resolve once, serve from local storage" discipline, for the same reason
   - **Why:** these facts are static — a metro station does not move between turns — and a live per-listing lookup across a shortlist would exhaust §5.2's L4 budget on network round trips alone (see §5.2 P5)
   - **Grounding is unaffected.** OSM remains the sole permitted source for these claims (§3.5); only the *timing* of the lookup moves. Each stored value keeps its OSM attribution **and the date it was retrieved**, so the UI cites OSM exactly as it would have live
 - **The precomputed query set is fixed and documented** — the same queries run for every listing, so coverage is uniform and no listing looks richer merely because it was queried more. Where OSM returns nothing for a listing, the value is stored as `null` and §3.1's null rules apply verbatim: "not stated", never inferred, never silently treated as a match
@@ -220,7 +220,7 @@ These are not tuning tips. Each one, if skipped, breaks a specific row above.
 - **P2 — Connection reuse.** Persistent WebSocket to Deepgram; HTTP keep-alive to Groq, Anthropic, Google and Smallest.ai. A fresh TLS handshake per call adds roughly a round trip each and L2 has no room for it
 - **P3 — Deepgram endpointing ≤300 ms.** The silence window before a transcript is finalized is the largest single term inside L1 and is a configured value, not a given. Set it explicitly; a 500 ms window leaves under 200 ms for everything else
 - **P4 — TTS starts on the first sentence,** not on the complete response text. L2 and L3 are first-byte budgets and are unreachable if synthesis waits for the full string
-- **P5 — OSM facts are precomputed at index time,** not fetched per query. Amenity and transit values for each listing are resolved once during §9.2 and stored on the record; **OSM remains the sole source and the attribution is unchanged (§3.5)** — only the timing moves. Live per-listing OSM calls inside a shortlist turn would put L4 out of reach on its own
+- **P5 — OSM facts are precomputed at index time,** not fetched per query. Amenity and transit values for each listing are resolved once during §9.3 and stored on the record; **OSM remains the sole source and the attribution is unchanged (§3.5)** — only the timing moves. Live per-listing OSM calls inside a shortlist turn would put L4 out of reach on its own
 - **P6 — Calendar writes issued in parallel.** Sequential round trips make L6/L7 depend on Google's latency multiplied by the number of calls. §2.4's atomicity requirement is about the *outcome* and does not require sequential requests
 - **P7 — Job 2 thinking is configured explicitly.** Claude Sonnet 5 runs **adaptive thinking by default when `thinking` is omitted**, at default effort — thinking tokens are produced before any visible text, which lands directly on L3. Set `output_config: {effort: "low"}` (raise only if Suite C scores require it) and measure L3 and L5 at that setting. Prefer lowering effort to disabling thinking outright; grounded citation work is retrieval-bound rather than reasoning-bound, so low effort is the expected operating point
 
@@ -228,7 +228,7 @@ These are not tuning tips. Each one, if skipped, breaks a specific row above.
 - **All targets are p99**, measured over the §7.2 sample: every suite run plus the 20 dedicated timed interactions. p99 over a handful of manual tries is not a measurement
 - **Hard failure if any single request exceeds 2× its row's target**
 - **Instrument per component, not just per turn** — record STT-final, retrieval, LLM first-token, LLM last-token, TTS first-byte, and each external API call separately. A turn that misses its budget must be diagnosable to a stage without re-running it
-- **These numbers are engineering targets derived from the architecture, not measurements.** §9.3 requires a measured latency spike before the pipeline is considered built; **if a row proves unreachable, it is renegotiated openly and this table is updated — the failure mode to avoid is a budget quietly ignored because it was never achievable**
+- **These numbers are engineering targets derived from the architecture, not measurements.** §9.2's Gate L requires a measured latency spike, on deployed infrastructure, before anything is built on these numbers; **if a row proves unreachable, it is renegotiated openly and this table is updated — the failure mode to avoid is a budget quietly ignored because it was never achievable**
 
 ### 5.3 Security & Robustness
 - All API keys server-side only; never exposed to the frontend
@@ -258,7 +258,7 @@ These are not tuning tips. Each one, if skipped, breaks a specific row above.
 - **App sleeping must be OFF** — a sleeping instance wakes on the tenant's first word and blows every row in §5.2. If the chosen plan can sleep, either move off it or run a keep-warm ping, and **say which was done in the §7.3 report** (P1)
 - **One long-lived process**, holding the Deepgram WebSocket and keep-alive pools to Groq, Anthropic, Google and Smallest.ai (P2)
 - **Healthcheck endpoint** configured so a failed deploy is caught by Railway rather than by a tenant
-- **Region is chosen by measurement, not by intuition.** The backend makes many round trips to the providers per turn but holds only one stream to the browser, so **proximity to the providers usually matters more than proximity to Bengaluru** — but Smallest.ai is India-based and may invert that. Time both a US region and the Singapore region during §9.3's latency spike and pick on the numbers; **record the chosen region in the §7.3 report.** Confirm Railway's current region list in their docs rather than assuming this one
+- **Region is chosen by measurement, not by intuition.** The backend makes many round trips to the providers per turn but holds only one stream to the browser, so **proximity to the providers usually matters more than proximity to Bengaluru** — but Smallest.ai is India-based and may invert that. Time both a US region and the Singapore region during §9.2's latency spike and pick on the numbers; **record the chosen region in the §7.3 report.** Confirm Railway's current region list in their docs rather than assuming this one
 
 **Vercel configuration:**
 - **Static/SSR frontend only.** Its sole backend-related environment variable is the Railway backend URL — a public value, not a secret
@@ -460,15 +460,102 @@ Login/accounts · post-visit feedback · cross-session preference history · mob
 
 ---
 
-## 9. Suggested Implementation Sequence
-*(Sequence, not committed calendar — compress or expand to your actual timeline.)*
-1. Scrape & curate **up to 10 listings per locality**; **publish the resulting locality list, per-locality counts, and total** (this number is unknown until now, by design — §1); document bengaluru.rent's availability marker (or report the gap) — **this is the first deliverable because both the dataset size and §3.1's gap-report decision may reshape everything downstream**
-2. Build listing-scoped RAG index (**1–3 docs per locality**, one set per locality in the published list); integrate OSM MCP and **run the fixed query set once across every listing, storing the results with their OSM attribution and retrieval date** (§3.4); verify routing capability and lock the commute-method disclosure
-3. Voice pipeline: Deepgram with keyterm boosting + amount normalization; **Job 1 on Groq (`openai/gpt-oss-120b`) structured extraction at temp=0, latency-verified against §5.2**; streaming TTS; hit the §5.2 acknowledgment budget. **Validate Job 2 (`claude-sonnet-5`) against Suite C and record the scores** before building §9.4's explanations. **Run a measured latency spike against §5.2 (both turn types, components instrumented per P1–P7) and either confirm the table or renegotiate it — before the UI is built on top of it**
-4. Shortlist logic + refinement engine + grounded explanations with citations
-5. Dual-calendar booking (free/busy slot offers), cancel/reschedule by confirmation code, PDF, Gmail; error paths **§6.E and §6.F in full** — including the confirm-time free/busy re-check (§6.41) and IST-explicit slot arithmetic (§6.47)
-6. UI — including the **card and citation view-models** §7.1's Suite C asserts against, and §4's commute-method badges. **Deploy backend to Railway first** (app sleeping off, healthcheck set, region chosen from §9.3's measurements), **then the frontend to Vercel** with the backend URL and an explicit CORS allowlist (§5.4)
-7. Build the 60-test suites + per-component latency instrumentation; publish the §7.3 artefact list; iterate to sign-off (§7.3)
+## 9. Implementation Sequence
+
+*A sequence, not a calendar — compress or expand to your own timeline.*
+
+**Ordered by what can invalidate what, not by what is satisfying to build.** Two things in this document can still prove wrong in a way that reshapes the design: **the dataset** (does bengaluru.rent actually carry the fields §3.1 assumes?) and **the latency budget** (§5.2 is derived from the architecture, not measured). Both are settled first, in parallel, behind explicit gates. Everything after them is construction.
+
+---
+
+### Phase 0 — De-risk, in parallel. Nothing downstream is safe until both gates clear.
+
+These two tracks share no dependencies and should run at the same time. Each ends in a **gate**: a written answer, and a decision to proceed or to change the specification.
+
+**9.1 — Data track: scrape, curate, publish**
+- Scrape bengaluru.rent; curate to **up to 10 listings per locality**
+- **Publish the locality list, per-locality counts, and total.** This number is unknown until now by design (§1) — it is an output, not an assumption
+- Identify and document the **availability marker**; document the **curation rule** used wherever a locality exceeded 10
+- Produce the **field-availability gap report**: which of §3.1's schema fields the source actually publishes, and which it does not
+
+> **Gate D — Dataset.** If no reliable availability marker exists, or the published schema is materially thinner than §3.1 assumes, **stop and decide before building on it.** A missing field is not a bug to route around later: it changes §3.1's filter vocabulary, §4's cards, and Suite A's coverage requirement. Amend the specification, then proceed.
+
+**9.2 — Infrastructure track: walking skeleton and the latency spike**
+- Deploy a **minimal end-to-end skeleton** to Railway and Vercel: health check, the mic WebSocket, one stub turn that touches every provider with placeholder logic
+- Run the **latency spike on that deployed skeleton** — real Deepgram, Groq, Anthropic and TTS round trips, **both turn types**, with **P1–P7 actually in force** and per-component timings recorded
+- **Compare candidate Railway regions** (a US region against Singapore) and choose on the numbers (§5.4)
+
+> **Gate L — Latency.** Confirm §5.2's table against measurement, or **renegotiate it in writing and update the table**. This must happen on real infrastructure: a local measurement says nothing about the cross-provider, cross-region reality that defines L3 and L5. A missed budget here can change the model choice (§5.1), the region, or the targets themselves — all of which are far cheaper to change now than after the pipeline is built on them.
+
+---
+
+### Phase 1 — Foundations
+
+**9.3 — Knowledge layer**
+- Build the **listing-scoped RAG index**: 1–3 documents per locality from the published list, each chunk carrying its source attribution
+- **Run the fixed OSM query set once across every listing**, storing each value with its OSM attribution and retrieval date (§3.4). Verify the MCP's routing capability and **lock the commute-method disclosure** wording
+
+**9.4 — Eval harness and the view-model contract** *(before the features they test — deliberately)*
+- Build the harness, the fixtures, and **enough of Suite C to validate Job 2**. This has to exist first: §9.7 cannot "validate Job 2 against Suite C" if Suite C is built last
+- **Define the card and citation view-model shape now.** Suite C asserts against it (§7.1), so it is a contract between the eval suite, the backend and the UI — not a detail discovered while building §9.9
+- Define the **backend contract version** the frontend will pin (§5.4)
+
+---
+
+### Phase 2 — The conversation
+
+**9.5 — Voice pipeline (Job 1)**
+- Deepgram with **keyterms generated from the dataset's locality field** and Indian-English amount normalisation; endpointing set explicitly (P3)
+- Job 1 structured extraction on Groq at `temperature=0`; streaming TTS starting on the first sentence (P4)
+- **Job 1 latency check against Gate L's measured numbers** — if `gpt-oss-120b` misses L1/L2, drop to a lighter Groq tier now (§5.1). Job 1 only has to emit valid JSON
+
+**9.6 — Shortlist and refinement**
+- Filtering, ranking and edit application in **application code, not the LLM** — reading the stored dataset and precomputed OSM values
+- The `null` rules (§3.1) and the zero-result empty state (§6.1)
+- **Suites A and B green**
+
+**9.7 — Grounded explanation (Job 2)**
+- Retrieval + Job 2 with citations, gap declarations, and the **commute-method labels at all three layers** (§2.3, §4, §7.1)
+- **Suite C green. Pin the model ID and record its Suite C scores and `effort` setting** (§5.1). If a Groq-hosted model matches, collapsing to one vendor is legitimate — decide here, on the scores
+
+---
+
+### Phase 3 — Completing the product
+
+**9.8 — Booking, cancel, reschedule, PDF, email**
+- Dual-calendar booking with free/busy slot offers; cancel and reschedule by confirmation code
+- **§6.E and §6.F in full** — including the **confirm-time free/busy re-check** (§6.41), **IST-explicit slot arithmetic** (§6.47), and **character-by-character email readback** (§6.50)
+- PDF generated on confirmation, emailed, discarded
+
+**9.9 — UI**
+- §4's components against the view-models fixed in §9.4, including the commute-method badges
+- The failure states §6 requires — in particular, **"couldn't ask" rendered differently from "nothing found"** (principle 2)
+- Promote the §9.2 skeleton to the real deployment: **backend to Railway first, frontend to Vercel second**, with the contract version pinned and an explicit CORS allowlist
+
+---
+
+### Phase 4 — Sign-off
+
+**9.10 — Harden, verify, publish**
+- Complete all three suites to 20 cases each; run **3× in CI at 100%**
+- Full per-component latency instrumentation; **cold start measured and reported separately**
+- The **§6 walkthrough** (§6.H): every row exercised or its guard shown, fault-injected rows labelled as such
+- Publish the **§7.3 artefact list** and complete sign-off
+
+---
+
+### What invalidates what
+
+If a step in the left column produces a surprise, the right column is what has to change with it. This is the reason for the ordering above.
+
+| Surprise at | Forces revision of |
+|---|---|
+| **9.1** Dataset thinner than assumed | §1 scope · §3.1 schema · §4 cards · Suite A coverage |
+| **9.2** Latency budget unreachable | §5.1 model choice · §5.2 targets · §5.4 region |
+| **9.3** Thin or missing neighborhood sources | §3.3 corpus · §6.2 disclaimers · Suite C's coverage mix |
+| **9.7** Job 2 misses the grounding bar | §5.1 Job 2 model — and, if nothing reaches the bar, §7.2's target itself, renegotiated openly rather than quietly lowered |
+
+**Parallelism worth taking:** 9.1 and 9.2 run together. So do 9.3 and 9.4 once their gates clear. 9.9's UI work can begin against the §9.4 view-model contract before 9.7 and 9.8 are finished — that contract exists precisely so the two sides can be built independently.
 
 ---
 
