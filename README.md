@@ -9,11 +9,19 @@ The problem it addresses isn't finding listings — it's judging whether one fit
 
 ---
 
-## The specification
+## The documents
 
-**[`Problem_Statement_Detailed.md`](./Problem_Statement_Detailed.md) (v3.9) is the single source of truth.** Scope, data schema, latency budget, all 58 error cases, and the sign-off contract live there — and it governs wherever this README or any other summary disagrees with it.
+**[`Problem_Statement_Detailed.md`](./Problem_Statement_Detailed.md) (v3.9) is the single source of truth.** Scope, data schema, latency budget, all 58 error cases, and the sign-off contract live there — and it governs wherever this README, the architecture, or any summary disagrees with it.
 
-This README covers what you need to orient and get set up. Reach for the specification when you are implementing: §6 for behaviour under failure, §7.3 for what "done" means.
+**[`Architecture.md`](./Architecture.md)** is how the system is structured to meet it — components, data model, turn lifecycles, error taxonomy, and the decisions taken with their alternatives.
+
+| You are about to… | Read |
+|---|---|
+| Orient, or set up | this README |
+| Decide **what** correct behaviour is | the specification — §6 for failure behaviour, §7.3 for what "done" means |
+| Decide **where** code goes, or **how** something is shaped | the architecture — §5 for components, §4 for the data model, §12 for decisions already taken |
+
+The architecture is *derived* from the specification, not independent of it. If the two disagree, the specification wins and the architecture is wrong.
 
 ---
 
@@ -41,6 +49,12 @@ flowchart LR
 ```
 
 **Every provider call originates on the backend.** The browser talks to exactly one origin and holds no keys. The dataset, the closed RAG index and all OpenStreetMap values are resolved at **build time** and served from local storage — no scraping, no retrieval fetching and no OSM lookups happen inside a tenant's turn.
+
+Three structures carry most of the correctness, and are worth knowing before reading any code — all detailed in [`Architecture.md`](./Architecture.md):
+
+- **`Provenanced<T>`** — every fact travels with its source, method, timing and as-of date. A distance without its method label is *unrepresentable*, not merely discouraged
+- **The resolver registry** — the grounding boundary is a call graph, so the explanation model can only reach facts through a resolver
+- **`TurnOutcome`** — "nothing found" and "couldn't ask" are different variants of a union, so they cannot accidentally render alike
 
 ### Two LLM roles, two providers
 
@@ -75,6 +89,7 @@ Both are pinned by **exact model ID, never a `latest` alias** — the CI guarant
 ```
 .
 ├── Problem_Statement_Detailed.md          # the specification
+├── Architecture.md                        # how it is structured
 ├── frontend/                 # Vercel — UI, view-models, mic client. No keys.
 ├── backend/                  # Railway — pipeline, both LLM jobs, calendar, PDF
 ├── data/                     # scraped listings, RAG index, precomputed OSM values
