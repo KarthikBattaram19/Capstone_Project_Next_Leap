@@ -1,0 +1,89 @@
+# ---------------------------------------------------------------------------
+# Secrets — never commit. Five provider keys live in the backend environment
+# (Deepgram, Groq, Anthropic, Smallest.ai, Google OAuth). A key pushed to a
+# public repo must be treated as leaked and rotated, not just deleted.
+# ---------------------------------------------------------------------------
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+credentials.json
+client_secret*.json
+token.json
+service-account*.json
+
+# ---------------------------------------------------------------------------
+# Node / frontend
+# ---------------------------------------------------------------------------
+node_modules/
+.next/
+out/
+build/
+dist/
+.vercel/
+*.tsbuildinfo
+npm-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# ---------------------------------------------------------------------------
+# Python / backend
+# ---------------------------------------------------------------------------
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+env/
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# ---------------------------------------------------------------------------
+# Generated data artefacts
+#
+# These are build outputs, reproducible from scripts/ — not source. Note the
+# exception: the *published record* of what a build produced (locality list,
+# per-locality counts, field-availability gap report, OSM query set and index
+# date) IS committed, because sign-off requires it. Track the record, not the
+# payload.
+# ---------------------------------------------------------------------------
+data/raw/
+data/listings.json
+data/index/
+data/embeddings/
+data/osm_cache/
+*.faiss
+*.sqlite
+*.db
+
+# ---------------------------------------------------------------------------
+# Eval and instrumentation output
+# ---------------------------------------------------------------------------
+evals/results/
+evals/**/*.log
+latency/
+coverage/
+.coverage
+htmlcov/
+
+# ---------------------------------------------------------------------------
+# Transient runtime output — audio and PDFs are never retained by design
+# (no storage, no retention), so nothing here should ever reach a commit.
+# ---------------------------------------------------------------------------
+*.wav
+*.mp3
+*.pdf
+tmp/
+.cache/
+
+# ---------------------------------------------------------------------------
+# Editors and OS
+# ---------------------------------------------------------------------------
+.vscode/
+.idea/
+*.swp
+.DS_Store
+Thumbs.db
+desktop.ini
