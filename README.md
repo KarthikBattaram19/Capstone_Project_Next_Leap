@@ -4,8 +4,8 @@ A voice-first rental assistant that collects a tenant's spoken preferences, shor
 
 The problem it addresses isn't finding listings — it's judging whether one fits your life. Is the commute realistic? What's the area actually like? Is the extra room worth the extra rent? Every answer this system gives is traceable to a source, and where it has no source it says so.
 
-> **Status: specification complete, implementation not started.**
-> This repository currently contains the problem statement only. Commands, paths and environment variable names below describe the intended build; they are **proposals until the scaffold exists**. Nothing here has been run.
+> **Status: specification, architecture and implementation plan complete; implementation not started.**
+> This repository currently contains documents only. Commands, paths and environment variable names below describe the intended build; they are **proposals until the scaffold exists**. Nothing here has been run.
 
 ---
 
@@ -15,13 +15,17 @@ The problem it addresses isn't finding listings — it's judging whether one fit
 
 **[`Architecture.md`](./Docs/Architecture.md)** is how the system is structured to meet it — components, data model, turn lifecycles, error taxonomy, and the decisions taken with their alternatives.
 
+**[`Implementation_Plan.md`](./Docs/Implementation_Plan.md)** is the build plan as a decision document — plain language: the 39 tasks in five phases, why that order, what "done" means for each, and a table of every decision the owner will be asked to make (the two gates, the model pins, the region). Its companion, **[`Implementation_Plan_Addendum.md`](./Docs/Implementation_Plan_Addendum.md)**, is the technical reference builders work from: for every task, the files, interfaces, tests and step-by-step instructions. Earlier versions of the plan are kept in [`Docs/versions/`](./Docs/versions/README.md).
+
 | You are about to… | Read |
 |---|---|
 | Orient, or set up | this README |
 | Decide **what** correct behaviour is | the specification — §6 for failure behaviour, §7.3 for what "done" means |
 | Decide **where** code goes, or **how** something is shaped | the architecture — §5 for components, §4 for the data model, §12 for decisions already taken |
+| Decide **what to build next**, or take a gate decision | the implementation plan — §4 for the order, §5 for the decisions |
+| **Build** a task | the addendum, at that task's number |
 
-The architecture is *derived* from the specification, not independent of it. If the two disagree, the specification wins and the architecture is wrong.
+The architecture is *derived* from the specification, and the plan from both; none is independent. If they disagree, the specification wins and the others are wrong.
 
 ---
 
@@ -91,7 +95,10 @@ Both are pinned by **exact model ID, never a `latest` alias** — the CI guarant
 ├── Docs/
 │   ├── Problem_Statement_Detailed.md      # the specification
 │   ├── Problem_Statement_Summary.md       # condensed working summary
-│   └── Architecture.md                    # how it is structured
+│   ├── Architecture.md                    # how it is structured
+│   ├── Implementation_Plan.md             # the build plan — decisions, order, done-when
+│   ├── Implementation_Plan_Addendum.md    # per-task technical reference for builders
+│   └── versions/                          # earlier plan versions + how to roll back
 ├── frontend/                 # Vercel — UI, view-models, mic client. No keys.
 ├── backend/                  # Railway — pipeline, both LLM jobs, calendar, PDF
 ├── data/                     # scraped listings, RAG index, precomputed OSM values
@@ -123,7 +130,7 @@ The frontend takes exactly one backend-related variable, and it is public, not a
 
 ### Build order
 
-The build is ordered by **what can invalidate what**, not by what is satisfying to build. Two things can still prove the design wrong, so both are settled first — **in parallel**, each behind a gate. Full detail in §9 of the specification.
+The build is ordered by **what can invalidate what**, not by what is satisfying to build. Two things can still prove the design wrong, so both are settled first — **in parallel**, each behind a gate. The rationale is §9 of the specification; the task-by-task plan is [`Implementation_Plan.md`](./Docs/Implementation_Plan.md).
 
 **Phase 0 — de-risk (both tracks at once)**
 
