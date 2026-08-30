@@ -1,6 +1,6 @@
 # Voice-based AI Property Scout Platform – Bengaluru
 
-**Condensed problem statement.** This is a working summary of `Problem_Statement_Detailed.md` (v3.9). It carries every decision that changes what gets built; the full document carries the reasoning behind each one. **Where the two disagree, the full document governs.** Section numbers below match it.
+**Condensed problem statement.** This is a working summary of `Problem_Statement_Detailed.md` (v3.10). It carries every decision that changes what gets built; the full document carries the reasoning behind each one. **Where the two disagree, the full document governs.** Section numbers below match it.
 
 ---
 
@@ -110,9 +110,10 @@ Budgeted in two classes because they run on different providers. **Type A** = Gr
 
 | # | Stage | Target |
 |---|---|---|
-| L1 | Acknowledgment (both) — end-of-speech → transcript rendered + indicator | **<700 ms** |
+| L0 | First feedback (both) — a word spoken → visible in the live transcript, listening state shown. **Independent of end-of-speech** | **<300 ms** |
+| L1 | Acknowledgment (both) — end-of-speech → transcript rendered + indicator. Bounded below by P3 | **<700 ms** |
 | L2 | First audio — Type A | **≤1.5 s** |
-| L3 | First audio — Type B | **≤2.5 s** |
+| L3 | First audio — Type B (first sentence is code-built from resolved facts, P8) | **≤1.5 s** |
 | L4 | Shortlist rendered | **<3 s** |
 | L5 | Explanation **text + citations rendered** (not audio end) | **≤6 s** |
 | L6 | Booking confirm — both events created + code shown | **<5 s** |
@@ -121,9 +122,9 @@ Budgeted in two classes because they run on different providers. **Type A** = Gr
 
 **Audio playback duration is never a target** — it scales with answer length, not system speed.
 
-**Preconditions — the targets are void without these:** P1 warm process (Railway app sleeping **off**; no serverless in the pipeline; cold start measured separately) · P2 connection reuse (persistent Deepgram WebSocket, keep-alive pools) · P3 Deepgram endpointing **≤300 ms** (the dominant term inside L1) · P4 TTS starts on the first sentence · P5 OSM precomputed · P6 calendar writes issued in parallel · P7 Job 2 thinking configured explicitly.
+**Preconditions — the targets are void without these:** P1 warm process (Railway app sleeping **off**; no serverless in the pipeline; cold start measured separately) · P2 connection reuse (persistent Deepgram WebSocket, keep-alive pools) · P3 Deepgram endpointing **400 ms** (the dominant term inside L1 — and a floor: shorter windows cut tenants off mid-sentence) · P3b **content-aware hold** (wait up to 400 ms more when the words so far end in *under / near / and* or a bare number) · P4 TTS starts on the first sentence · P5 OSM precomputed · P6 calendar writes issued in parallel · P7 Job 2 thinking configured explicitly · P8 **fact-led opener on Type B** (the first sentence is code-built from resolved facts, so L3 never waits on Job 2's first token).
 
-**Measurement:** p99 over all suite runs + 20 timed interactions; hard failure at 2× any target; **per-component instrumentation** (STT-final, retrieval, LLM first/last token, TTS first byte, each API call) so a miss is diagnosable without a re-run. These are engineering targets, not measurements — a measured spike must confirm or openly renegotiate the table before the UI is built on it.
+**Measurement:** p99 over all suite runs + 20 timed interactions; hard failure at 2× any target; **per-component instrumentation** (STT-interim, STT-final, retrieval, LLM first/last token, TTS first byte, each API call) so a miss is diagnosable without a re-run. These are engineering targets, not measurements — a measured spike must confirm or openly renegotiate the table before the UI is built on it.
 
 ### 5.3 Security
 Keys server-side only · HTTPS · **scraped text and RAG chunks are untrusted data**, delimited and never executed as instructions · no PII in logs or transcripts · **stateless demo**, no login, sessions isolated.

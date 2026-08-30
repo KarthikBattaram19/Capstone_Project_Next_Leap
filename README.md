@@ -11,7 +11,7 @@ The problem it addresses isn't finding listings — it's judging whether one fit
 
 ## The documents
 
-**[`Problem_Statement_Detailed.md`](./Docs/Problem_Statement_Detailed.md) (v3.9) is the single source of truth.** Scope, data schema, latency budget, all 58 error cases, and the sign-off contract live there — and it governs wherever this README, the architecture, or any summary disagrees with it.
+**[`Problem_Statement_Detailed.md`](./Docs/Problem_Statement_Detailed.md) (v3.10) is the single source of truth.** Scope, data schema, latency budget, all 58 error cases, and the sign-off contract live there — and it governs wherever this README, the architecture, or any summary disagrees with it.
 
 **[`Architecture.md`](./Docs/Architecture.md)** is how the system is structured to meet it — components, data model, turn lifecycles, error taxonomy, and the decisions taken with their alternatives.
 
@@ -73,7 +73,7 @@ Both are pinned by **exact model ID, never a `latest` alias** — the CI guarant
 
 | Layer | Choice |
 |---|---|
-| Speech-to-text | Deepgram (keyterm boosting, endpointing ≤300 ms) |
+| Speech-to-text | Deepgram (keyterm boosting, endpointing 400 ms with a content-aware hold) |
 | LLM | Groq + Anthropic (see above) |
 | Text-to-speech | Smallest.ai, streaming |
 | Maps / transit | OpenStreetMap MCP — [jagan-shanmugam/open-streetmap-mcp](https://github.com/jagan-shanmugam/open-streetmap-mcp) |

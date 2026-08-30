@@ -1,6 +1,8 @@
 # Voice-based AI Property Scout Platform – Bengaluru
 
-*v3.9 — the current problem statement. Supersedes all earlier drafts; where this document and an earlier version disagree, this one governs.*
+*v3.10 — the current problem statement. Supersedes all earlier drafts; where this document and an earlier version disagree, this one governs.*
+
+*Changed in v3.10 (§5.2): a new **L0** target for first visible feedback (<300 ms); **L3** tightened from ≤2.5 s to ≤1.5 s, made reachable by a new **P8** (fact-led opener); **P3** endpointing set to 400 ms with a new **P3b** content-aware hold, so speed is never bought by cutting a tenant off mid-sentence. L1 stays <700 ms. No other target moved.*
 
 *Principal decisions: listing scope of **up to 10 per locality** with the locality set determined by the scrape (§1); an LLM **split into two roles across two providers** — Groq for extraction, Claude Sonnet for grounded explanation (§5.1); a latency budget **split by turn type** with explicit preconditions (§5.2); **commute-method disclosure** carried end-to-end from OSM precompute through card label to eval assertion (§3.4, §2.3, §4, §7.1); deployment on **Vercel (frontend) + Railway (backend)** (§5.4); and grouped, principle-driven error handling (§6).*
 
@@ -198,13 +200,14 @@ Futuristic real-estate theme. Required components:
 
 **Turns are budgeted in two classes, because they run on different providers (§5.1).**
 **Type A** — preference collection, refinement, booking, cancel/reschedule — uses Job 1 on Groq only.
-**Type B** — grounded explanation — uses RAG retrieval plus Job 2 on the Anthropic API, a second provider on a second network path. Holding both to one number would either make Type A slack or make Type B unachievable.
+**Type B** — grounded explanation — uses RAG retrieval plus Job 2 on the Anthropic API, a second provider on a second network path. Both classes now share a 1.5 s first-audio budget, but for different reasons: Type A waits on Job 1; Type B does not wait on Job 2 at all, because its first sentence is built by code from facts already resolved (P8).
 
 | # | Stage | Target (p99) | Definition | What dominates the budget |
 |---|---|---|---|---|
-| L1 | **Acknowledgment** (both types) | **<700 ms** | End-of-speech → final transcript rendered **and** processing indicator visible | Deepgram's endpointing silence window (see P3) plus one network hop. Nothing else fits in this budget — no LLM call may sit inside it |
+| L0 | **First feedback** (both types) | **<300 ms** | A word spoken → that word visible in the live transcript, with the listening state shown | Deepgram interim-result latency plus one network hop. **Independent of end-of-speech**, so it has no cut-off cost — this is the number that makes the system *feel* instant |
+| L1 | **Acknowledgment** (both types) | **<700 ms** | End-of-speech → final transcript rendered **and** processing indicator visible | Deepgram's endpointing silence window (see P3) plus one network hop. Nothing else fits in this budget — no LLM call may sit inside it. **Bounded below by P3:** the system cannot know speech has ended before the silence window has elapsed, so L1 is never traded down by shortening that window |
 | L2 | **First audio — Type A** | **≤1.5 s** | End-of-speech → first TTS audio byte plays | L1 + Job 1 round trip + TTS time-to-first-byte |
-| L3 | **First audio — Type B** | **≤2.5 s** | End-of-speech → first TTS audio byte plays | L1 + retrieval + Job 2 time-to-first-token (cross-provider) + TTS. **Type B cannot meet L2** — that is the reason for the split, not a concession |
+| L3 | **First audio — Type B** | **≤1.5 s** | End-of-speech → first TTS audio byte plays | L1 + retrieval + a **code-built opener from facts already resolved (P8)** + TTS. Job 2's cross-provider first token no longer sits inside this budget. **Without P8 the honest figure is 2.5 s** (L1 + retrieval + Job 2 time-to-first-token + TTS) — which is why P8 is a precondition, not a nicety |
 | L4 | **Shortlist rendered** | **<3 s** | End-of-speech → full shortlist rendered in the UI | Job 1 extraction. Filtering itself is application code over a few hundred records — microseconds — **provided P5 holds**. Tightened from 5 s because no LLM performs the filtering |
 | L5 | **Explanation rendered** | **≤6 s** | Question end → **full explanation text and its citations rendered in the UI**. Explicitly **not** the end of audio playback | Job 2 generation length. Loosened from 4 s: cross-provider generation with citations cannot be held to a budget written for local Groq inference |
 | L6 | **Booking confirm** | **<5 s** | Confirmation utterance → both calendar events created + code shown | Two Google Calendar writes (**issued in parallel**, per P6) |
@@ -218,16 +221,18 @@ These are not tuning tips. Each one, if skipped, breaks a specific row above.
 
 - **P1 — Warm process.** Budgets assume an already-warm server. A host that sleeps adds 10–30 s to the first request and would fail every row — concretely, **Railway app sleeping must be off** (§5.4), and no part of the pipeline may run as a Vercel serverless function. Either that, or a keep-warm ping, stated as such; **measure and report cold start separately**, never inside these numbers
 - **P2 — Connection reuse.** Persistent WebSocket to Deepgram; HTTP keep-alive to Groq, Anthropic, Google and Smallest.ai. A fresh TLS handshake per call adds roughly a round trip each and L2 has no room for it
-- **P3 — Deepgram endpointing ≤300 ms.** The silence window before a transcript is finalized is the largest single term inside L1 and is a configured value, not a given. Set it explicitly; a 500 ms window leaves under 200 ms for everything else
+- **P3 — Deepgram endpointing 400 ms.** The silence window before a transcript is finalized is the largest single term inside L1 and is a configured value, not a given. Set it explicitly. **It is a floor as much as a ceiling:** natural mid-sentence pauses — before a number, before a locality name — run roughly 200–500 ms, and a window inside that range cuts tenants off; a window far above it wastes L1. 400 ms with P3b is the balance. Gate L records the false end-of-speech rate to confirm it on real Indian-English speech, which is where this figure has not yet been measured
+- **P3b — Content-aware hold.** If the interim transcript ends in a continuation word (*under, above, near, with, and, about, around, to*) or a bare number without a unit, the orchestrator waits up to a further 400 ms before treating the silence as end-of-speech. Plain pattern matching, no model. A hard fallback — Deepgram's utterance-end event at about 1 s — guarantees nobody waits indefinitely. This is what protects "two BHK… under forty thousand" from being finalized after "BHK"
 - **P4 — TTS starts on the first sentence,** not on the complete response text. L2 and L3 are first-byte budgets and are unreachable if synthesis waits for the full string
 - **P5 — OSM facts are precomputed at index time,** not fetched per query. Amenity and transit values for each listing are resolved once during §9.3 and stored on the record; **OSM remains the sole source and the attribution is unchanged (§3.5)** — only the timing moves. Live per-listing OSM calls inside a shortlist turn would put L4 out of reach on its own
 - **P6 — Calendar writes issued in parallel.** Sequential round trips make L6/L7 depend on Google's latency multiplied by the number of calls. §2.4's atomicity requirement is about the *outcome* and does not require sequential requests
 - **P7 — Job 2 thinking is configured explicitly.** Claude Sonnet 5 runs **adaptive thinking by default when `thinking` is omitted**, at default effort — thinking tokens are produced before any visible text, which lands directly on L3. Set `output_config: {effort: "low"}` (raise only if Suite C scores require it) and measure L3 and L5 at that setting. Prefer lowering effort to disabling thinking outright; grounded citation work is retrieval-bound rather than reasoning-bound, so low effort is the expected operating point
+- **P8 — Fact-led opener on Type B.** The first sentence spoken on an explanation turn is produced by **application code from facts already resolved** — rent, BHK, the commute distance with its method label — while Job 2 streams behind it. Every word is a §3.5-grounded value and no model touches the opener, so §3.5 and the commute-disclosure rule hold exactly. This is what removes Job 2's cross-provider first token from L3; L5 (checked text and citations rendered) is unchanged
 
 #### Measurement rules
 - **All targets are p99**, measured over the §7.2 sample: every suite run plus the 20 dedicated timed interactions. p99 over a handful of manual tries is not a measurement
 - **Hard failure if any single request exceeds 2× its row's target**
-- **Instrument per component, not just per turn** — record STT-final, retrieval, LLM first-token, LLM last-token, TTS first-byte, and each external API call separately. A turn that misses its budget must be diagnosable to a stage without re-running it
+- **Instrument per component, not just per turn** — record STT-interim (for L0), STT-final, retrieval, LLM first-token, LLM last-token, TTS first-byte, and each external API call separately. A turn that misses its budget must be diagnosable to a stage without re-running it
 - **These numbers are engineering targets derived from the architecture, not measurements.** §9.2's Gate L requires a measured latency spike, on deployed infrastructure, before anything is built on these numbers; **if a row proves unreachable, it is renegotiated openly and this table is updated — the failure mode to avoid is a budget quietly ignored because it was never achievable**
 
 ### 5.3 Security & Robustness
@@ -439,7 +444,7 @@ Sign-off requires **every** line below. Any failure → fix → **full** re-run,
 **Latency (§5.2)**
 - Budget met **at p99, scored per turn type** — Type A and Type B judged separately; a Type A pass does not cover Type B
 - **No single request exceeded 2× its row's target**
-- **Per-component timings recorded** (STT-final, retrieval, LLM first- and last-token, TTS first-byte, each external API call), so any miss is diagnosable without a re-run
+- **Per-component timings recorded** (STT-interim, STT-final, retrieval, LLM first- and last-token, TTS first-byte, each external API call), so any miss is diagnosable without a re-run
 - **Cold start measured and reported separately**, outside the budget (§5.2 P1) — reported, not hidden
 - **Preconditions P1–P7 verified as actually in force** during the timed runs; a budget met with a precondition silently violated is not met
 - Any row that proved unreachable is **renegotiated in §5.2 and re-run** — never quietly dropped
@@ -559,6 +564,6 @@ If a step in the left column produces a surprise, the right column is what has t
 
 ---
 
-**v3.9 is the locked problem statement.**
+**v3.10 is the locked problem statement.**
 
 *Open item carried into execution (not a gap, a deliberate deferral): the locality list and total listing count are produced by §9.1 and must be written back into §1 and §3.1 once the scrape completes.*

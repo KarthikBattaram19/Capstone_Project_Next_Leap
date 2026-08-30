@@ -141,45 +141,51 @@ Budgets are p99: 99 turns out of 100 must come in under them. An average that me
 
 ```mermaid
 flowchart LR
-    L1["<b>L1</b> · 700 ms<br/>your words on screen<br/>plus a thinking indicator"] --> L2["<b>L2</b> · 1.5 s<br/>first audio<br/><i>Type A</i>"]
-    L2 --> L3["<b>L3</b> · 2.5 s<br/>first audio<br/><i>Type B</i>"]
+    L0["<b>L0</b> · 300 ms<br/>your words appear<br/>as you speak"] --> L1["<b>L1</b> · 700 ms<br/>you finish, and a thinking<br/>indicator confirms it"]
+    L1 --> L2["<b>L2</b> · 1.5 s<br/>first audio<br/><i>Type A</i>"]
+    L2 --> L3["<b>L3</b> · 1.5 s<br/>first audio<br/><i>Type B</i>"]
     L3 --> L4["<b>L4</b> · 3 s<br/>shortlist on screen"]
     L4 --> L5["<b>L5</b> · 6 s<br/>explanation text<br/>and citations on screen"]
 
     classDef fast fill:#dcfce7,stroke:#16a34a,stroke-width:2px,color:#052e16
     classDef mid fill:#fef3c7,stroke:#d97706,stroke-width:2px,color:#451a03
     classDef slow fill:#ffedd5,stroke:#ea580c,stroke-width:2px,color:#431407
-    class L1,L2 fast
-    class L3,L4 mid
+    class L0,L1 fast
+    class L2,L3,L4 mid
     class L5 slow
 ```
 
-<sub>[⤢ Open this diagram in a canvas](https://mermaid.live/view#pako:eNqF0stuozAUBuBXOXK2pOEapgghteoyq053wyxO7ONiFTCyjZKo6ruPB5iWRKrGO_-2P9_OO-NaECuYbPWJN2gcHJ7rHnw7RL9qVh6rQ1TujhXUYxgec8jDEDpbHs2uuujRwEkbYUH3YLkh6qeBoR0tILhG9W-qfwXVC8XRaVOz37DdVnCIFzpe09FdBrMslbEOcBRKT_1SVS-XgeCh3KnKI8sB4xlLFixZY_F_scdrLJmxdMHSNZYslG20ca3y3OeFv4B0BrIFyNbAfgHoPLTYo1N-vaOzm0LsBXDlptTeyLPNW7T2iSRI9HtL1bbFRnDJKQ-sM_qNik20xyTFpbs9KeGaIh7OAdetNsUmzGKK9jdap8SCSZIJ_8LEfZ6H-2-xNIswTG4w6wvonyZJiOxTI8x-hPx7LYnSMF9pvvIC_7d_73qVJoF_Y3_mqzCbNmYB68h0qIQv5feauYY6qlkBNRMkcWxdzT78JByd_nnpOSucGSlg4yDQ0ZPCV4PdHH78ATVl97c) — zoom, pan and export</sub>
+<sub>[⤢ Open this diagram in a canvas](https://mermaid.live/view#pako:eNqV08uOmzAUBuBXOXK2pDG3MEUIaUazZNV2V7o48WWwAjayjZJoNO9eN9AmRJpF2fkYf79tDu-EGS5ISWRvTqxD66H51moIT0N_tqQ61A2tdoca2onSQwEppTC46mB39cVMFk7Gcgc4jgLttYoOwgS4UDi25BdstzU08ULF91SxokAqrVwXAWoOCL5T-qj023Vaaa4YemOBGS2VHRwoH_Blo_EckiwhyX1I_CWHOSOscx5w4spcx5Wqf1xGAc_VTtU3LJmxdMHS_8Ne1lg6Y9mCZaubXCjXGet7FTijwTErhL4B2QzkC5DfA_sFEOexR41ehfVenP38GcItMuWvVfcgzzbr0blXIUFiyJaq78sNZ5KJInLemqMoN_Ee0wyX4fakuO_KZDxHzPTGlhuaJyLeP2iD4gsmhUzZDeNfi4LuP8WyPEaaPmAudOVfTQrO83-awPyJss-1NM5ocaeFdo5Co_w566qaRE0ahWsO217V82s2icgg7ICKh1_kvSW-E4NoSQkt4ULi1Icu_Agv4eTN94tmpPR2EhGZRo5evCp8szjMxY_fGIARzg) — zoom, pan and export</sub>
 
 | # | Stage | Budget |
 |---|---|---|
-| **L1** | You stop speaking, and your words appear with a thinking indicator | **< 700 ms** |
+| **L0** | A word you say appears on screen, and the listening state is visible | **< 300 ms** |
+| **L1** | You stop speaking, and the final line plus a thinking indicator confirm it | **< 700 ms** |
 | **L2** | First audio out — Type A | **≤ 1.5 s** |
-| **L3** | First audio out — Type B | **≤ 2.5 s** |
+| **L3** | First audio out — Type B | **≤ 1.5 s** |
 | **L4** | Shortlist drawn | **< 3 s** |
 | **L5** | Explanation **text and citations drawn** (not audio finished) | **≤ 6 s** |
 | **L6** | Booking confirmed: both calendar entries written, code shown | **< 5 s** |
 | **L7** | Cancel or reschedule | **< 5 s** |
 | **L8** | PDF emailed | **< 30 s** |
 
+> **Why L1 is not smaller, and why L0 exists.** L1 starts at end of speech, and the system cannot know you have finished until it has waited through a silence and seen that you did not continue. That wait — the 400 ms endpointing window, P3 — is a floor under L1, and shrinking it does not make the system faster; it makes the system cut people off before the number or the area name they were about to say. So the number that is held strict is **L0**: your words appearing as you speak, which needs no end-of-speech at all and therefore costs nothing. **L2 and L3 share a budget for different reasons:** Type A must wait for Job 1, because the readback sentence *is* Job 1's output. Type B does not wait for Job 2 at all — its first sentence is built by code from facts already resolved (P8, §9.5), so the cross-provider first token that forced the specification's original 2.5 s is simply not on the path any more.
+
 **How long the audio plays is never a target** — that depends on how much there is to say, not on how fast the system is.
 
-**The seven conditions the budgets depend on** (spec §5.2). If any one of these is not true, the numbers above are void:
+**The nine conditions the budgets depend on** (spec §5.2). If any one of these is not true, the numbers above are void:
 
 | | Condition | Where this document keeps it true |
 |---|---|---|
 | **P1** | The process stays awake — no sleeping, no serverless | §2.2, §13.6 |
 | **P2** | Connections are reused, not reopened per request | §13.6 |
-| **P3** | Deepgram declares end-of-speech within 300 ms | §7.2 |
+| **P3** | Deepgram declares end-of-speech after a 400 ms silence — and **no shorter** | §7.2 |
+| **P3b** | A content-aware hold: a pause after *under*, *near*, *and* or a bare number is not the end of the sentence | §7.2 |
 | **P4** | Speech synthesis starts on the **first sentence**, not the finished answer | §7.4, §9.5 |
 | **P5** | OpenStreetMap facts are precomputed | §3, §8.3 |
 | **P6** | The two calendar writes go out at the same time | §10.2 |
 | **P7** | The careful model's thinking effort is set explicitly | §13.5 |
+| **P8** | On a "why?" turn, the first sentence spoken is built by code from facts already in hand — first audio never waits on Job 2 | §9.5 |
 
 ### 2.6 How the rest of this document is organised
 
@@ -559,7 +565,7 @@ stateDiagram-v2
 
 ### 7.2 Turning speech into text, then picking a lane
 
-Speech goes to Deepgram over **one WebSocket that stays open** for the whole session — opening a new one per utterance would spend the L1 budget on a handshake. Deepgram is configured to declare end-of-speech within **300 ms** (P3), which is the single largest term inside L1, and it is primed with the name of **every area in the scraped dataset**, generated from the dataset rather than typed by hand (spec §5.1).
+Speech goes to Deepgram over **one WebSocket that stays open** for the whole session — opening a new one per utterance would spend the L1 budget on a handshake. Deepgram is configured to declare end-of-speech after a **400 ms** silence (P3) — the single largest term inside L1, and deliberately no shorter: natural pauses before a number or an area name run roughly 200–500 ms, and a window inside that range cuts people off. On top of it sits a **content-aware hold** (P3b): if the words so far end in *under*, *near*, *with*, *and*, *to* or a bare number, the orchestrator waits up to 400 ms more before treating the silence as the end — plain pattern matching, with Deepgram's utterance-end event at about a second as the hard stop. It is primed with the name of **every area in the scraped dataset**, generated from the dataset rather than typed by hand (spec §5.1).
 
 **[AD-3] Choosing between Type A and Type B is pattern matching, not a model call.** Explanation-shaped requests — *why*, *what is the area like*, *is the commute realistic* — are matched against the current shortlist context before Job 1 runs. Asking a model which model to call would spend the acknowledgement budget twice, for a decision a short list of patterns gets right.
 
@@ -594,8 +600,8 @@ sequenceDiagram
     FE->>TO: audio frames (streaming)
     TO->>DG: audio (connection already open)
     DG-->>TO: partial transcripts
-    TO-->>FE: partial transcript on screen
-    DG-->>TO: final transcript (end of speech ≤300 ms)
+    TO-->>FE: partial transcript on screen ⟵ L0 under 300 ms
+    DG-->>TO: final transcript (400 ms silence, longer if the sentence looks unfinished — P3, P3b)
     rect rgba(34, 197, 94, 0.16)
     TO-->>FE: words + thinking indicator ⟵ L1 under 700 ms
     end
@@ -610,7 +616,7 @@ sequenceDiagram
     TO-->>FE: shortlist ⟵ L4 under 3 s
 ```
 
-<sub>[⤢ Open this diagram in a canvas](https://mermaid.live/view#pako:eNptVE1v4jAQ_SujnKiasgRoKTn0xIeEVmK14ZiLsQdikYyD7YhFVf_7TkLCspScJp43kzdvnvMZSKMwiAOHxwpJ4kyLvRVFSsCPqLyhqtiivbyXwnotdSnIwwaEg99I_lFyMa-zC2s4TepB8brOr63M0HkrvHnQY7asMTPE8h-h2_wqqvMrs4UIektrjk_fMUnDI8mM9bl2Hua014QP-GySBliIPGdGfaFTuqA2Lx8fi3kMrkRxcJezxZwPN-uY9VHawI7poYMeT4Ki0LRviWzWDJstO1hPGiKUXhsCkTNUncGUSC16tnxpuzbERA4sDDlpdendtWHL5jsEuCtHiHTfbqfpf2SPVwJmV4-EMoO0Gg7fxqPBAArXcrFME-x-K3qjcQjRdBLClINBP3p7uqdyMlY5eAafaTrw8KBJaVmvtO482b3CzwgqUmhh0nzj0uBqi0alVRTfMnwGWVnL3mImx0pbLDhuC1dRN9gpEx5kJmiPKqzXxwuopK8sKlDCi5v-CRMVZZmfmSa2NWEdE8uTs4WhpwlKayS6ToRk3n2oEJ6NquAHz3EgcyKO8I_MK4XqXrBho9hkGsJ7I9j7rRnYZvU-LDvR1TeH7xvvjVm1Sv0at-BN0sl78Y7zvHB3FXTYChr1X-GBnp1lr7bv6sZt3QhcEAYF2kJoxZf_Mw1YiwLTIIY0ULgTVe7T4ItB9S8gOZMMYhYXw6AqWdruL3E5_PoLw-Bcig) — zoom, pan and export</sub>
+<sub>[⤢ Open this diagram in a canvas](https://mermaid.live/view#pako:eNptVF1v4jAQ_CurPFE15QjQo_DQJz4kdBLVhce8GHsBi2QdbEccqvrfbx0SjqNEiuR4x-uZ8cSfkTQKo0nk8FghSZxqsbOiyAj4EZU3VBUbtJfvUlivpS4FeViDcPAbyT8qzmehOreGy6QeLF6F-srKPTpvhTcPekwXATNFLP8Ruq0vk1Bfmg0k0FlYc3z6jklrHuneWJ9r52FGO034gM86rYGFyHNm1BU6owtq_fL-Pp9NwJUoDu4yN5_x5Ho1YX-UNrBleuigw0pQFJp2DZH1imHTRQvrSEOE0mtDIHKGqjOYEqlBTxcvTdeamMiBjSEnrS69uzZs2HyHAHflESJBVvVH21f41YOKFFoY9HpQuPtdtpr-b9AZ1jhwOg9BiCE3tOPlegt-j-DCUfM8T5uD49bcQLs9qrBfLxnCxyDmd9PIsawU7G4jOoNhDMl4FMOYB71u8vPpXs3JWOXgmbfRdGD_QJPSMqTiqiVptIxutFyTVRu9TCa3ap5BVtYyZ2ZyrLTFgsfNwmXSmnDaCw9yL1ioikMC-Awr6SvLspTw4qZ_ykRFWebn2o3LmjiMia3M-S-AjiYorZHoXCMxnbUbFcLL4NUP1nEgcyIe4R-ZVwrVvWH92rHROIa32rC32zxxUsPZWQ7z9UQMMavGqY9hA16nrb2X-DnPmXFXQ_uNoUn3FR742ab--ue064ZtqMBFcVSgLYRWfH98ZhF7UWAWTSCLFG5Flfss-mJQuEXSM8lowuZiHFUlW9teNJfJr789l3JG) — zoom, pan and export</sub>
 
 Note what is **not** in this picture: no network call to a listing site, no map lookup, no second model. A Type A turn touches three providers — speech in, the fast model, speech out — and otherwise runs on data already in memory.
 
@@ -733,7 +739,7 @@ flowchart TB
 
     G4 ==>|"ships as a<br/>read-only file"| DB[("<b>The RAG index</b><br/>every chunk of every guide,<br/>each with area, title, URL, date")]
 
-    subgraph ON["Question time — inside one turn: first audio by 2.5 s, checked text by 6 s  (§9.2 to §9.4)"]
+    subgraph ON["Question time — inside one turn: first audio by 1.5 s, checked text by 6 s  (§9.2 to §9.4)"]
         direction TB
         Q1["<b>5. Embed the question</b><br/>'is Indiranagar noisy?'"]
         Q2["<b>6. Search one collection</b><br/>the area of the listing<br/>being discussed — <i>and nothing else</i>"]
@@ -761,7 +767,7 @@ flowchart TB
     class GAP gap
 ```
 
-<sub>[⤢ Open this diagram in a canvas](https://mermaid.live/view#pako:eNqNVl1v2zgQ_CsL9SEtoDjWh-3Yl_qQXK5GD4e2blPcQ90HSlxZhGXSJak4Rtv_fktRlj-KHE4IIJmiZoazs2S-B7niGEyColLbvGTawsPdQgJdps6Wmm1KeP_mzZdFcFeLioMVa4RFHfejFDjbGciwUBrBlggc1yoEVRSVkAjwclH3-2yUvFoEXz2iu7jQmFuhZMfjrllEDDfZNOrBH6qqaAYsa8HR3Fxl05tMX00jsAoS2KAGppGFUGi1hn_ESmyQC9bMYZKD2qCEXNhdC3BCPos9TUw0ZS1XYHDNpBU5q6pdR2U2lbCwLbFd142YrpFJIZc3V2IKphSFNWEzVSoL-Ih6B-_Aucdyi_qMM_GcSQ_-XGfIAVle0mSi7xhtrSVYfLIgJC2TwSM5oPQpTupx0h58ss5yIWkRZAK7v-uASKoi73PvoXN5b5iTfooXweXllCzxt8TfUj8BJV9I_zhL4fXr6Y9FQOveGGD011ARJr9UstpBISpcBD_g_u7Ly0biA5n28XZGCjk-ddq8T83CKSStbU2RvJeNL1thy7bAVtgKQ_j88e-QomaJ4tXXvahDNt-RK_MaTbPY43QKaQganB3O3gnJ1MYCq7lQkO0g7g3AhKQH8xVVpXGfhodguuiOe7FL3f5H-n-SPG-TPNiX2yXoWyuw8-JCGHgrCYFJtmQapBJm9_vFCf68DeuQCo5MkzmnpT2khxicZc5V91wJIqOwuncZ0hNJNXltDKlpzaGcuGah-JbuPVYGfwnIvA3uqAcPbOVbwaoNFLj1VTw0Z1M6Iq0qyJnWO4cprPHqXBnBsdG2sDplaCN93YO_VAYxbErNDBpHte7AC5Q5Kad9xYWvllbXxtIAZYL95mdQ2xkqeEj9LK2bbkDV9pRr4LnGrvWp5G3-9h90bFKBRqOqR5aRbNpImPN63-3d_FNs30pz30pz30rz1N8Gv3TU_Z17Qx3VtZCHrxTjbqEED4zCqJR1bTWP_WfzQQP4_vMDreRWmi11NoXP5Bppy3MGs0rVPDxutoqJNVjaltAtpxPtJPYaCfsEFKomgcQ2u_3gjBLTi7fAlbywULJHBIliWWaq1qVSvGFw9tNnmopFYl3-LroIeRZiN-YeC8iao4O2iWryAjmOCwyN1WqFkxejPGHI25-XW8FtOYk3TyHFXOnJixij_nBwBmea7c_D5UXBjuD61-Moi0_hkgNc_zpJ0vQMrhKPezSeFzmOOrRoyJKUPSuuPyB5wzO0NR2nVQtXYJHkBzg-Ho36w2fh0kHE-skZHMV4D1ZgisMODKOIp9fPg-X9QTQ-A1uyTacMY4wPyvJ4GP-Xsj7rsyMwOjzCWRzOkpBOh6a6xy8p302JjsfmUTiPw3kSUoqd4SfvUu_a8RilvGnhY87bD24FQRisUa-Z4PRfy_dF4PYKSvYEFgHHgtUVNc1PmsRqqz7tZB5MaMPAMKg37hC5F4wOjrUf_PkvgQDaLQ) — zoom, pan and export</sub>
+<sub>[⤢ Open this diagram in a canvas](https://mermaid.live/view#pako:eNqNVl1v2zgQ_CsL9SEtoDjWh-3Yl_qQXK5GD4e2blPcQ90HSlxZhGXSJak4Rtv_fktRlj-KHE4IIJmiZoazs2S-B7niGEyColLbvGTawsPdQgJdps6Wmm1KeP_mzZdFcFeLioMVa4RFHfejFDjbGciwUBrBlggc1yoEVRSVkAjwclH3-2yUvFoEXz2iu7jQmFuhZMfjrllEDDfZNOrBH6qqaAYsa8HR3Fxl05tMX00jsAoS2KAGppGFUGi1hn_ESmyQC9bMYZKD2qCEXNhdC3BCPos9TUw0ZS1XYHDNpBU5q6pdR2U2lbCwLbFd142YrpFJIZc3V2IKphSFNWEzVSoL-Ih6B-_Aucdyi_qMM_GcSQ_-XGfIAVle0mSi7xhtrSVYfLIgJC2TwSM5oPQpTupx0h58ss5yIWkRZAK7v-uASKoi73PvoXN5b5iTfooXweXllCzxt8TfUj8BJV9I_zhL4fXr6Y9FQOveGGD011ARJr9UstpBISpcBD_g_u7Ly0biA5n28XZGCjk-ddq8T83CKSStbU2RvJeNL1thy7bAVtgKQ_j88e-QomaJ4tXXvahDNt-RK_MaTbPY43QKaQganB3O3gnJ1MYCq7lQkO0g6g3AhKQH8xVVpXGfhodguuiOe7FL3f5H-n-SPG-TPNiX2yXoWyuw8-JCGHgrCYFJtmQapBJm9_vFCf68DeuQCo5MkzmnpT2khxicZc5V91wJIqOwuncZ0hNJNXltDKlpzaGcuGah-JbuPVYGfwnIvA3uqAcPbOVbwaoNFLj1VTw0Z1M6Iq0qyJnWO4cprPHqXBnBsdG2sDplaCN93YO_VAYxbErNDBpHte7AC5Q5Kad9xYWvllbXxtIAZYL95mdQ2xkqeEj9LK2bbkDV9pRr4LnGrvWp5G3-9h90bFKBRqOqR5aRbNpImPN63-3d_FNs30pz30pz30rz1N8Gv3TU_Z17Qx3VtZCHrxTjbqEED4zCqJR1bTWP_WfzQQP4_vMDreRWmi11NoXP5Bppy3MGs0rVPDxutoqJNVjaltAtpxPtJPYaCfsEFKomgcQ2u_3gjBLTi7fAlbywULJHBIliWWaq1qVSvGFw9tNnmopFYl3-LroIeRZiN-YeC8iao4O2iWryAjmOCwyN1WqFkxejPGHI25-XW8FtOYk3TyHFXOnJixij_nBwBmea7c_D5UXBjuD61-Moi0_hkgNc_zpJ0vQMrhKPezSeFzmOOrRoyJKUPSuuPyB5wzO0NR2nVQtXYJHkBzg-Ho36w2fh0kHE-skZHMV4D1ZgisMODKOIp9fPg-X9QTQ-A1uyTacMY4wPyvJ4GP-Xsj7rsyMwOjzCWRzOkpBOh6a6xy8p302JjsfmUTiPw3kSUoqd4SfvUu_a8RilvGnhY87bD24FQRisUa-Z4PRfy_dF4PYKSvYEFgHHgtUVNc1PmsRqqz7tZB5MaMPAMKg37hC5F4wOjrUf_PkvevzaLA) — zoom, pan and export</sub>
 
 **Reading it in one line:** guides are cut into chunks and stored once; a question is turned into the same kind of vector, matched against **only its own area's chunks**, and the few that come back are the *only* material the model is allowed to speak from.
 
@@ -769,14 +775,14 @@ flowchart TB
 
 **Semantic chunking, not fixed-size.** A guide is split where the **meaning changes** — paragraph and topic boundaries measured by how much the text drifts — rather than every N characters. Fixed-size splitting is simpler, but it cuts sentences in half and mixes two topics into one chunk. That matters more here than in a typical RAG system, because a chunk is not just retrieval material: **it is what gets cited**. A chunk that begins mid-sentence or straddles two subjects produces a citation that does not properly support the claim attached to it, which is an automatic failure at sign-off. Semantic chunks stay readable on their own, which is the same property a citation needs.
 
-**ChromaDB, embedded in the backend process.** Chroma runs as a library inside the Python process, loading a persisted directory at start-up — no server, no network hop, nothing else to deploy. That is exactly what **[AD-4]** requires: for a corpus of a few dozen documents, a hosted vector database would put a network round trip inside the 2.5 s first-audio budget and add an outage the demo does not need.
+**ChromaDB, embedded in the backend process.** Chroma runs as a library inside the Python process, loading a persisted directory at start-up — no server, no network hop, nothing else to deploy. That is exactly what **[AD-4]** requires: for a corpus of a few dozen documents, a hosted vector database would put a network round trip inside the 1.5 s first-audio budget and add an outage the demo does not need.
 
 **[AD-10] Dense embeddings — a small English sentence model — not sparse, hybrid or anything heavier.** Retrieval matches on *meaning*, using vectors produced by a compact English model that runs in-process. Two things decide this:
 
 - **Semantic chunking already requires an embedding model.** Splitting a guide where the meaning shifts means embedding adjacent passages and watching the similarity drop. A dense model therefore exists in the build pipeline whichever retrieval method is chosen — so dense retrieval costs **no extra machinery**, and the same model that cut the chunks also embeds the question.
 - **Spoken questions share almost no words with guide text.** A renter asks *"is it noisy?"*; the guide says *"a residential locality known for its pubs and nightlife"*. There is no token overlap at all. Keyword matching scores that pair near zero; a dense model scores it high. Transcribed speech is the case sparse retrieval handles worst.
 
-The usual objection to dense retrieval — that it is compute-heavy — is an argument about web-scale corpora. Here, build-time embedding covers a few hundred chunks, and at question time the system embeds **one short sentence** against a collection of perhaps 10 to 40 chunks. A small model on CPU does that in tens of milliseconds, well inside the 2.5 s first-audio budget.
+The usual objection to dense retrieval — that it is compute-heavy — is an argument about web-scale corpora. Here, build-time embedding covers a few hundred chunks, and at question time the system embeds **one short sentence** against a collection of perhaps 10 to 40 chunks. A small model on CPU does that in tens of milliseconds, well inside the 1.5 s first-audio budget.
 
 **Why not the alternatives:**
 
@@ -815,7 +821,7 @@ A question about a listing in Indiranagar can **only ever see Indiranagar's chun
 
 Why a partition and not a filter is argued under **[AD-9]** above; the short version is that the other areas' text is **not in the set that was searched**, so contamination is something the code cannot express rather than something a test might catch.
 
-**[AD-4] The RAG index runs inside the backend process.** The corpus is a few dozen documents. An in-memory index loaded at start-up beats a hosted vector database on latency, on operational surface, and on the 2.5 s budget it would otherwise sit inside.
+**[AD-4] The RAG index runs inside the backend process.** The corpus is a few dozen documents. An in-memory index loaded at start-up beats a hosted vector database on latency, on operational surface, and on the 1.5 s first-audio budget it would otherwise sit inside.
 
 ### 9.3 The resolver registry — the source rules, written as code
 
@@ -867,21 +873,21 @@ sequenceDiagram
     TO->>RS: question + which listing
     RS->>RES: this area's chunks and facts
     RES-->>TO: wrapped facts only
-    TO->>J2: facts + chunks, fenced off as untrusted data
-    J2-->>TO: first tokens (streaming)
     rect rgba(234, 179, 8, 0.18)
-    TO->>TTS: first sentence ⟵ L3 under 2.5 s
+    TO->>TTS: opener built by code from those facts ⟵ P8, L3 under 1.5 s
     end
-    J2-->>CA: the complete structured answer
+    TO->>J2: facts + chunks, fenced off as untrusted data
+    J2-->>CA: sentences, streaming
     CA->>CA: bind each claim, drop the unciteable
+    CA-->>TTS: each sentence, once its citation resolves
     rect rgba(34, 197, 94, 0.16)
     CA-->>FE: text + citations + labels ⟵ L5 under 6 s
     end
 ```
 
-<sub>[⤢ Open this diagram in a canvas](https://mermaid.live/view#pako:eNptk0Fv4jAQhf_KKJcFNUVLWkrJoRJi4YBWiwQccxmcCbFw7KztlEVV__uOSWDRltwm_vz85o39EQmTU5RGjn43pAX9kLi3WGUa-MPGG91UO7JtXaP1UsgatYftCtDByoqSnLfozR1mvQnMmryV9I7qDjDvCGfUO1n3lVgmAViaHSTQm2pfWlNL0f8KzqYBnDpH1U7dNbw9n7WpUCm2PED5lVnMA7KwRnvSeaZb4pfxBIb9cdMpoDhoc1SU76ki3oPKEuYncKHImmRcjODnsN25XT2-va03KXC4zkuj4QGOpRQlKMm13rfYehOwOXO-lA6QBb85EGWjD1zpHAoUvguHsUemg5OjxbqmbhWMVqebU5dJ2i08dEoxFGHCOZiiCG022tvGef6Ro8d26zK5iBfSOg_eHEg76PGICSs23CVvSXiw-x32kqfnGIbjSQyvMXwfDF_7NyY484tSiCccf43oiQ3knGkyGEHX2znzfzZm0xAIgTBVrYhnwC4a4RvLllG742XKs2kH7yRnRcjxCoWyiiHn23KWaLSQnpBvxv_-z_Yn4xgmz2f_L_2rKKsu5myB_vgQovQYRhgCVbgj5a6tjLpWXm4aieKoIluhzPl1fWQRu6goi1LIopwKbJTPok-GwhvbnLSIUm6O4qipeRqXZ9j-_PwLCJos0A) — zoom, pan and export</sub>
+<sub>[⤢ Open this diagram in a canvas](https://mermaid.live/view#pako:eNptk8Fu4jAQhl9llMsWNUULLaXkUAmxcEBoWQHHXCbOBKw6dtZ2yqKq777jJEWowM3hm8k_X8YfkTA5RUnk6G9NWtAviXuLZaqBf1h7o-syI9ueK7ReClmh9rBbAzpYW3Eg5y16c4PZbAOzIW8lvaO6Acw7whn1TtZdE8thAJYmgyHcTbU_WFNJ0bsGZ9MATp2jMlM3A--ad21LVIoj91FeM4t5QBbWaE86T3VL_DaewHA-HjoBFG_aHBXleyqJa1BZwvwELhzSejguRrAatJW79cPr62abAMt1XhoN93A8SHEAJfms9y222QZszpw_SAfIDX84EIdav_FJ51Cg8J0cxh6YDkmOFquKun_BaHVqEUvCg91neDd8fIphMJ7E8BLDz_7gpXeRi4UkYCrSPFhWS-UhO0FYByisKTmKcdT17sb6w11Wj1DrnEsG_RF0mRpX577LYdKV3XczxFCE3crBFEUQXGtva-f5QY4e29LlMIw1myaNyIBzGW8WYXn2NJt2SCZZCiF7FAplGUPOa8GJiVsL6Ql5Bc4lX6M2_FfzmH0JAskpuQCbb2PbNXTfLTYSJ-MYJk-NxefeZe_FnD8b_fNh2q5TmFxhRupsbjXqrD1fOIviqCRbosz5An6kEecvKY0SSKOcCqyVT6NPhsI13J60iBLWRnFUV6zt66a2Dz__AzjHOIo) — zoom, pan and export</sub>
 
-**Two clocks, deliberately.** Speech starts on Job 2's *first sentence* while the assembler is still working on the rest. L3 measures when sound starts; L5 measures when the fully checked text and its citations are on screen. They are different budgets because they are different promises.
+**Two clocks, deliberately.** Sound starts with the **code-built opener** (P8) — *"It's ₹38,000 for a 2BHK, 1.2 km in a straight line from your office. On the neighbourhood —"* — every word a wrapped fact the resolvers had already handed over, spoken while Job 2 is still producing its first token. Job 2's own sentences follow, each one only after the assembler has resolved its citation. L3 measures when sound starts; L5 measures when the fully checked text and its citations are on screen. They are different budgets because they are different promises.
 
 ---
 
@@ -1136,11 +1142,11 @@ flowchart TB
 | **Microphone and audio** | Browser **AudioWorklet** | Captures while the system is speaking, so interruption is detectable; playback is unlocked by the renter's own click | §11 |
 | **Backend language** | **Python 3, FastAPI, asyncio** | The build pipeline is data work, OpenStreetMap tooling is Python-first, and both model SDKs are first-class in Python. **The one choice the specification does not constrain** | [AD-8] |
 | **Backend hosting** | **Railway**, one long-lived process, sleeping **off** | Holds a persistent Deepgram socket and keep-alive pools. Region picked by measurement, not assumption | P1, P2, §13.6 |
-| **Speech to text** | **Deepgram**, streaming WebSocket | End-of-speech within 300 ms — the largest single term in the 700 ms acknowledgement. Primed with every area name in the dataset, plus Indian-English amount handling ("35k" → 35000) | P3, §7.2 |
+| **Speech to text** | **Deepgram**, streaming WebSocket | Interim words within 300 ms (L0); end-of-speech after a 400 ms silence plus a content-aware hold — the largest term in the 700 ms acknowledgement, and deliberately no shorter. Primed with every area name in the dataset, plus Indian-English amount handling ("35k" → 35000) | P3, P3b, §7.2 |
 | **Job 1 — understanding** | **Groq**, `openai/gpt-oss-120b`, `temperature=0` | Latency-critical and needs schema conformance, not reasoning. Drops to a lighter Groq tier if it misses its budget | spec §5.1 |
 | **Job 2 — explanation** | **Anthropic**, `claude-sonnet-5` | Sets the zero-invented-facts outcome; off the critical path, so capability beats speed. **No sampling parameters** (the model rejects them), no prefill, thinking effort set explicitly to low | P7, spec §5.1 |
 | **Text to speech** | **Smallest.ai**, streaming | Starts on the first sentence, not the finished answer | P4 |
-| **Retrieval** | **ChromaDB, embedded** — runs inside the Python process, persisted to a file, **one collection per area** | A few dozen documents. A hosted vector database would add a network hop inside the 2.5 s budget; a per-area collection makes cross-area leakage impossible rather than merely tested-for | [AD-4], [AD-9], §9.1 |
+| **Retrieval** | **ChromaDB, embedded** — runs inside the Python process, persisted to a file, **one collection per area** | A few dozen documents. A hosted vector database would add a network hop inside the 1.5 s first-audio budget; a per-area collection makes cross-area leakage impossible rather than merely tested-for | [AD-4], [AD-9], §9.1 |
 | **Embeddings** | **Dense** — a small English sentence model, in-process, pinned by exact version, **the same model at build time and question time** | Spoken questions share almost no words with guide text, so keyword matching fails; and semantic chunking needs an embedding model anyway, so dense retrieval adds no extra machinery | [AD-10], §9.1 |
 | **Map data** | **OpenStreetMap MCP** — **build time only** | Resolved once per listing against a fixed question list; never called during a conversation | P5, §3 |
 | **Calendar and email** | **Google Calendar API + Gmail API**, one demo account, two secondary calendars, single OAuth | Bookings live there rather than in a database of ours | §10, AD-7 |
@@ -1176,7 +1182,7 @@ Two settings on the Railway side are part of the contract with §2.5, not prefer
 
 ### 13.3 Measuring, so a miss is diagnosable
 
-One trace per turn, with a child span per component, named to match the specification's measurement rules exactly: `stt.final`, `retrieval`, `llm.first_token`, `llm.last_token`, `tts.first_byte`, and one span per external call.
+One trace per turn, with a child span per component, named to match the specification's measurement rules exactly: `stt.interim`, `stt.final`, `retrieval`, `llm.first_token`, `llm.last_token`, `tts.first_byte`, and one span per external call.
 
 Every trace carries its turn type, so Type A and Type B are scored separately rather than averaged into one misleading number. **Cold start is its own counter**, never folded into the budget (spec §6.56).
 
@@ -1236,7 +1242,7 @@ evals/
 | **AD-1** | The build pipeline is a separate offline program producing versioned files | Scraping at start-up — a source outage would take the service down, and the dataset would stop being reproducible |
 | **AD-2** | The manifest is a build output | Writing the sign-off artefacts by hand at the end — they drift from what was actually built |
 | **AD-3** | A pattern-matching router picks the turn type before Job 1 | A model classifier — it spends the acknowledgement budget twice |
-| **AD-4** | The RAG index runs in-process — **ChromaDB, embedded** | A hosted vector database — a network hop inside the 2.5 s budget, for a corpus of a few dozen documents |
+| **AD-4** | The RAG index runs in-process — **ChromaDB, embedded** | A hosted vector database — a network hop inside the 1.5 s first-audio budget, for a corpus of a few dozen documents |
 | **AD-5** | The frontend works nothing out; view-models arrive complete | Formatting in the UI — it puts the method label two codebases away from the number it labels, which is exactly how the two drift apart |
 | **AD-6** | The eval harness skips audio | End-to-end audio in CI — non-determinism against a 100%-three-times bar |
 | **AD-7** | No database | Postgres or Redis for sessions and bookings — it reopens every retention question the specification deliberately closed (spec §2.5, §3.2, §5.3), and the calendar is already the booking's record of truth |
@@ -1254,7 +1260,7 @@ Stated plainly, so nothing here reads as more settled than it is.
 | Open item | What it could change |
 |---|---|
 | **The scrape has not happened yet.** If bengaluru.rent publishes fewer fields than assumed | The data model (§5), the card layout (§11) and Suite A's coverage all move. The wrapper absorbs a missing field gracefully — it becomes a `null` with `source: DATASET` — but the **vocabulary of things a renter can filter on genuinely depends on what the scrape finds** |
-| **The latency budget has not been measured.** If the spike misses the targets | The fast model, the hosting region, or the targets themselves change (§7, §8, §9). Component boundaries are drawn so that **swapping the fast model is a config change, not a rewrite** |
+| **The latency budget has not been measured.** L3 leans on P8, and P3's 400 ms window leans on pause timings not yet observed on Indian-English speakers. If the spike misses the targets | The fast model, the hosting region, or the targets themselves change (§7, §8, §9). Component boundaries are drawn so that **swapping the fast model is a config change, not a rewrite** |
 | **How many people can use it at once** is bounded by provider rate limits, not by this design | The single-process model is a demo-scope decision. Exactly one thing would have to move to scale horizontally: the in-memory session map (spec §6.57) |
 | **Nothing here is measured** | Like the specification's budget, this document is derived from requirements, not from a running system. The first thing that should update it is the latency spike's real numbers |
 
@@ -1270,7 +1276,7 @@ Almost every structural choice in this document exists to make one of these hard
 |---|---|
 | **Say where it came from** | Every fact names its source, how it was worked out, and how fresh it is. Distances must say *by route* or *straight line* — out loud, on the card badge, and in the full label — and all three must say the same thing. A bare `[OSM]` is an automatic failure. |
 | **One source per kind of claim** | Listing details come only from the scraped dataset (missing means "not stated", never guessed). Amenities and transit come only from OpenStreetMap. Neighbourhood character comes only from a small, fixed set of documents. Anything else is declared unavailable rather than answered. |
-| **Answer fast, or say why not** | Budgets per turn: acknowledge you within 700 ms, start speaking within 1.5 s (simple turns) or 2.5 s (explanations), show the shortlist within 3 s, book within 5 s. These hold only while the setup conditions P1–P7 hold (see §2.5). |
+| **Answer fast, or say why not** | Budgets per turn: your words appear as you say them (within 300 ms), the system acknowledges within 700 ms of you finishing, starts speaking within 1.5 s, shows the shortlist within 3 s, books within 5 s. These hold only while the setup conditions P1–P7 hold (see §2.5). |
 | **A failure is not an empty result** | *"I couldn't check"* and *"nothing matched"* must never look alike. Nothing is ever invented to paper over a failure, and no operation is left half-done without saying so. |
 
 **How it is checked.** Three test suites of 20 cases each, all 60 passing, run three times in CI, with zero invented facts. §14 describes the harness.
