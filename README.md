@@ -11,9 +11,9 @@ The problem it addresses isn't finding listings — it's judging whether one fit
 
 ## The documents
 
-**[`Problem_Statement_Detailed.md`](./Problem_Statement_Detailed.md) (v3.9) is the single source of truth.** Scope, data schema, latency budget, all 58 error cases, and the sign-off contract live there — and it governs wherever this README, the architecture, or any summary disagrees with it.
+**[`Problem_Statement_Detailed.md`](./Docs/Problem_Statement_Detailed.md) (v3.9) is the single source of truth.** Scope, data schema, latency budget, all 58 error cases, and the sign-off contract live there — and it governs wherever this README, the architecture, or any summary disagrees with it.
 
-**[`Architecture.md`](./Architecture.md)** is how the system is structured to meet it — components, data model, turn lifecycles, error taxonomy, and the decisions taken with their alternatives.
+**[`Architecture.md`](./Docs/Architecture.md)** is how the system is structured to meet it — components, data model, turn lifecycles, error taxonomy, and the decisions taken with their alternatives.
 
 | You are about to… | Read |
 |---|---|
@@ -50,7 +50,7 @@ flowchart LR
 
 **Every provider call originates on the backend.** The browser talks to exactly one origin and holds no keys. The dataset, the closed RAG index and all OpenStreetMap values are resolved at **build time** and served from local storage — no scraping, no retrieval fetching and no OSM lookups happen inside a tenant's turn.
 
-Three structures carry most of the correctness, and are worth knowing before reading any code — all detailed in [`Architecture.md`](./Architecture.md):
+Three structures carry most of the correctness, and are worth knowing before reading any code — all detailed in [`Architecture.md`](./Docs/Architecture.md):
 
 - **`Provenanced<T>`** — every fact travels with its source, method, timing and as-of date. A distance without its method label is *unrepresentable*, not merely discouraged
 - **The resolver registry** — the grounding boundary is a call graph, so the explanation model can only reach facts through a resolver
@@ -88,8 +88,10 @@ Both are pinned by **exact model ID, never a `latest` alias** — the CI guarant
 
 ```
 .
-├── Problem_Statement_Detailed.md          # the specification
-├── Architecture.md                        # how it is structured
+├── Docs/
+│   ├── Problem_Statement_Detailed.md      # the specification
+│   ├── Problem_Statement_Summary.md       # condensed working summary
+│   └── Architecture.md                    # how it is structured
 ├── frontend/                 # Vercel — UI, view-models, mic client. No keys.
 ├── backend/                  # Railway — pipeline, both LLM jobs, calendar, PDF
 ├── data/                     # scraped listings, RAG index, precomputed OSM values
