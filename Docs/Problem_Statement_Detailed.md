@@ -2,7 +2,7 @@
 
 *v3.10 — the current problem statement. Supersedes all earlier drafts; where this document and an earlier version disagree, this one governs.*
 
-*Changed in v3.10 (§5.2): a new **L0** target for first visible feedback (<300 ms); **L3** tightened from ≤2.5 s to ≤1.5 s, made reachable by a new **P8** (fact-led opener); **P3** endpointing set to 400 ms with a new **P3b** content-aware hold, so speed is never bought by cutting a tenant off mid-sentence. L1 stays <700 ms. No other target moved.*
+*Changed in v3.10 (§5.2): a new **L0** target for first visible feedback (<300 ms); **L3** tightened from ≤2.5 s to ≤1.5 s, made reachable by a new **P8** (fact-led opener); **P3** endpointing set to 400 ms with a new **P3b** content-aware hold, so speed is never bought by cutting a tenant off mid-sentence. L1 stays <700 ms. No other target moved. Also carried in from `Architecture.md`: how the RAG index is built and partitioned (§3.3); turn-type routing in application code (§5.1); the availability flag as an in-memory overlay with an operator-token-guarded toggle, and a confirm-time re-check that reads the flag rather than the source site (§3.1, §6.43); the build manifest as a machine-readable output (§7.3, §9.1); boot-time manifest checks (§6.35); and what the frontend–backend contract actually contains (§5.4, §9.4).*
 
 *Principal decisions: listing scope of **up to 10 per locality** with the locality set determined by the scrape (§1); an LLM **split into two roles across two providers** — Groq for extraction, Claude Sonnet for grounded explanation (§5.1); a latency budget **split by turn type** with explicit preconditions (§5.2); **commute-method disclosure** carried end-to-end from OSM precompute through card label to eval assertion (§3.4, §2.3, §4, §7.1); deployment on **Vercel (frontend) + Railway (backend)** (§5.4); and grouped, principle-driven error handling (§6).*
 
@@ -111,7 +111,7 @@ Answers *"Why did you pick this one?"*, *"Is the commute realistic?"*, *"What's 
 - **Null never silently satisfies a must-have.** If a tenant requires four-wheeler parking and some listings have `parking: null`, those listings are neither counted as matches nor silently dropped — they surface as a separate **"unknown on this filter"** group the tenant can choose to include. Without this rule, a wider schema makes the shortlist quietly *worse*, because every sparse field becomes an invisible filter
 - **Budget filtering runs on `rent`** unless the tenant says otherwise; `deposit` and `maintenance_charges` are always **shown** on the card, so the real cost is never a surprise at booking
 - **Deduplication:** listings merged when they share an exact address **or** coordinates within 50m; the most detailed record wins, merged records noted in dataset metadata
-- **Stale-listing handling (corrected for static-scrape reality):** availability is a dataset flag. It can flip to unavailable via (a) an admin toggle simulating a delisting, or (b) an optional one-time recheck of the source pin at booking time. When a shortlisted listing goes unavailable, the system **removes it without requiring user action and immediately notifies the tenant**: "One listing in your shortlist is no longer available and has been removed."
+- **Stale-listing handling (corrected for static-scrape reality):** availability is a dataset flag. It can flip to unavailable via (a) an **operator-only admin toggle** simulating a delisting — a small endpoint guarded by an operator token held with the other secrets (§5.4) — or (b) a **mandatory re-check of that flag at booking confirmation**, before either calendar write (§6.43). The re-check reads the flag, **never the source site**: no fetch to bengaluru.rent happens inside a tenant's turn, by the same discipline as §3.4. The flag lives in an **in-memory overlay** on the read-only dataset — there is no database (§5.3) — so a restart returns every listing to the state the scrape found; that is acceptable demo scope, because bookings live in the calendars, not here. When a shortlisted listing goes unavailable, the system **removes it without requiring user action and immediately notifies the tenant**: "One listing in your shortlist is no longer available and has been removed."
 
 ### 3.2 PII
 - Owner/agent names and phone numbers stripped **before** data touches the dataset, UI, logs, **or voice transcripts**
@@ -123,6 +123,8 @@ Answers *"Why did you pick this one?"*, *"Is the commute realistic?"*, *"What's 
 - Corpus: **1–3 unique documents per locality**, built once per locality and shared by that locality's ≤10 listings; each listing is mapped to its locality's documents at index time
 - **Retrieval is listing-scoped:** queries about listing X retrieve only from the documents mapped to X's locality — this is the structural defense against cross-locality contamination (a Koramangala answer citing Indiranagar's document). Scaling to many localities makes this risk larger, not smaller, so it is tested explicitly (§7.1 Suite C)
 - **Incomplete data:** show what exists + disclaimer "Limited neighborhood data available"; never fill gaps from model knowledge
+- **Index construction (fixed, so Suite C can rely on it):** documents are **chunked semantically** — split where the topic shifts, not every N characters — because a chunk is what gets cited, and a chunk that starts mid-sentence yields a citation that does not support its claim. Chunks are embedded with a **small English dense-embedding model, pinned by exact version and recorded in the build manifest** (§7.3), and stored in **ChromaDB embedded in the backend process** — one persisted directory, loaded read-only at start-up, no vector-database server (a network hop inside L3 for a corpus of a few dozen documents). The **same model** embeds the tenant's question at query time; two different models make the search meaningless
+- **Partition, not filter:** the index holds **one collection per locality**. A query touches only the collection of the listing under discussion, so other localities' text is not in the searched set at all — the listing-scoped rule above is enforced by the store's structure, not by a `where` clause that can be forgotten or applied too late. **Hybrid (dense + keyword) retrieval is the documented escalation** if Suite C fails on exact-token questions — society or road names a dense model blurs; it is not built up front
 
 ### 3.4 Amenities & Transit (OpenStreetMap MCP — Precomputed)
 - All amenity, transit-point, and POI claims come from the OpenStreetMap MCP (github.com/jagan-shanmugam/open-streetmap-mcp), queried around each listing's coordinates
@@ -192,6 +194,7 @@ Futuristic real-estate theme. Required components:
 - **Job 2 configuration:** `temperature` is **not** set — Claude Sonnet 5 does not accept sampling parameters, and a request carrying one is rejected. Determinism for §7's CI runs comes from the pinned model ID plus structured output, not from a temperature value. Fix the response shape with structured outputs (`output_config.format`); **assistant prefill is not supported on this model**, so it cannot be used to force a format. **Thinking must be set explicitly** — omitting it runs adaptive thinking at default effort, which lands on the §5.2 L3 budget; start at `output_config: {effort: "low"}` (see §5.2 P7)
 - **Job 2 still has to earn the role.** Validate it against Suite C before locking, and record the scores in the repo. If a Groq-hosted model reaches the same Suite C result, collapsing back to a single vendor is a legitimate simplification — the two-key setup is justified by measured grounding quality, not by brand
 - **Job 1 and Job 2 must remain different models**, so that a model chosen for speed never sets the grounding bar
+- **Turn-type routing is application code, not a model call.** Whether an utterance is Type A (preferences, refinement, booking) or Type B (explanation) is decided by pattern matching against the current shortlist context *before* Job 1 runs — *why*, *what's the area like*, *is the commute realistic*. Asking a model which model to call would spend the L1 budget twice
 - **Both models are pinned by exact model ID, never by a `latest`-style alias.** §7's "3 consecutive CI runs at 100%" is only meaningful if the model under test cannot change underneath the suite; an alias that silently re-points invalidates every prior run
 - **Cost/latency note:** Job 2 runs once per explanation request, not once per turn, so the more expensive model is invoked far less often than Job 1's. Claude Sonnet 5 is billed per token — **confirm current pricing on Anthropic's pricing page before budgeting**; this document does not track it
 - **TTS:** Smallest.ai, streaming playback (audio starts before full synthesis completes)
@@ -250,7 +253,7 @@ These are not tuning tips. Each one, if skipped, breaks a specific row above.
 | Tier | Host | Holds | Never holds |
 |---|---|---|---|
 | **Frontend** | Vercel | §4's UI, the card and citation view-models, the mic capture client | **No API keys. No provider calls. No API routes.** |
-| **Backend** | Railway | The whole voice pipeline, both LLM jobs, RAG index, precomputed OSM values, calendar/Gmail integration, all four provider keys | Nothing rendered directly to the tenant |
+| **Backend** | Railway | The whole voice pipeline, both LLM jobs, RAG index, precomputed OSM values, calendar/Gmail integration, all five provider credentials and the operator token | Nothing rendered directly to the tenant |
 
 **The split is a hard boundary, not a convenience.** Every provider call originates on Railway. The browser talks to exactly one backend origin and to no provider directly — that is what keeps §5.3's "keys server-side only" true rather than aspirational.
 
@@ -272,10 +275,10 @@ These are not tuning tips. Each one, if skipped, breaks a specific row above.
 **Cross-origin contract:**
 - **CORS allowlist is explicit** — the Vercel production origin (plus any previews deliberately included). Never `*`
 - **WebSocket (browser → Railway) carries the mic audio.** It is not proxied through Vercel; a proxy hop would add a round trip inside §5.2 L1, which has no room for one
-- **Backend exposes a contract version**, and the frontend pins the version it expects. Two hosts deploy independently, so **version skew is possible in production even when CI is green** — Suite C's view-model assertions run against a matched pair and would not catch a mismatched one. **Deploy backend first, frontend second**
+- **Backend exposes a contract version**, and the frontend pins the version it expects — it sends that version in its first WebSocket message, and the backend refuses a mismatch with a named error (§6.12) rather than failing later. The contract is the small, versioned set of WebSocket messages and HTTP endpoints defined in §9.4. Two hosts deploy independently, so **version skew is possible in production even when CI is green** — Suite C's view-model assertions run against a matched pair and would not catch a mismatched one. **Deploy backend first, frontend second**
 - Both tiers are HTTPS by default on these hosts, satisfying §5.3
 
-**API keys — all four set as Railway environment variables, none in Vercel, none in the repo:** Deepgram (deepgram.com) · **Groq — Job 1** (console.groq.com/keys) · **Anthropic — Job 2** (console.anthropic.com) · Smallest.ai (app.smallest.ai/dashboard), plus the Google OAuth credential for §2.4's calendars.
+**Secrets — all set as Railway environment variables, none in Vercel, none in the repo:** five provider credentials — Deepgram (deepgram.com) · **Groq — Job 1** (console.groq.com/keys) · **Anthropic — Job 2** (console.anthropic.com) · Smallest.ai (app.smallest.ai/dashboard) · the Google OAuth credential for §2.4's calendars — plus **one operator token** guarding the availability toggle (§3.1). Every one of them is checked at start-up (§6.55).
 
 ---
 
@@ -339,7 +342,7 @@ These are not tuning tips. Each one, if skipped, breaks a specific row above.
 | 6.2 | Missing neighborhood data | Partial info + "Limited neighborhood data available" disclaimer |
 | 6.4 | Listing goes unavailable post-shortlist | Remove without user action + notify tenant (§3.1) |
 | 6.8 | Injection content in scraped data | Neutralized by §5.3; covered by a grounding-suite test |
-| 6.35 | Dataset, RAG index, or precomputed OSM values fail to load at startup | **Fail startup** (principle 5). A backend that serves a tenant from a half-loaded index will answer confidently from whatever it did load |
+| 6.35 | Dataset, RAG index, or precomputed OSM values fail to load at startup — **or the build manifest disagrees with what loaded**: bundle version ≠ contract version, the embedding model on disk ≠ the one the manifest names, or a listing with no row for an OSM query | **Fail startup** (principle 5). A backend that serves a tenant from a half-loaded index will answer confidently from whatever it did load |
 | 6.36 | Retrieval returns chunks, but none actually support the question asked | Declare the gap (§6.2 wording). Retrieving something is not the same as having an answer, and this is exactly where a fluent model invents one |
 | 6.37 | Injection content inside a **RAG chunk** (as distinct from a listing field) | Same treatment as §6.8 — both are untrusted data under §5.3. Called out separately because the defence is often applied only to listing text |
 | 6.38 | OSM returned nothing for a listing's transit or amenity query | Row reads "not stated" (§3.1 null rules, §4). Never blank, never `0 km`, never filled from another listing's values |
@@ -355,7 +358,7 @@ These are not tuning tips. Each one, if skipped, breaks a specific row above.
 | 6.40 | No free slots anywhere in the 7-day window | Say so explicitly and offer the earliest slot beyond the window, or to try another listing. An empty slot list is never presented as "pick one" |
 | 6.41 | Offered slot is taken between the offer and the confirmation | **Free/busy is re-checked at confirm, not trusted from offer time.** On a clash, say so and offer the next free slots. The window between offering and confirming is exactly long enough for this to happen |
 | 6.42 | Two concurrent sessions confirm the same slot | The re-check in §6.41 is the guard; the second confirmation loses and is re-offered. **Neither tenant is told a booking exists that does not** |
-| 6.43 | Listing becomes unavailable between shortlist and booking confirmation | Booking is refused with the reason given (§3.1's optional booking-time recheck). Confirming a visit to a delisted property is worse than refusing it |
+| 6.43 | Listing becomes unavailable between shortlist and booking confirmation | Booking is refused with the reason given — §3.1's **mandatory confirm-time re-check of the availability flag**, which is distinct from §6.41's free/busy re-check: that one asks whether the *owner* is free, this one asks whether the *listing* still exists, and both run before either calendar write. The listing is removed from the shortlist (§6.4) and the remaining shortlist is read back. Confirming a visit to a delisted property is worse than refusing it |
 | 6.44 | Confirmation-code collision on generation | Generated codes are checked for collision against live bookings before being issued; a collision regenerates rather than overwrites |
 | 6.45 | Someone enters a code that is not theirs, or guesses codes | There is no login (§8), so **the code is the only credential**. Lookups are rate-limited, and the response to an unknown code is identical to the response for a valid-but-cancelled one (§6.9), so the endpoint cannot be used to enumerate live bookings. *Stated as a demo-scope limitation, not solved: a code alone is weak authorisation, acceptable only because the calendars hold no real personal data (§3.2)* |
 | 6.46 | Google OAuth token expired or revoked mid-session | Treated as §6.3 — the intended state stands, the tenant is told the calendar is temporarily unreachable, and re-auth is an operator action, never something the tenant is asked to perform |
@@ -446,7 +449,7 @@ Sign-off requires **every** line below. Any failure → fix → **full** re-run,
 - **No single request exceeded 2× its row's target**
 - **Per-component timings recorded** (STT-interim, STT-final, retrieval, LLM first- and last-token, TTS first-byte, each external API call), so any miss is diagnosable without a re-run
 - **Cold start measured and reported separately**, outside the budget (§5.2 P1) — reported, not hidden
-- **Preconditions P1–P7 verified as actually in force** during the timed runs; a budget met with a precondition silently violated is not met
+- **Preconditions P1–P8 (including P3b) verified as actually in force** during the timed runs; a budget met with a precondition silently violated is not met
 - Any row that proved unreachable is **renegotiated in §5.2 and re-run** — never quietly dropped
 
 **Artefacts published before sign-off** — each of these is a decision this document deliberately deferred, and sign-off is where they come back:
@@ -455,6 +458,7 @@ Sign-off requires **every** line below. Any failure → fix → **full** re-run,
 - The **curation rule** used where a locality exceeded 10 listings (§1)
 - The **pinned model IDs** for Job 1 and Job 2, with Job 2's **Suite C scores** and its `effort` setting (§5.1)
 - The **OSM precompute record**: the fixed query set, and the index date carried by every stored value (§3.4)
+- The **build manifest** (§9.1) — a machine-readable output of the build, not a report written afterwards — carrying the five items above plus the **embedding model and exact version** used to build the RAG index (§3.3). Producing it from the build is what stops the published record drifting from what was actually built
 - The **§6 walkthrough record** (§6.H): every row exercised or its guard shown, with fault-injected rows labelled as such, and the concurrency actually tested (§6.57)
 - The **deployment record** (§5.4): both public URLs, the **Railway region chosen and the measurements that chose it**, confirmation that **app sleeping is off** (or that a keep-warm ping is running, stated as such), and the CORS allowlist actually in force
 
@@ -482,12 +486,13 @@ These two tracks share no dependencies and should run at the same time. Each end
 - **Publish the locality list, per-locality counts, and total.** This number is unknown until now by design (§1) — it is an output, not an assumption
 - Identify and document the **availability marker**; document the **curation rule** used wherever a locality exceeded 10
 - Produce the **field-availability gap report**: which of §3.1's schema fields the source actually publishes, and which it does not
+- Emit all of the above as a **machine-readable build manifest** — the artefact §7.3 publishes — rather than writing it up by hand afterwards, so the record cannot drift from what was built; §9.3 adds the embedding model to it
 
 > **Gate D — Dataset.** If no reliable availability marker exists, or the published schema is materially thinner than §3.1 assumes, **stop and decide before building on it.** A missing field is not a bug to route around later: it changes §3.1's filter vocabulary, §4's cards, and Suite A's coverage requirement. Amend the specification, then proceed.
 
 **9.2 — Infrastructure track: walking skeleton and the latency spike**
 - Deploy a **minimal end-to-end skeleton** to Railway and Vercel: health check, the mic WebSocket, one stub turn that touches every provider with placeholder logic
-- Run the **latency spike on that deployed skeleton** — real Deepgram, Groq, Anthropic and TTS round trips, **both turn types**, with **P1–P7 actually in force** and per-component timings recorded
+- Run the **latency spike on that deployed skeleton** — real Deepgram, Groq, Anthropic and TTS round trips, **both turn types**, with **P1–P8 actually in force** (the Type B leg exercises the fact-led opener, P8) and per-component timings recorded
 - **Compare candidate Railway regions** (a US region against Singapore) and choose on the numbers (§5.4)
 
 > **Gate L — Latency.** Confirm §5.2's table against measurement, or **renegotiate it in writing and update the table**. This must happen on real infrastructure: a local measurement says nothing about the cross-provider, cross-region reality that defines L3 and L5. A missed budget here can change the model choice (§5.1), the region, or the targets themselves — all of which are far cheaper to change now than after the pipeline is built on them.
@@ -497,20 +502,20 @@ These two tracks share no dependencies and should run at the same time. Each end
 ### Phase 1 — Foundations
 
 **9.3 — Knowledge layer**
-- Build the **listing-scoped RAG index**: 1–3 documents per locality from the published list, each chunk carrying its source attribution
+- Build the **listing-scoped RAG index**: 1–3 documents per locality from the published list, **chunked semantically**, embedded with the **pinned embedding model**, stored in **ChromaDB as one collection per locality**, each chunk carrying its source attribution (§3.3). Record the embedding model and version in the build manifest
 - **Run the fixed OSM query set once across every listing**, storing each value with its OSM attribution and retrieval date (§3.4). Verify the MCP's routing capability and **lock the commute-method disclosure** wording
 
 **9.4 — Eval harness and the view-model contract** *(before the features they test — deliberately)*
 - Build the harness, the fixtures, and **enough of Suite C to validate Job 2**. This has to exist first: §9.7 cannot "validate Job 2 against Suite C" if Suite C is built last
 - **Define the card and citation view-model shape now.** Suite C asserts against it (§7.1), so it is a contract between the eval suite, the backend and the UI — not a detail discovered while building §9.9
-- Define the **backend contract version** the frontend will pin (§5.4)
+- Define the **backend contract version** the frontend will pin (§5.4), and the contract itself: the WebSocket messages — `hello` (contract version), `audio`, `transcript`, `ack`, `audio_out`, `outcome` (one of five shapes: answered, empty, degraded, failed, needs-input) — and the HTTP endpoints for booking, cancel, reschedule, health, contract and the operator availability toggle
 
 ---
 
 ### Phase 2 — The conversation
 
 **9.5 — Voice pipeline (Job 1)**
-- Deepgram with **keyterms generated from the dataset's locality field** and Indian-English amount normalisation; endpointing set explicitly (P3)
+- Deepgram with **keyterms generated from the dataset's locality field** and Indian-English amount normalisation; endpointing set explicitly at 400 ms with the content-aware hold (P3, P3b); turn-type routing by pattern matching before Job 1 (§5.1)
 - Job 1 structured extraction on Groq at `temperature=0`; streaming TTS starting on the first sentence (P4)
 - **Job 1 latency check against Gate L's measured numbers** — if `gpt-oss-120b` misses L1/L2, drop to a lighter Groq tier now (§5.1). Job 1 only has to emit valid JSON
 
@@ -520,7 +525,7 @@ These two tracks share no dependencies and should run at the same time. Each end
 - **Suites A and B green**
 
 **9.7 — Grounded explanation (Job 2)**
-- Retrieval + Job 2 with citations, gap declarations, and the **commute-method labels at all three layers** (§2.3, §4, §7.1)
+- Retrieval + Job 2 with citations, gap declarations, and the **commute-method labels at all three layers** (§2.3, §4, §7.1); the **fact-led opener** spoken before Job 2's first token (P8), with each Job 2 sentence released to TTS only after its citation resolves
 - **Suite C green. Pin the model ID and record its Suite C scores and `effort` setting** (§5.1). If a Groq-hosted model matches, collapsing to one vendor is legitimate — decide here, on the scores
 
 ---
@@ -529,7 +534,7 @@ These two tracks share no dependencies and should run at the same time. Each end
 
 **9.8 — Booking, cancel, reschedule, PDF, email**
 - Dual-calendar booking with free/busy slot offers; cancel and reschedule by confirmation code
-- **§6.E and §6.F in full** — including the **confirm-time free/busy re-check** (§6.41), **IST-explicit slot arithmetic** (§6.47), and **character-by-character email readback** (§6.50)
+- **§6.E and §6.F in full** — including the **confirm-time free/busy re-check** (§6.41), the **confirm-time availability re-check** (§6.43), **IST-explicit slot arithmetic** (§6.47), and **character-by-character email readback** (§6.50)
 - PDF generated on confirmation, emailed, discarded
 
 **9.9 — UI**

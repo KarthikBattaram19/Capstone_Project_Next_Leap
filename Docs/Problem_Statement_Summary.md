@@ -53,13 +53,15 @@ Three rules that govern the whole schema:
 - **`null` is a real, displayable value** — *"not stated for this listing"*. Never inferred, never a default (a missing deposit is not ₹0).
 - **`null` never silently satisfies a must-have.** Unknowns surface as their own *"unknown on this filter"* group the tenant can opt into — otherwise every sparse field becomes an invisible filter and a wider schema makes results quietly worse.
 
-Also: budget filters on `rent` (deposit and maintenance always *shown*); dedup on exact address or coordinates within 50 m; availability is a dataset flag that can flip via admin toggle or a booking-time recheck, and an unavailable listing is removed automatically with the tenant told.
+Also: budget filters on `rent` (deposit and maintenance always *shown*); dedup on exact address or coordinates within 50 m; availability is a dataset flag held in an **in-memory overlay** (no database; a restart resets it), flipped by an operator-token-guarded admin toggle or **re-checked at booking confirmation** — reading the flag, never the source site — and an unavailable listing is removed automatically with the tenant told.
 
 ### 3.2 PII
 Owner/agent names and numbers stripped **before** data reaches the dataset, UI, logs or transcripts. The labelled placeholder is the only contact value anywhere.
 
 ### 3.3 Neighborhood guidance (RAG)
 **Pre-built closed index**, no live fetching. Wikipedia and comparable open city guides, chunked with per-chunk attribution. **Retrieval is listing-scoped** — a query about listing X reads only its locality's documents. This is the structural defence against cross-locality contamination, and it gets larger, not smaller, as localities multiply. Gaps show *"Limited neighborhood data available"* — never filled from model knowledge.
+
+**Index construction:** **semantic chunking** (a chunk is what gets cited, so it must read whole) · a small English **dense-embedding model, pinned by exact version** and recorded in the build manifest, the same model at build and query time · **ChromaDB embedded** in the backend process, loaded read-only at boot, no vector-database server · **one collection per locality** — partition, not filter. Hybrid retrieval is the documented escalation if Suite C fails on exact-token names; not built up front.
 
 ### 3.4 Amenities & transit (OSM MCP — **precomputed**)
 All amenity/transit/POI claims come from the OpenStreetMap MCP, resolved **once at index time** and stored on the listing record. **No OSM call happens inside a tenant's turn.** Grounding is unchanged: OSM stays the sole source, each value keeps its attribution and retrieval date. The query set is fixed and documented so coverage is uniform; empty results store as `null`.
@@ -104,6 +106,7 @@ All amenity/transit/POI claims come from the OpenStreetMap MCP, resolved **once 
 
 Job 2 config: **no sampling parameters** (Sonnet 5 rejects them), **no assistant prefill**; shape via `output_config.format`; **thinking set explicitly** at `effort: "low"` — omitting it runs adaptive thinking and lands on the first-audio budget. Both models pinned by **exact ID, never a `latest` alias**, or the 3-run CI guarantee is void. The two must remain different models. Two providers means two keys — Claude is not served by Groq.
 - **TTS — Smallest.ai**, streaming playback.
+- **Turn-type routing** (Type A vs Type B) is pattern matching in application code before Job 1 — never a model call, which would spend L1 twice.
 
 ### 5.2 Latency budget (p99)
 Budgeted in two classes because they run on different providers. **Type A** = Groq only; **Type B** = retrieval + Anthropic.
@@ -136,9 +139,9 @@ Keys server-side only · HTTPS · **scraped text and RAG chunks are untrusted da
 | **Vercel** | UI, card and citation view-models, mic client | **No keys, no provider calls, no API routes** |
 | **Railway** | Whole pipeline, both LLM jobs, RAG index, precomputed OSM, calendar/Gmail, all keys | Nothing rendered directly to the tenant |
 
-Every provider call originates on Railway — that is what makes "keys server-side only" true rather than aspirational. **No Vercel API routes**: serverless functions can't hold the persistent connections P2 needs and reintroduce the cost P1 excludes. Railway: app sleeping off, one long-lived process, healthcheck configured, **region chosen by measurement** (provider proximity usually beats user proximity; Smallest.ai being India-based may invert it). Cross-origin: **explicit CORS allowlist, never `*`**; mic WebSocket goes browser → Railway directly, never proxied; **contract version pinned, backend deployed first** — two hosts deploy independently, so production skew is possible with green CI.
+Every provider call originates on Railway — that is what makes "keys server-side only" true rather than aspirational. **No Vercel API routes**: serverless functions can't hold the persistent connections P2 needs and reintroduce the cost P1 excludes. Railway: app sleeping off, one long-lived process, healthcheck configured, **region chosen by measurement** (provider proximity usually beats user proximity; Smallest.ai being India-based may invert it). Cross-origin: **explicit CORS allowlist, never `*`**; mic WebSocket goes browser → Railway directly, never proxied; **contract version pinned** (sent in the frontend's first WebSocket message; a mismatch is refused by name), **backend deployed first** — two hosts deploy independently, so production skew is possible with green CI. The contract is the WebSocket message set (`hello`, `audio`, `transcript`, `ack`, `audio_out`, `outcome`) plus the HTTP endpoints for booking, health, contract and the operator toggle (§9.4).
 
-Keys (all Railway env vars, none in Vercel, none in the repo): Deepgram · Groq · Anthropic · Smallest.ai · Google OAuth.
+Secrets (all Railway env vars, none in Vercel, none in the repo, all checked at boot): Deepgram · Groq · Anthropic · Smallest.ai · Google OAuth · plus one operator token for the availability toggle.
 
 ---
 
@@ -160,8 +163,8 @@ Keys (all Railway env vars, none in Vercel, none in the repo): Deepgram · Groq 
 | **6.A Audio & browser** | Mic permission denied · **TTS autoplay blocked** (fall back to full text + one-tap enable) · **barge-in** stops playback immediately · backgrounded tab is not end-of-speech · refresh loses the conversation but **a confirmed booking survives via its code** |
 | **6.B STT** | Deepgram down as a *distinct* failure from the LLM · **locality spoken that was never scraped** — say so, never silently substitute · ambiguous amounts confirmed in words **and** digits |
 | **6.C Understanding** | Question budget exhausted → proceed on what was confirmed, label the rest unknown · "the second one" re-anchored to **what the tenant last heard** · schema-invalid extraction never partially parsed |
-| **6.D Grounding** | Index fails to load → **fail startup** · retrieval returning chunks that don't answer the question → declare the gap · injection inside a **RAG chunk**, not just listing text |
-| **6.E Booking** | **Free/busy re-checked at confirm**, never trusted from offer time · concurrent sessions racing a slot · **all slot arithmetic in `Asia/Kolkata`** — the backend is deliberately outside India · the code is the only credential: rate-limited, unknown and cancelled codes answer identically |
+| **6.D Grounding** | Index fails to load, or the build manifest disagrees with what loaded (bundle version, embedding model, OSM coverage) → **fail startup** · retrieval returning chunks that don't answer the question → declare the gap · injection inside a **RAG chunk**, not just listing text |
+| **6.E Booking** | **Free/busy re-checked at confirm**, never trusted from offer time · **listing availability re-checked at confirm too** — a different question, answered before either calendar write · concurrent sessions racing a slot · **all slot arithmetic in `Asia/Kolkata`** — the backend is deliberately outside India · the code is the only credential: rate-limited, unknown and cancelled codes answer identically |
 | **6.F Delivery** | **Email address read back character by character before sending** — the highest-error input in the system · the **code is authoritative, not the PDF** |
 | **6.G Infrastructure** | TTS down → turn completes in text · 429s reported as themselves · missing secret fails startup · combined failures degrade to the most conservative answer |
 
@@ -181,7 +184,7 @@ Keys (all Railway env vars, none in Vercel, none in the repo): Deepgram · Groq 
 
 **Red lines (automatic failure):** any fabricated amenity/transit/number · **any distance or travel-time shown without its method, or with labels disagreeing between speech and card** · any citation not supporting its claim · any bare `[OSM]` · any cross-locality contamination · any PII surfacing.
 
-**Sign-off** requires all of: 60 tests passing on 3 consecutive runs, zero red lines, three-layer view-model assertions, manual spot-check of 10 outputs per suite; latency met at p99 per turn type with no request over 2×, per-component timings recorded, cold start reported separately, **P1–P7 verified as actually in force**; plus published artefacts — locality list and counts, field-availability gap report, curation rule, pinned model IDs with Job 2's Suite C scores and effort setting, OSM precompute record, §6 walkthrough, and the deployment record (URLs, region and the measurements behind it, sleeping status, CORS allowlist).
+**Sign-off** requires all of: 60 tests passing on 3 consecutive runs, zero red lines, three-layer view-model assertions, manual spot-check of 10 outputs per suite; latency met at p99 per turn type with no request over 2×, per-component timings recorded, cold start reported separately, **P1–P8 verified as actually in force**; plus published artefacts — the **build manifest** (a machine-readable output of the build) carrying the locality list and counts, field-availability gap report, curation rule, OSM query set and index date, and the **pinned embedding model and version**; pinned model IDs with Job 2's Suite C scores and effort setting; OSM precompute record; §6 walkthrough, and the deployment record (URLs, region and the measurements behind it, sleeping status, CORS allowlist).
 
 ---
 
@@ -197,25 +200,25 @@ Login/accounts · post-visit feedback · cross-session history · mobile app · 
 
 **Phase 0 — De-risk in parallel. Nothing downstream is safe until both gates clear.**
 
-- **9.1 Data track** — scrape and curate up to 10 per locality; **publish the locality list, counts and total**; document the availability marker and the **field-availability gap report**.
+- **9.1 Data track** — scrape and curate up to 10 per locality; **publish the locality list, counts and total**; document the availability marker and the **field-availability gap report**; emit all of it as a **machine-readable build manifest**, not a hand-written report.
   **Gate D:** no reliable availability marker, or a schema materially thinner than §3.1 assumes → **stop and amend the specification** before building on it. A missing field changes §3.1, §4 and Suite A — it is not something to route around later.
-- **9.2 Infrastructure track** — deploy a **walking skeleton** to Railway and Vercel (health check, mic WebSocket, one stub turn touching every provider) and run the **latency spike on it**: both turn types, real provider round trips, P1–P7 in force, candidate regions compared.
+- **9.2 Infrastructure track** — deploy a **walking skeleton** to Railway and Vercel (health check, mic WebSocket, one stub turn touching every provider) and run the **latency spike on it**: both turn types, real provider round trips, P1–P8 in force (the Type B leg exercises the fact-led opener), candidate regions compared.
   **Gate L:** confirm §5.2 against measurement or **renegotiate it in writing**. This must run on real infrastructure — a local measurement says nothing about the cross-provider, cross-region reality that defines L3 and L5.
 
 **Phase 1 — Foundations**
 
-- **9.3 Knowledge layer** — listing-scoped RAG index (1–3 docs per locality); **OSM query set run once across every listing**, stored with attribution and retrieval date; commute-method disclosure locked.
-- **9.4 Eval harness and the view-model contract** — *before the features they test.* Enough of Suite C to validate Job 2 must exist first, and the **card and citation view-model shape is a contract** between the suite, the backend and the UI — not something discovered while building §9.9. Backend contract version defined here too.
+- **9.3 Knowledge layer** — listing-scoped RAG index (1–3 docs per locality; semantic chunks, pinned embedding model, ChromaDB with one collection per locality — recorded in the manifest); **OSM query set run once across every listing**, stored with attribution and retrieval date; commute-method disclosure locked.
+- **9.4 Eval harness and the view-model contract** — *before the features they test.* Enough of Suite C to validate Job 2 must exist first, and the **card and citation view-model shape is a contract** between the suite, the backend and the UI — not something discovered while building §9.9. Backend contract version — and the contract's message set and endpoints — defined here too.
 
 **Phase 2 — The conversation**
 
-- **9.5 Voice pipeline (Job 1)** — Deepgram with dataset-generated keyterms; extraction at `temperature=0`; streaming TTS. **Job 1 latency check against Gate L's numbers**; drop to a lighter Groq tier if it misses.
+- **9.5 Voice pipeline (Job 1)** — Deepgram with dataset-generated keyterms, 400 ms endpointing and the content-aware hold (P3, P3b); pattern-matched turn routing; extraction at `temperature=0`; streaming TTS. **Job 1 latency check against Gate L's numbers**; drop to a lighter Groq tier if it misses.
 - **9.6 Shortlist and refinement** — filtering and edits in application code, not the LLM. **Suites A and B green.**
-- **9.7 Grounded explanation (Job 2)** — citations, gap declarations, commute labels at all three layers. **Suite C green; model ID pinned with its scores and `effort` recorded.**
+- **9.7 Grounded explanation (Job 2)** — citations, gap declarations, commute labels at all three layers; the fact-led opener before Job 2's first token (P8), each Job 2 sentence spoken only once its citation resolves. **Suite C green; model ID pinned with its scores and `effort` recorded.**
 
 **Phase 3 — Completing the product**
 
-- **9.8 Booking, cancel, reschedule, PDF, email** — §6.E and §6.F in full, including the confirm-time free/busy re-check, IST-explicit slot arithmetic, and character-by-character email readback.
+- **9.8 Booking, cancel, reschedule, PDF, email** — §6.E and §6.F in full, including the confirm-time free/busy re-check, the confirm-time availability re-check, IST-explicit slot arithmetic, and character-by-character email readback.
 - **9.9 UI** — §4 against the §9.4 view-models, including the failure states §6 requires. Promote the skeleton to the real deployment: **Railway first, Vercel second.**
 
 **Phase 4 — Sign-off**
