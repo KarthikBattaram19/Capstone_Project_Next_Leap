@@ -12,7 +12,7 @@
 2. Change the shortlist when you ask ("drop anything above 40k") **without disturbing the listings you did not mention, or their order**.
 3. Explain each choice, with a source for every neighbourhood claim — and say plainly when it has no data.
 4. Book, cancel and reschedule visits, using a **6-character code** instead of a login.
-5. Email a PDF confirmation, then throw the PDF away.
+5. Email a PDF confirmation.
 
 ---
 
@@ -29,7 +29,7 @@ flowchart TB
         direction TB
         FE["Frontend — Vercel<br/><i>screen and microphone</i>"]
         BE["Backend — Railway<br/><i>all the thinking</i>"]
-        BUILD["Build pipeline<br/><i>run offline, before the demo</i>"]
+        BUILD["Build pipeline"]
     end
 
     subgraph LIVE["Live services — called during a conversation"]
@@ -40,7 +40,7 @@ flowchart TB
         GC["Google Calendar<br/>and Gmail"]
     end
 
-    subgraph OFFLINE["Data sources — touched only before the demo"]
+    subgraph OFFLINE["Data sources"]
         BR["bengaluru.rent<br/><i>listings</i>"]
         OSM["OpenStreetMap<br/><i>metro, bus, amenities</i>"]
         WK["Wikipedia and city guides<br/><i>neighbourhood character</i>"]
@@ -63,12 +63,7 @@ flowchart TB
     class BR,OSM,WK offline
 ```
 
-<sub>[⤢ Open this diagram in a canvas](https://mermaid.live/view#pako:eNp9Vdtu2zgQ_RVCAfqkpL4kDmoEBuI4FrK5NXaaoFjtw4gcWYQpUktRuaDtv3coRa4cIyUMQaR4Ds-cmaF_BNwIDMZBqswzz8A6dj-NNaNx_28cLFA7tCeJ_Tw5kZOyQFiXIVOydKjpxSKI8uSznMTBfw3o9iuhbgu04MwGZytdMpchSyqpRMgyo0SzEBmzUsiUWUm94WmYyipZWSgytvy-JM4HIzmyr9YQt3tlS24qtznVDyEtcieN3gTgx_ycsHNrKAwtWFwNev1D9oCWo9pExS2iZkDfc8npgMxo3ArKj6knmgJfd3gWINUzvLZEoFQdlMukXku92uX4dnE18zTeBlbIApWko_64xEya-qWQJZgaizWdwNxsUZGCHZOuLh68wCv5hKxE-0Rmla1MTsJQMFFZEsWAcaOf0JbgzdrSN4uIYoZYEGfeSTryjDnDHL64nZiiO8JE1vzf7k-hdCynolIh-8ckrL8DOb0hyKl2GXkteYvjYDGtVBc62IEurwm6zH1ApTsA2YK9NC-xEbsr8syLbGrtDBQZCE1x-qRHOaXxr-bezudXFzfe3xk4YKWpbMdeZyqekb9Gq9f3edtO_4IYEtQrUJWtDiz1VqvfdxQlp9xRfltHTA2ll47K1F1D0WJydNZQpVTUiJCjlk7iLsHjJeEf5ZqKTUioq5xLaqBVJQVtf-PSKFdZQnFlxtAGugeA-8b_oOzu2cn-_oSaq5nOz5v59Ly9BFg99eXerNSvzeKCffJR0fPxcuvjwf7kZxwU1GKwIjtTSTmOg58b1unbKbOIsNEdPU5v6FFTRWetNK6gLGeYMronSroMiEaN90SCkGJYkmNrHO8NjkZDTN6m-89SuGw8KF5CbpSx471e0k-G8I6PzClbNp5yPN6w9UcwPISP2Y4G2B-9Y1O-URu2FNMh_8Mmvhwf90Yfsh0e9aE3fK-tuTbeCFHgl06wx3wIKD4kJHG90VGHkN2HlMDGvu7y_Dyc0q9Oljej-20WhdFdeHoTLq_D6KyOrvt5uggp5eHjZas0CIMcLTWeoL-eH3FA_ZJjHIxZHAhMoVJ0t_-iTVA5s3zVPBg7W2EYVIUAhzMJ_oZqFn_9BgZmId8) — zoom, pan and export</sub>
-
-**Two things to notice.**
-
-- The browser talks to **exactly one address of ours** — the Railway backend. Every call to a paid provider starts there, which is what makes "the keys never leave the server" true by construction rather than by good intentions.
-- The purple boxes are reached **only by the build pipeline**, never by the backend. There is no arrow from the backend to `bengaluru.rent`, and that missing arrow is the whole of principle **A3** (§17): nothing is fetched while you are waiting.
+<sub>[⤢ Open this diagram in a canvas](https://mermaid.live/view#pako:eNp9lN9O4zgUxl_lyEhcGYbSATQVQqK0jVj-FCgL2m324sQ-Saw6dtZ2YNDMSPsQ-4TzJCM3pFuoWF_l2D6_833Hdr4xYSWxAcu1fRYlugD3w9QAANzPU3ZHJpA7ztynk2N14mvCheeglQ9kPAdHKP3xJ3WSsr_apOnNPGXTmhwGu8pzjfEQSoKsUVpyKK2W7URibaEJtC2UWXFakm-ywmFdwuyP2TxlD1YJghtna3LhBWbCNmFVNQ6pHImgrFkZiGMynqds4qwJZCT8_OdfeCAnSK8sCUdkAI2ESgln69IaeuMojmGkDFEsOsgdKv2MLx0FtV7aCaUyC2WKTcDv55ejyIgNgFrVpJWh1RYycsP25flDrHqpngg8uSclyC9rC9SaJMjGKVMAgrDmiZzH6P1N0VEyT9mIqC4cVmtnSKKEYCHQ17AhNLmdpyxx9u9uf44-QGUlaQ6_2Qx6Gymn1_OUnZpQOlsr0eUJdJQ3ej11fyN1djVP2ayKhnzYRdUlR2lRYit2U-RZFNlenTPUZCS2dy0eY1Kh0v_b2elkcnl-HZs7woDgbeME-bfndTdPWUamQN24ZteRCZ22ePmVKfyGqunSzbQmMwuOKFxh3eVUFJzlkDWeA1ZkVFC0CXi8mKfsUS1UTVLh8k4KFV6gaJQk37EMqaLMbONKayXEJ4sivtF12prrezje2TmBybgNJ-M2Ho679wrLMN7Pdmb52U7ewXZ0BdvwePFmcXfn5HvKahQLLEhCrnTs3_cVdfhaZZTANiS3sA2n17ANS1Ry1kkTGr0fUQ41OW9NxOjBlswIc-I-OLugwdb-wWGfstdw51nJUA72669cWG3dYGsv62V9fMezjfMdTeSCjla03iH2P-PHtIN96h2-o-n4AltaTnlf_EeTX46O9g4_pH0-6OFe_722PI9P_xVIkr6smT0SfST5IXCfenuHB2tAuOfTm9f2rU9Pxnw45u1hxWasr40Sntzy02s-u-LJ2dLd-vLwjk9nV_zxolPKOCuckmwQXEOcVeQqjCH7FtNSFkqqKGUDSJlEt0hZan4wzmo0f1pbdWnONkXJBjlqT5w1tcRAI4Xxz9RtwSbY2YsRbfzjF1k5F7Q) — zoom, pan and export</sub>
 
 ### 2.2 The three moving parts
 
@@ -89,7 +84,7 @@ flowchart LR
     B --> C["<b>3. Choose</b><br/>plain code filters<br/>and ranks listings"]
     C --> D["<b>4. Explain</b><br/>careful model phrases<br/>facts it is handed"]
     D --> E["<b>5. Book</b><br/>free slot, two calendar<br/>entries, 6-character code"]
-    E --> F["<b>6. Confirm</b><br/>PDF emailed,<br/>then deleted"]
+    E --> F["<b>6. Confirm</b><br/>PDF emailed"]
 
     classDef s1 fill:#dbeafe,stroke:#2563eb,stroke-width:2px,color:#0b1b3a
     classDef s2 fill:#cffafe,stroke:#0891b2,stroke-width:2px,color:#083344
@@ -105,7 +100,7 @@ flowchart LR
     class F s6
 ```
 
-<sub>[⤢ Open this diagram in a canvas](https://mermaid.live/view#pako:eNp11EtvozAQAOC_MqLXJA3hkQZVkZpHT3tYbbWnzR6MPS5Wjc3aZtNV1f--U6AURQonxqBvHja8RdwKjIpIanvmFXMBvv04GaDr4dcpui-38QKeGmQv97fl9r50t9tacWebyhqEYLsVrf7SvWPGc6eacIp-w3y-hV0PrBbw0wh0PjAjRkUyH6Cm3BpC64yHs3XCd4-UCRYc_mmVwxpN8AT2Je06d9-7yQL2lbUeR7PRTBn4aAik0oFSdsuUFqi4Fw9a-aDM8xe478BDD6YLOL52xihy5lC2eii0qRzz6If6efCgAigPFWVAMaKHDj32aLaAnbVf05MOEby2YQbhbIEzjUYw1z2jXp1CP4N8_rEVlAFd185IHzv6sadzGoA1Url61L8fHgFrpjSKWbcQKjRAtWMYCuwdrpn3B5Tg449R6eJGlMgkznxw9gWLm1WWJ1gO4fysRKiKVfM641ZbV9wsy7hM2KW1Giwu5dRa3m3icnXdukuSNL20ks-6uOS4Hq04Z0nKrlvZCuP80koHS6JM-JclNuv1Mr9qpVnMlsmllX1aElPMRwvjWKR31y2-zOLNpZUPFgrcTOa15gmj_btmUYfLPJtY8EDbOI13tBXTeE_jnMYHGsk0PlJb0_iRSotmUY2OjpKgn8PbKaKDVNM5LOAUCZSs1fSZv9NLrA326Z_hURFci7OobQQLeFDs2bG6X3z_Dwgdarg) — zoom, pan and export</sub>
+<sub>[⤢ Open this diagram in a canvas](https://mermaid.live/view#pako:eNp10ctu2zAQBdBfGTBb2bWejoXAQPzIqouiQTetshiRQ4uwRKokVacI8u-FJUdRDXh5RfLgzuiNcSOI5UzW5sQrtB6-fi80AMDjr4I9lOtwDs8t4fHhS7l-KO2XdaO4NW1lNIE3_Zda_SHwFrXjVrW-YC8wm61hMwDRHH5oQdZ51GJUJDoPjRFUg--sdnAyVrj-SGlvwNLvTllqSHtXsJeh0qZ3t4Mbz2FbGeNoNNsalYbzQCBV7ckOHmoBFvXRQa2cV_rwCW57cDeAyRz2r70xihwtya6-FG0ri47cpT_3DpQH5aBCLUiM6K5H9wOazmFjzOf2pCUCVxsfgD8Z4FiTFmj7M9LeKnIBZLPzr0DuyfbjjPS-p58GOpvD1mipbDPq33ZPQA2q-lJneMVrdG5HElx4Xkyd34mSUFLgvDVHyu-iNIupvMTZSQlf5VH7GnBTG5vfLcqwjPHaii4Wl3JqLe5XYRndtu7jOEmurfijF5eclqMVZhgneNtKIwqzayu5WJJkzD8tsVouF9lNK0lDXMTXVvphSUooGy0KQ5Hc37b4Ig1X11Z2sUjQarKvJY-RxE0ronCRpRMLHsGF07wBF03zFtx0DtiBm-4b9uD-857AZSxgB6sEy73tKGAN2QbPkb2dbxbMV9RQwXIomEB7LFih31nAWtQ_jWk-nlnTHSqWS6wdBaxrBXraKTxYHK9g583zX82H_P4PwqBzMg) — zoom, pan and export</sub>
 
 Steps 3 and 5 are **ordinary code, not a model**. That is deliberate: filtering, ranking, availability and slot arithmetic have right answers, so they are written as functions that can be tested, not asked of a model that might answer differently next time (**A4**, §17).
 
@@ -169,7 +164,14 @@ flowchart LR
 | **L7** | Cancel or reschedule | **< 5 s** |
 | **L8** | PDF emailed | **< 30 s** |
 
-> **Why L1 is not smaller, and why L0 exists.** L1 starts at end of speech, and the system cannot know you have finished until it has waited through a silence and seen that you did not continue. That wait — the 400 ms endpointing window, P3 — is a floor under L1, and shrinking it does not make the system faster; it makes the system cut people off before the number or the area name they were about to say. So the number that is held strict is **L0**: your words appearing as you speak, which needs no end-of-speech at all and therefore costs nothing. **L2 and L3 share a budget for different reasons:** Type A must wait for Job 1, because the readback sentence *is* Job 1's output. Type B does not wait for Job 2 at all — its first sentence is built by code from facts already resolved (P8, §9.5), so the cross-provider first token that forced the specification's original 2.5 s is simply not on the path any more.
+> **Why L1 is not smaller, and why L0 exists.**
+>
+> 1. **L0 — the live echo (< 300 ms).** Your words appear as you speak. No end-of-speech needed, so it costs nothing — this is the number held strict, and the one that makes the system feel instant.
+> 2. **L1 — the nod (< 700 ms).** You stop; the final line and a thinking indicator confirm it. The clock starts at end of speech, and the system only knows you finished after 400 ms of silence (**P3**) — a floor under L1.
+> 3. **Why L1 stays at 700 ms.** Shrinking that 400 ms does not buy speed; it cuts people off before the number or area name they were about to say. So the strictness goes to L0 instead.
+> 4. **L2 — readback, Type A (≤ 1.5 s).** Requirement turns must wait for Job 1: the readback sentence *is* the fast model's output.
+> 5. **L3 — answer, Type B (≤ 1.5 s).** Explanation turns do not wait for Job 2 at all — code builds the opening sentence from facts already resolved (**P8**, §9.5).
+> 6. **Same budget, opposite reasons.** L2 uses a fast model on the path; L3 takes the model off the path. That is why L3's original 2.5 s no longer applies.
 
 **How long the audio plays is never a target** — that depends on how much there is to say, not on how fast the system is.
 
@@ -201,13 +203,13 @@ It follows the order in which the work actually happens — from the data gather
 | 6 | **§8 · Choosing the listings** | How requirements accumulate without disturbing what was already agreed, why filtering returns three groups instead of one list, how distances keep their method label, and the one listing fact that can change at runtime. |
 | 7 | **§9 · Explaining, with sources** | The four stages behind every "why this one?" — area-partitioned retrieval, one resolver per kind of claim, the careful model phrasing facts it was handed, and the assembler that drops any sentence it cannot cite. |
 | 8 | **§10 · Booking, cancelling, rescheduling** | The states a booking moves through, the four mechanisms that keep it correct (confirm-time re-check, parallel writes, explicit IST arithmetic, the code as the only credential), and what happens on confirmation. |
-| 9 | **§11 · What the renter sees** | The frontend, which works nothing out for itself: it draws finished view-models. Also the card rules, the three audio behaviours the browser forces on the design, and the small set of messages that cross the wire between the two hosts. |
+| 9 | **§11 · What the renter sees** | The frontend, which works nothing out for itself: it draws finished view-models. Also the card rules, the three audio behaviours the browser forces on the design, and the small set of messages that cross the wire between the two hosts, and the **voice agent persona** — who the renter hears, and the rules that keep her in bounds. |
 | 10 | **§12 · When something goes wrong** | The five shapes a turn can end in and why an empty result and a failure can never be confused, what still works when each provider is down, and why the system refuses to start rather than fail mid-sentence. |
 | 11 | **§13 · Running it** | The complete tech stack; deploying two hosts without skew; measuring each turn so a missed budget is diagnosable; keeping scraped text from issuing instructions; where the keys live. |
 | 12 | **§14 · Proving it works** | The three test suites, what each one proves, why the harness skips real audio, and where determinism comes from. |
 | 13 | **§15 · The decisions** | The eleven design decisions, each with the alternative that was rejected and the reason. |
 | 14 | **§16 · What is left open** | The four things this document cannot settle yet — chiefly that neither the scrape nor the latency measurement has happened. |
-| 15 | **§17 · Appendix** | The four rules taken from the specification, and the seven principles this architecture adds on top of them. |
+| 15 | **§17 · Appendix** | The four rules taken from the specification, the seven principles this architecture adds on top of them, and a one-page index of the guardrails that hold them — G1–G15, each with the place in the system that enforces it. |
 
 Reading in order works, but each section stands on its own; **§4 is the one worth reading first** if you only read one, because almost everything else leans on it.
 
@@ -383,7 +385,7 @@ flowchart TB
 flowchart LR
     A["Personal data"] -->|"removed at scrape time"| A2["never enters<br/>the bundle"]
     B["Conversation"] -->|"in memory, expires"| B2["gone when the<br/>session ends"]
-    C["PDF"] -->|"emailed, then deleted"| C2["nothing retained"]
+    C["PDF"] -->|"emailed"| C2["nothing retained"]
     D["Booking"] -->|"written to"| D2["Google Calendar<br/><i>the record of truth</i>"]
 
     classDef gone fill:#fee2e2,stroke:#dc2626,stroke-width:2px,color:#450a0a
@@ -394,7 +396,7 @@ flowchart LR
     class D2 kept
 ```
 
-<sub>[⤢ Open this diagram in a canvas](https://mermaid.live/view#pako:eNp10lFv2yAQAOC_ciKvRE1Y41RWFCmxtb3sYdoe5z5c4ByjYIgAN63a_veBEyVdpfoN7u7jDvPKpFPEStYad5Id-gg_fzcW0rf527Bf5IOzaEBhxIY9wnS6fmuYp949kQKMEKTHI0HUPTXsDTYiVVl6Ig9kY6pe7fzdOnYEu8Eqk3Iez_o25VXOpsSAUTt7w7WFPvn-hQM9H7WnkOFthvfOEpw6spDEUQ4UQqpOh6lwtavcef39RlKP2pDiucyCIkORVFarsV0XO2334CmitjlwceoU3Dp3SMGbdfI6xtyBy0CdgR_O7Q1BhSa1gX5sbKXHqT1J5xW4FqIfYre60-uRPx8gDYZQUwvjYK02ppy0RIIED9G7A5UTJUUhistyetIqdqU4PnPpjPPl5H4xwxl-0g50jBdNyVbS8qrNC_x2j19qs4WgefFJC15eMFrQknZXrNgtxcPsS2w-nz-I5QcMNnzLK15n8b9twbeCV2K8hY-BWoyjMM568ukXqvROXxuW7jU_thIapqjFwcSGvackHKL782IlK9NdE2fDMb1aqjXuPfbnzfd_8f72zQ) — zoom, pan and export</sub>
+<sub>[⤢ Open this diagram in a canvas](https://mermaid.live/view#pako:eNp10lFv2jAQAOC_cjKvRgWvQBUhJEi0vexh2t6G-3DEl8QisaOzgVZt__vkQKGr1Mez7767s_wiSm9IZKJq_alskCP8_K0dAMB6q8Uv4uAdtmAwohaPMB6vXrVg6vyRDGCEUDL2BNF2pMUrrNVWC0dHYiAXicNyx3er2BDsDs60pMXjWd9stci9OxIHjNa7G24ddNR5fpZAT71lCgneJLj2juDUkIPY0CAHCsF6B-RMuNp5mrz4fiOpQ9uSSU4-DOhjY10NTBGtSxeXymKrxcb7vXX1rfrENsbU0yegSMAP7-uWIMeWnEEeRlnaYU-m0rMBX0HkQ2yWd3Y18OcGZYshFFTBsEpl2zYbVUSKlAyR_Z6ykSnVXM0v4fhkTWwy1T_J0rees9H9bIIT_KTtqY8XzZRVSYurNp3jt3v8UpvMFE3nn7TA5QWjGS1od8Xmu4V6mHyJTafTB7X4gMFabmQuiyT-d6zkRslcDa_w8aJQwypCipqtEVnkA0nREXeYQvGSkrWIDaXvloEWBnmvhXZvQooe3V_vu_cy9oe6EVmFbSApDr3BSIXFmvGagofo_zy78hy__QN2PACz) — zoom, pan and export</sub>
 
 **The absence of storage is a feature, and it should be defended.** Adding a database later would reopen every retention question the specification deliberately closed (spec §2.5, §3.2, §5.3). The one thing that genuinely needs to outlive a session — a confirmed booking — already lives in Google Calendar, and the 6-character code is how a renter reaches it again.
 
@@ -996,6 +998,26 @@ The two hosts deploy independently (§13.2), so the messages between them are a 
 
 Everything the renter can see arrives in `outcome`. That is the same structure the grounding suite asserts on (§14), which is what principle **A7** (§17) means.
 
+### 11.2 Voice Agent Persona
+
+Everything above settles what the renter *sees*. This settles what they **hear** — who is speaking, and how. It is a design constraint, not decoration: the persona is what makes a stranger comfortable enough to say a real budget out loud, and it is bound by every guardrail in §17.3, not exempt from them.
+
+| # | Element | The rule |
+|---|---|---|
+| **1** | **Role** | A professional property service agent, experienced at understanding what a buyer or renter actually needs and turning it into useful information for scouting a property against their preferences. |
+| **2** | **Identity** | **Nakshatra**, female. Warm and sweet in manner, with a strong working knowledge of Bengaluru real estate. Welcoming, likeable, polite, respectful, empathetic. |
+| **3** | **Goal** | Get the renter to a booked site visit: calendars blocked, a 6-character visit code given, and the confirmation PDF emailed — exactly the flow in §10. |
+| **4** | **Speech style** | **At most 3 sentences per reply.** Calm, natural pace with short pauses. Everyday language, no jargon. Never a monologue. |
+| **5** | **Capabilities** | Acknowledge and appreciate what the renter says; build their preferences up with them; move steadily towards a booked slot. Stay on this project's subject. Never invent — every claim is grounded (**G1**). Take correction gracefully and let it improve the next reply. Keep the conversation engaging and meaningful. |
+| **6** | **Privacy** | Never ask for personal or financial details. Rent, deposit and budget are the only money questions. **The single exception is the email address**, asked only at the confirmation step because the PDF cannot be sent without it (§10.3) — read back letter by letter, used once, and gone when the session ends (**G13**). No name, phone, ID, employer, income, or bank detail is ever requested. |
+| **7** | **Opening** | The renter clicks the microphone; **Nakshatra speaks first** — greeting, who she is, what she can do, then a request for preferences with one or two examples. **No more than 3 sentences or 150 words.** |
+
+**Three things that make this safe rather than merely nice.**
+
+- **The opener is written by code, not by a model.** It is a fixed template spoken on the mic click — the same click that unlocks browser audio (§11, spec §6.15). So it costs nothing from the L0–L3 budgets (§2.5), and it cannot hallucinate a claim about the dataset before the conversation has started.
+- **The persona lives in three places, not one.** Job 1 never speaks, so it carries none of it; the greeting and the conversational replies are code templates that carry the tone; **Job 2's system prompt carries the tone and is still fenced by the assembler** (§9.4) — a charming sentence with an unresolvable citation is discarded exactly like any other.
+- **The 3-sentence rule governs conversational turns.** A Type B explanation is the fact-led opener plus the Job 2 sentences that survive binding (§9.5); the persona keeps those short and plain, but the assembler, not the persona, decides which ones are said at all.
+
 ---
 
 ## 12. When something goes wrong
@@ -1294,3 +1316,27 @@ Every structural choice above traces back to one of these.
 | **A5** | **A result and a failure are different shapes** | The five outcomes (§12.1). "Nothing matched" and "couldn't check" cannot share a rendering path, because they are not the same type |
 | **A6** | **State lives where its lifetime belongs** | The conversation is in memory and dies with the session. Bookings live in Google Calendar. There is no database (§5.2, AD-7) |
 | **A7** | **Everything the renter can see, the test harness can reach** | The view-model is a published contract used identically by the UI and by the grounding suite (§14), so assertions run against the same structure the renter is looking at |
+
+### 17.3 Guardrails — one index
+
+The rules above are stated in §17.1 and §17.2. This is where each one is actually **held** — the place in the system that makes it hard to break, rather than merely asked for.
+
+| # | Guardrail | Where it lives | What it stops |
+|---|---|---|---|
+| **G1** | **An uncitable sentence never reaches the renter** | §9.4 — the assembler discards any sentence whose citation does not resolve | An invented fact being spoken, and prompt injection having any route out |
+| **G2** | **A fact without provenance cannot be represented** | §4 — the wrapper; a distance with no method label does not type-check | A bare number crossing a boundary and losing where it came from (**A1**) |
+| **G3** | **One resolver per kind of claim** | §9.3 — the explanation path can only reach data through resolvers | Listing details, map facts and neighbourhood character being mixed or guessed (**A2**) |
+| **G4** | **Nothing is fetched while a renter waits** | §3 — scrape, index and map facts are build-time files; §2.1 shows no arrow from the backend to a source site | A live scrape blowing the latency budget, or a source site being down mid-conversation (**A3**) |
+| **G5** | **The model never decides what is true or what matches** | §8 and §10 — filtering, ranking, availability and slot arithmetic are ordinary, testable code | A model answering differently tomorrow and changing what a renter is shown (**A4**) |
+| **G6** | **A result and a failure are different types** | §12.1 — five outcomes, enforced by the compiler | *"Nothing matched"* and *"I couldn't check"* being rendered the same way (**A5**) |
+| **G7** | **Scraped text is data, never instructions** | §13.4 — explicit delimiters, Job 2 has no tools and no write path, and G1 drops whatever survives | Text in a listing description steering the model |
+| **G8** | **Free/busy is re-read at the moment of confirmation** | §10.2 | Two renters being given the same slot |
+| **G9** | **Both calendar entries are written together, failures queued for retry** | §10.2 (P6) | A half-booked visit that nobody is told about |
+| **G10** | **Every date calculation names `Asia/Kolkata`** | §10.2 — the backend runs outside India, so a naive timestamp is a live bug | Slots computed in the server's local time |
+| **G11** | **Unknown and cancelled codes get identical answers, rate-limited** | §10.2 | Code guessing used to enumerate other people's bookings |
+| **G12** | **Fail at start-up, never mid-sentence** | §12.3 and the boot-time manifest checks | A missing artefact or key surfacing halfway through a conversation |
+| **G13** | **No listings database, no transcript store, no PDF store** | §5.2 — state lives where its lifetime belongs | Retention questions the specification deliberately closed being reopened (**A6**) |
+| **G14** | **The keys never leave the server** | §2.1 — the browser talks to exactly one address of ours, and every paid call starts there | A provider key reaching the frontend |
+| **G15** | **Every guardrail above is asserted, not assumed** | §14 — three suites of 20, passing three times in CI, zero invented facts; suite C checks the commute method agrees at all three layers | A rule holding in the document but not in the running system (**A7**) |
+
+**Read this as the checklist for a change.** If a proposed change makes any row harder to state, the change is the thing that is wrong.

@@ -373,3 +373,43 @@ Both gates have cleared. 1.1–1.3 (the knowledge layer) and 1.4–1.6 (store, c
 ## 7. Where each spec requirement lands
 
 The addendum's final section, **Spec coverage map**, lists every spec and architecture requirement against the task(s) that satisfy it, so a gap is visible before work starts rather than at sign-off.
+
+## 8. Voice agent persona — the prompt list
+
+The persona is specified in **arch §11.2**. This is the builder's copy: the seven blocks below are the prompt text, followed by where each one actually lands in the code. Nothing here loosens a rule in §3 — the persona sets the *voice*, never what may be claimed.
+
+**P-1 · Role**
+> You are a professional property service agent with deep experience in understanding what a buyer or renter needs, and in giving them useful information for scouting a property that matches their preferences.
+
+**P-2 · Identity**
+> Your name is Nakshatra and you are female. You are sweet in manner and have impressive knowledge of real estate and properties in Bengaluru. You have a welcoming, likeable attitude, and you are polite, respectful and empathetic.
+
+**P-3 · Goal**
+> Help the renter book a slot for a property visit: block the calendars, give them their visit code, and send the confirmation email with the PDF, exactly as this project defines those steps.
+
+**P-4 · Speech style**
+> Keep each response under 3 sentences. Speak naturally and calmly. Use short pauses and avoid monologues. Use simple, everyday language and avoid jargon.
+
+**P-5 · Capabilities**
+> Acknowledge and appreciate the renter's preferences. Keep building their preferences with them and move towards booking a slot. Do not deviate from this project's subject. Do not invent anything — every answer must be grounded in the facts you are handed. Take feedback and let it improve your next response. Keep the conversation engaging and meaningful.
+
+**P-6 · Privacy**
+> Never ask about personal information or financial details. Rent, deposit and budget are the only money topics. The one exception is the renter's email address, asked only at the confirmation step because the PDF cannot be sent without it; read it back letter by letter and never ask for a name, phone number, ID, employer, income or bank detail.
+
+**P-7 · Opening**
+> When the renter clicks the microphone, greet them first. Introduce yourself, your role and what you can do, in no more than 3 sentences or 150 words, and then ask for their preferences with one or two examples.
+
+### Where each block lands
+
+| Block | Lands in | Task |
+|---|---|---|
+| **P-7** | A fixed greeting template spoken on the mic click — **code, not a model call**, so it costs nothing from the latency budget and cannot invent a claim | 2.9 (speaker) + 3.6 (mic control) |
+| **P-4, P-5** | The wording of the code-built conversational replies: readback, clarifying questions, empty state, booking prompts | 2.10 |
+| **P-1, P-2, P-3** | Tone and framing in Job 2's system prompt; Job 1 never speaks, so it carries none of this | 2.12 |
+| **P-6** | Enforced in code, not by wording: the only personal field the flow ever collects is the email at confirm time, read back letter by letter, held in the session and discarded | 3.4 |
+
+**Three cautions for whoever builds this.**
+
+1. **The persona never overrides the assembler.** A Job 2 sentence that is warm, on-brand and uncitable is still dropped (arch §9.4). If the tone makes Job 2 pad sentences that then get dropped, shorten the tone instruction — do not loosen the assembler.
+2. **"Under 3 sentences" is a rule for conversational turns.** A Type B explanation is the fact-led opener plus whatever Job 2 sentences bind; keep those short and plain, but the count is set by the facts that resolve, not by the persona.
+3. **The greeting must not be reintroduced as a model call later.** It is the one thing the renter hears before any latency measurement starts, and a model call there would put a provider on the path to first audio — the exact thing P8 removed.
