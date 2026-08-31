@@ -68,6 +68,51 @@ Copied from the spec and architecture. Every task's requirements implicitly incl
 
 ---
 
+## Voice agent persona (arch §11.2, plan §8)
+
+Copied from the architecture, in the form the code needs. Every task that produces spoken or on-screen wording implicitly includes this section. **The persona sets the voice; it never widens what may be claimed** — a sentence that is warm and uncitable is still dropped by the assembler (Task 2.12).
+
+**The module — `backend/scout/conversation/persona.py`** (created in Task 2.9, imported by 2.10, 2.12 and 3.4; no dependencies beyond the standard library, so it can never put a provider on the path to first audio):
+
+| Name | Type | Value / behaviour |
+|---|---|---|
+| `NAME` | `str` | `"Nakshatra"` |
+| `ROLE` | `str` | "You are a professional property service agent with deep experience in understanding what a buyer or renter needs, and in giving them useful information for scouting a property that matches their preferences." |
+| `IDENTITY` | `str` | "Your name is Nakshatra and you are female. You are sweet in manner and have impressive knowledge of real estate and properties in Bengaluru. You have a welcoming, likeable attitude, and you are polite, respectful and empathetic." |
+| `GOAL` | `str` | "Help the renter book a slot for a property visit: block the calendars, give them their visit code, and send the confirmation email with the PDF." |
+| `STYLE` | `str` | "Keep each response under 3 sentences. Speak naturally and calmly. Use short pauses and avoid monologues. Use simple, everyday language and avoid jargon." |
+| `CAPABILITIES` | `str` | "Acknowledge and appreciate the renter's preferences. Keep building their preferences with them and move towards booking a slot. Do not deviate from the subject. Never invent anything — answer only from the facts you are handed. Take feedback and let it improve your next response." |
+| `PRIVACY` | `str` | "Never ask about personal information or financial details. Rent, deposit and budget are the only money topics. The one exception is the renter's email address, asked only at the confirmation step because the PDF cannot be sent without it." |
+| `GREETING` | `str` | `"Hello, I'm Nakshatra — I help people find a flat to rent in Bengaluru. Tell me what you're looking for and I'll put a shortlist together, and I can book a visit for you. For example: a 2BHK in Koramangala under 35,000, or somewhere with an easy commute to Whitefield."` |
+| `MAX_REPLY_SENTENCES` | `int` | `3` |
+| `FORBIDDEN_PII_FIELDS` | `frozenset[str]` | `{"name", "phone", "mobile", "age", "gender", "employer", "occupation", "income", "salary", "bank", "account", "aadhaar", "pan", "address"}` — everything the system must have no slot for. `email` is deliberately **not** here |
+| `job2_preamble() -> str` | function | `"\n".join([ROLE, IDENTITY, GOAL, STYLE, CAPABILITIES])` — prepended to Job 2's system prompt in Task 2.12, ahead of the grounding rules, never replacing them |
+
+**Tests — `backend/tests/unit/conversation/test_persona.py`:**
+
+- `test_greeting_fits_the_opening_budget()` — imports `split_sentences` from `scout.conversation.speaker`; asserts `len(split_sentences(persona.GREETING)) <= 3` and `len(persona.GREETING.split()) <= 150`.
+- `test_greeting_introduces_the_agent_and_asks_for_preferences()` — asserts `persona.NAME in persona.GREETING` and that the greeting contains `"For example"`.
+- `test_greeting_is_a_constant_not_a_call()` — asserts `isinstance(persona.GREETING, str)` and that `persona` imports nothing from `scout.providers` (assert `"providers" not in inspect.getsource(persona)`), so the opening line can never become a model call (P8's reason, arch §11.2).
+- `test_job1_schema_has_no_slot_for_personal_data()` — imports `JOB1_SCHEMA` from `scout.conversation.job1`; asserts `set(JOB1_SCHEMA["properties"]) & persona.FORBIDDEN_PII_FIELDS == set()` and `"email" in JOB1_SCHEMA["properties"]`. **This is where the privacy rule is actually enforced**: extraction has no field to put a phone number in, so wording is not the only thing standing between the renter and an unwanted question.
+
+**Where each block is consumed:**
+
+| Task | Change |
+|---|---|
+| **2.9** | Create `persona.py`. No behaviour change to `Speaker`. |
+| **2.10** | On `hello`, before the STT stream opens, the live session emits `Answered(view_model=self._view(session, notices=[persona.GREETING]), spoken=persona.GREETING)` and hands the greeting to `Speaker.speak`. **No contract change and no new message type** — the greeting travels as an ordinary `outcome`. Every `_say(...)` string stays within `MAX_REPLY_SENTENCES`. |
+| **2.12** | `Job2.explain` prepends `persona.job2_preamble()` to the system prompt, above the fact list, the untrusted-document delimiters and the citation rules. The strict output schema, the parser and the assembler are unchanged. |
+| **3.4** | The email step is the only place any personal field is requested, read back letter by letter, held in the session and discarded with it. |
+| **3.6** | The mic button's click both unlocks browser audio (spec §6.15) and triggers the greeting, so the renter's first click produces sound — which is what proves audio is working before anything is at stake. |
+
+**Three cautions.**
+
+1. **The greeting must stay a constant.** It is spoken before any measurement window opens; a model call there would put a provider on the path to first audio, which is exactly what P8 removed.
+2. **`MAX_REPLY_SENTENCES` governs conversational replies, not explanations.** A Type B answer is the fact-led opener plus whatever Job 2 sentences bind (Task 2.13); the count there is set by the facts that resolve.
+3. **If the tone makes Job 2 pad, shorten the tone.** Never loosen the assembler to keep a pleasant sentence that cites nothing.
+
+---
+
 ## How this plan is organised
 
 The order is the spec's §9 order — **by what can invalidate what**:
@@ -160,6 +205,7 @@ Tasks are numbered `P.N`. **Parallelism worth taking** (spec §9): 0.4–0.6 (da
 │   │   │   ├── session.py              # SessionManager — in-memory, expiring, one lock each
 │   │   │   ├── hold.py                 # P3b content-aware hold
 │   │   │   ├── router.py               # Type A / Type B by pattern (AD-3)
+│   │   │   ├── persona.py              # Nakshatra: greeting, tone constants, PII deny-list (arch §11.2)
 │   │   │   ├── state.py                # TurnState machine
 │   │   │   └── orchestrator.py         # TurnOrchestrator — the only part that knows the whole turn
 │   │   ├── grounding/
