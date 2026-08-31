@@ -31,6 +31,7 @@ The architecture is *derived* from the specification, and the plan from both; no
 
 ## What it does
 
+- **Meet Nakshatra** — the assistant greets you the moment you click the microphone, says who she is and what she can do, and asks for your preferences with an example. Warm, plain-spoken, at most three sentences a turn ([`Architecture.md` §11.2](./Docs/Architecture.md))
 - **Speak your requirements** — *"2BHK in Koramangala, budget 35k, need parking, close to a metro."* Constraints are always confirmed back before a shortlist is generated.
 - **Refine by voice** — *"drop anything above 40k."* Only the affected part changes; everything else keeps its place.
 - **Ask why** — every neighborhood claim carries a citation; every distance names the method that produced it.
@@ -59,6 +60,8 @@ Three structures carry most of the correctness, and are worth knowing before rea
 - **`Provenanced<T>`** — every fact travels with its source, method, timing and as-of date. A distance without its method label is *unrepresentable*, not merely discouraged
 - **The resolver registry** — the grounding boundary is a call graph, so the explanation model can only reach facts through a resolver
 - **`TurnOutcome`** — "nothing found" and "couldn't ask" are different variants of a union, so they cannot accidentally render alike
+
+The full set — fifteen guardrails, each against the section that actually enforces it — is indexed in [`Architecture.md` §17.3](./Docs/Architecture.md).
 
 ### Two LLM roles, two providers
 
@@ -194,6 +197,7 @@ If you contribute one thing to this codebase, know these:
 4. **`null` is a real value, and it never satisfies a must-have.** Unstated fields read *"not stated"* — never blank, never zero, never inferred. Unknowns surface as their own group rather than being silently dropped or silently counted.
 5. **Scraped text and retrieved chunks are untrusted data**, delimited in prompts and never executed as instructions.
 6. **Slot arithmetic is always `Asia/Kolkata`**, never server-local time. The backend is deliberately hosted outside India.
+7. **Never ask a renter for personal or financial details.** Rent, deposit and budget are the only money topics. The single exception is the email address at the confirmation step, because the PDF cannot be sent without it — read back letter by letter, used once, and gone with the session. Extraction has no field to hold anything else, so this survives a prompt edit.
 
 ---
 
