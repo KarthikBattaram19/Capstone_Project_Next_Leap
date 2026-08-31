@@ -252,12 +252,6 @@ flowchart LR
 | **RAG index** | **The searchable store** built by step 4, holding every chunk of every area guide | Built here, offline. Loaded read-only at start-up |
 | **RAG chunk** | **One piece of one guide document** — a few paragraphs, carrying its area, title and source link. Splitting the guides is what creates them | Created here at build time. Every chunk sits in the index **whether or not any question ever retrieves it** |
 
-So: step 4 *cuts guides into chunks and puts them in an index*. Later, at question time, retrieval *selects a handful of those chunks* (§9.2). A chunk is a stored unit; retrieval is the act of choosing some. In code a chunk is `RagChunk`; in the plain-language tables of §5.1 it is a **quoted passage**.
-
-This index is **closed**: it is built offline and **nothing is added to it, or fetched from anywhere else, during a conversation**.
-
-The bundle is versioned. The backend refuses to start if the bundle's version does not match the contract version it expects (§12.3).
-
 ---
 
 ## 4. How a single fact is carried
