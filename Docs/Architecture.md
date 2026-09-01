@@ -541,6 +541,11 @@ stateDiagram-v2
     TYPE_A --> SPEAKING
     TYPE_B --> SPEAKING
     SPEAKING --> IDLE: finished
+    TRANSCRIBING --> CAPTURING: renter interrupts
+    ACK --> CAPTURING: renter interrupts
+    CLASSIFYING --> CAPTURING: renter interrupts
+    TYPE_A --> CAPTURING: renter interrupts
+    TYPE_B --> CAPTURING: renter interrupts
     SPEAKING --> CAPTURING: renter interrupts
 
     classDef wait fill:#e5e7eb,stroke:#6b7280,color:#111827
@@ -553,11 +558,11 @@ stateDiagram-v2
     class SPEAKING talk
 ```
 
-<sub>[⤢ Open this diagram in a canvas](https://mermaid.live/view#pako:eNp9k11vmzAUhv-KRe46IgVooOOiE_nYFLWqotBdVKOajH1orBAb2WbZVPW_z2AgNJvKBYLj9znffnWIoODEyFEaa1gx_CLxcfrLzzgyz4-rZzSd3qLN6n5tLc1Xa1om28fvu83DtxhJ4BokMh6kVkhVgA-Mv1j9IGuhx13ykC53m0XLAadIFA0AZI8oaCAaqOXGyhZNlncxOglJFRIcKSIBOPqEGKeMYC2kxYzKZnefpOnm61Mb57Rnxr_JqQ2na8m_dMmdVTa9p-36ZxKjSkIBpioCSEhTXsE4HE2RH1ALU87vqsQcayZ4V0PrrtWk23VyZ4DRweI_B_3f0PQYmdhM7fu2vBP8OwLWvGVdaZV1OZASK7WCAp0w08ZZWcYTmEMEuau0FAeIJ2Ee-Tczl4hSyHjied6NH13AJVPatNviNAdcwID78zAw3jp8lnt5gC9jC3noYVIQiAbYC3FwjQd47oMXXsAalz1cQBGQM0w_R9Es7OHruYdnwQi2u9rUPTYOTXPfrZitcCw0q-SORu3aabrd7JqSxuphME26joucI8gjZrS5Wq-Zo_dmgTLzkzkUClyXOnPeGhmutUj_cGKOtKzBWOqKnm9iZ377C6xAHkc) — zoom, pan and export</sub>
+<sub>[⤢ Open this diagram in a canvas](https://mermaid.live/view#pako:eNqNlF1vmzAUhv-KRe42IoXQQMfFJvKxKWpVRaG7qMo0GfvQWCE2ss2yqep_n8GEULq15QLB8fvY5z3H9qNDBAUnQo7SWMOS4QeJD-Nf05Qj89x_-IHG489ovbxe2Uj91YQW8eb2-3Z98y1CErgGicwMUiukSsB7xh-svpM10O02vkkW2_W84YBTJPIaALJDFDQQDdRyfWWDxourCB2FpAoJjhSRABx9RIxTRrAW0mJGZbO7jpNk_fWuWee4Y2Z-k1OznK4k_9Imd1bZ9O42q59xhEoJORhXBJCQxl7OOByMyVeoubHzuywwx5oJ3npopms0yWYVXxmgNzD_x8Dpryt6hMzaTO3-W5aXbWD1W1alVoOSvKkcGnub6Dl8p3j-TvGzSrwutwApsFJLyNERM22qVhTRCGYQQuYqLcUeolGQhdPLiUtEIWQ08jzvchoO4IIpbfaVxWkGOIcOn84C38zW4pPMy3w8XFvI_QkmOYGwg70A-xe4g2dT8IIBrHFxgnPIfXKG6acwnAQn-GLm4Ynfg-2hrH33g13R3GebxjrsC80GcXutd21T3bZdtaW-umtMna7jIucA8oAZre-Qx9TRO3NSUvOTOhRyXBU6dZ5qGa60SP5wYoa0rMBEqpKer5w2_PQX1zJmug) — zoom, pan and export</sub>
 
 **The acknowledgement is the load-bearing state.** `ACK` fires the moment the final transcript is on screen and the thinking indicator is up — **before any model is called**. That ordering is the only reason the 700 ms budget is reachable at all; the specification says explicitly that no model call may sit inside L1.
 
-**Interrupting works because of one transition.** If the renter speaks while the system is speaking, `SPEAKING` goes straight back to `CAPTURING`, cancelling the audio stream in flight and, if it is still running, the Job 2 call behind it (spec §6.17).
+**Interrupting works because every active state has an edge back to `CAPTURING`.** If the renter speaks at any point after the turn has begun, the machine returns to `CAPTURING`, cancelling the audio stream in flight and, if it is still running, the Job 2 call behind it (spec §6.17). Speaking over the *answer* is the obvious case; speaking over the *thinking* — after the acknowledgement, before the first word of audio — is the one that is easy to miss, and dropping it on the floor is worse than talking over the renter. What no edge does is skip the acknowledgement: `CAPTURING → TYPE_A` remains illegal, which is what keeps a model call out of the 700 ms budget.
 
 ### 7.2 Turning speech into text, then picking a lane
 
@@ -923,7 +928,7 @@ stateDiagram-v2
 | 🟨 **Confirming** | They have picked, and the system is **re-reading free/busy before writing anything** | Both entries written → **Booked** · someone else took that hour first → back to **Offered** with three fresh ones · the flat came off the market → **Withdrawn** |
 | 🟩 **Booked** | The visit exists in both calendars and the renter has the 6-character code. **If only one of the two entries landed, it still counts as booked** — the missing one is retried in the background, and the renter is never asked to wait for it | Reschedule (the code stays the same) · cancel · the hour arrives and it closes quietly |
 | 🟥 **Withdrawn** | The flat came off the market before the entries were written (§8.4). Nothing is booked | The renter is told, the flat leaves the shortlist, and what remains is read out again |
-| 🟥 **Cancelled** | Both calendar entries are removed. The code still resolves — it answers "cancelled" | Nothing. A new visit is a new booking with a new code |
+| 🟥 **Cancelled** | Both calendar entries are removed. The code then answers **exactly as an unknown code does** — see §10.2 | Nothing. A new visit is a new booking with a new code |
 
 Slots come from the owner calendar's free/busy: the **next 7 days, 10:00 to 18:00 IST, one hour each**, with the first three offered. Cancelling and rescheduling are both refused once the hour has started, and both may happen more than once before then.
 
@@ -936,7 +941,7 @@ Slots come from the owner calendar's free/busy: the **next 7 days, 10:00 to 18:0
 | **Free/busy is re-read at the moment of confirmation**, never trusted from when the slot was offered | Two renters racing for the same slot. The one who loses is simply re-offered, and neither is ever told a booking exists that does not (spec §6.41, §6.42) |
 | **Both calendar entries are written at the same time**, with anything that failed queued for retry (P6) | A half-booked visit. The **renter's intended state is authoritative** from the moment they confirm; the system reconciles the calendar behind the scenes. Rescheduling is four calls, and without parallelism L7 would be Google's latency multiplied by four |
 | **Every date calculation names `Asia/Kolkata` explicitly** | The backend deliberately runs outside India, so **any use of the server's local clock is a live bug** (spec §6.47). A lint rule banning naive timestamps is worth the five minutes it takes to add |
-| **Unknown codes and cancelled codes get identical answers**, and lookups are rate-limited | Someone guessing codes to enumerate other people's bookings. The code is the only credential there is — the specification is explicit that this is a demo-scope limitation, not a solution (spec §6.45) |
+| **Unknown codes and cancelled codes get identical answers**, and lookups are rate-limited | Someone guessing codes to enumerate other people's bookings. The code is the only credential there is — the specification is explicit that this is a demo-scope limitation, not a solution (spec §6.45). *Identical* is literal: the same 404 and the same sentence, so a cancelled code cannot even be distinguished from one that never existed. An earlier draft of §10.1 said a cancelled code "answers cancelled"; that would have been a working oracle for guessers, and the specification wins (spec §6.9) |
 
 ### 10.3 The confirmation itself
 
