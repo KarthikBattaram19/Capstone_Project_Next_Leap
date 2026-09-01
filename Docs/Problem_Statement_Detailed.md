@@ -2,7 +2,7 @@
 
 *v3.10 — the current problem statement. Supersedes all earlier drafts; where this document and an earlier version disagree, this one governs.*
 
-*Changed in v3.10 (§5.2): a new **L0** target for first visible feedback (<300 ms); **L3** tightened from ≤2.5 s to ≤1.5 s, made reachable by a new **P8** (fact-led opener); **P3** endpointing set to 400 ms with a new **P3b** content-aware hold, so speed is never bought by cutting a tenant off mid-sentence. L1 stays <700 ms. No other target moved. Also carried in from `Architecture.md`: how the RAG index is built and partitioned (§3.3); turn-type routing in application code (§5.1); the availability flag as an in-memory overlay with an operator-token-guarded toggle, and a confirm-time re-check that reads the flag rather than the source site (§3.1, §6.43); the build manifest as a machine-readable output (§7.3, §9.1); boot-time manifest checks (§6.35); and what the frontend–backend contract actually contains (§5.4, §9.4).*
+*Changed in v3.10 (§5.2): a new **L0** target for first visible feedback (<300 ms); **L3** tightened from ≤2.5 s to ≤1.5 s, made reachable by a new **P8** (fact-led opener); **P3** endpointing set to 400 ms with a new **P3b** content-aware hold, so speed is never bought by cutting a tenant off mid-sentence. L1 stays <700 ms. No other target moved. Also carried in from `Architecture.md`: how the guide index is built and partitioned (§3.3); turn-type routing in application code (§5.1); the availability flag as an in-memory overlay with an operator-token-guarded toggle, and a confirm-time re-check that reads the flag rather than the source site (§3.1, §6.43); the build manifest as a machine-readable output (§7.3, §9.1); boot-time manifest checks (§6.35); and what the frontend–backend contract actually contains (§5.4, §9.4).*
 
 *Principal decisions: listing scope of **up to 10 per locality** with the locality set determined by the scrape (§1); an LLM **split into two roles across two providers** — Groq for extraction, Claude Sonnet for grounded explanation (§5.1); a latency budget **split by turn type** with explicit preconditions (§5.2); **commute-method disclosure** carried end-to-end from OSM precompute through card label to eval assertion (§3.4, §2.3, §4, §7.1); deployment on **Vercel (frontend) + Railway (backend)** (§5.4); and grouped, principle-driven error handling (§6).*
 
@@ -19,7 +19,7 @@ Tenants don't struggle to find listings. They struggle to judge whether a listin
 - **Up to 10 listings per locality**, scraped once from bengaluru.rent, cleaned and curated. A single 15-listing dataset was too thin to cover Bengaluru; breadth now comes from covering more localities, not from depth within one
 - **The locality set is not pinned in advance.** It is whatever bengaluru.rent actually has available pins for. The final locality list and the resulting total listing count are an **output of the first deliverable (§9.1)**, documented after the scrape — not assumed here
 - **"Up to" is a ceiling, not a target.** A locality with fewer than 10 available listings is kept at its real count and that count is documented; it is never padded with unavailable or duplicate pins. A locality with more than 10 is **curated down to the 10 best-populated records** (most fields present), and the selection rule is documented alongside the dataset so the shortlist is reproducible
-- **Up to 3 neighborhood guide documents per *locality*** (not per listing). Listings in the same locality share the same documents, so the RAG corpus is **1–3 unique documents per locality** — at most 10 listings per document set
+- **Up to 3 neighborhood guide documents per *locality*** (not per listing). Listings in the same locality share the same documents, so the guide corpus is **1–3 unique documents per locality** — at most 10 listings per document set
 
 ---
 
@@ -81,13 +81,13 @@ Answers *"Why did you pick this one?"*, *"Is the commute realistic?"*, *"What's 
 
 ### 3.1 Listings (bengaluru.rent)
 - Scraped **once at deployment** → static dataset of **up to 10 listings per locality**; the total is at most 10 × (number of localities bengaluru.rent supports), fixed and documented at scrape time
-- **Locality assignment:** every listing carries the locality it was scraped under, as a first-class field. This field drives RAG scoping (§3.3) and eval stratification (§7.1)
+- **Locality assignment:** every listing carries the locality it was scraped under, as a first-class field. This field drives guide scoping (§3.3) and eval stratification (§7.1)
 - **Availability filtering:** only pins marked currently available enter the working set; transparency-only pins ("Not for rent") are excluded. During scraping, the exact marker/field bengaluru.rent uses for this will be identified and documented; **if no reliable marker exists, that gap is reported before proceeding, not guessed around**
 - **Fields (the searchable schema).** Every field below is filterable by voice and assertable in Suite A:
 
 | Field | Type / values | Notes |
 |---|---|---|
-| `locality` | string | Per the locality bullet above; drives RAG scoping |
+| `locality` | string | Per the locality bullet above; drives guide scoping |
 | `bhk_type` | enum: `1RK`, `1BHK`, `2BHK`, `3BHK`, `3BHK+` | The way tenants actually speak. Held **alongside** the raw `bedrooms` integer, not instead of it |
 | `bedrooms` | integer | Raw count |
 | `bathrooms` | integer | |
@@ -106,7 +106,7 @@ Answers *"Why did you pick this one?"*, *"Is the commute realistic?"*, *"What's 
 | `society_name` | string | |
 | `coordinates` | lat, lng | |
 
-- **Field confirmation is part of the first deliverable.** The schema above is what the system is built to search; **which of these fields bengaluru.rent actually publishes is confirmed at scrape time, not assumed here.** Any field the source does not carry is reported in the same gap report as the availability marker — never backfilled from model knowledge, OSM, or the RAG index (§3.5 admits no exception for listing facts)
+- **Field confirmation is part of the first deliverable.** The schema above is what the system is built to search; **which of these fields bengaluru.rent actually publishes is confirmed at scrape time, not assumed here.** Any field the source does not carry is reported in the same gap report as the availability marker — never backfilled from model knowledge, OSM, or the guide index (§3.5 admits no exception for listing facts)
 - **Null is a real, displayable value.** A field the source does not state is `null`, and the system says *"not stated for this listing"*. It is never inferred, and never rendered as a default — a missing `deposit` is not ₹0
 - **Null never silently satisfies a must-have.** If a tenant requires four-wheeler parking and some listings have `parking: null`, those listings are neither counted as matches nor silently dropped — they surface as a separate **"unknown on this filter"** group the tenant can choose to include. Without this rule, a wider schema makes the shortlist quietly *worse*, because every sparse field becomes an invisible filter
 - **Budget filtering runs on `rent`** unless the tenant says otherwise; `deposit` and `maintenance_charges` are always **shown** on the card, so the real cost is never a surprise at booking
@@ -128,7 +128,7 @@ Answers *"Why did you pick this one?"*, *"Is the commute realistic?"*, *"What's 
 
 ### 3.4 Amenities & Transit (OpenStreetMap MCP — Precomputed)
 - All amenity, transit-point, and POI claims come from the OpenStreetMap MCP (github.com/jagan-shanmugam/open-streetmap-mcp), queried around each listing's coordinates
-- **Precomputed at index time, not at query time.** Every listing-anchored OSM fact is resolved once during §9.3 and stored on the listing record. **No OSM call is made inside a tenant's turn.** This mirrors §3.3's closed RAG index: the same "resolve once, serve from local storage" discipline, for the same reason
+- **Precomputed at index time, not at query time.** Every listing-anchored OSM fact is resolved once during §9.3 and stored on the listing record. **No OSM call is made inside a tenant's turn.** This mirrors §3.3's closed guide index: the same "resolve once, serve from local storage" discipline, for the same reason
   - **Why:** these facts are static — a metro station does not move between turns — and a live per-listing lookup across a shortlist would exhaust §5.2's L4 budget on network round trips alone (see §5.2 P5)
   - **Grounding is unaffected.** OSM remains the sole permitted source for these claims (§3.5); only the *timing* of the lookup moves. Each stored value keeps its OSM attribution **and the date it was retrieved**, so the UI cites OSM exactly as it would have live
 - **The precomputed query set is fixed and documented** — the same queries run for every listing, so coverage is uniform and no listing looks richer merely because it was queried more. Where OSM returns nothing for a listing, the value is stored as `null` and §3.1's null rules apply verbatim: "not stated", never inferred, never silently treated as a match
@@ -146,9 +146,9 @@ Answers *"Why did you pick this one?"*, *"Is the commute realistic?"*, *"What's 
 ### 3.5 Grounding Boundary (resolving the original brief's ambiguity)
 | Claim type | Sole permitted source |
 |---|---|
-| Listing facts (every field in §3.1's schema — rent, deposit, maintenance, BHK, furnishing, area, floor, parking, availability, move-in date) | Scraped bengaluru.rent dataset. **No fallback source:** an absent field is `null`, never filled from OSM, RAG, or model knowledge |
+| Listing facts (every field in §3.1's schema — rent, deposit, maintenance, BHK, furnishing, area, floor, parking, availability, move-in date) | Scraped bengaluru.rent dataset. **No fallback source:** an absent field is `null`, never filled from OSM, the guide index, or model knowledge |
 | Amenities, transit points, distances | OpenStreetMap MCP — **precomputed at index time** (§3.4); attribution and permitted-source status unchanged by the precompute |
-| Neighborhood character, safety notes, "what it's like" | Closed RAG index, with citation |
+| Neighborhood character, safety notes, "what it's like" | Closed guide index, with citation |
 | Anything else | Not asserted. Declared as unavailable |
 
 ---
@@ -203,7 +203,7 @@ Futuristic real-estate theme. Required components:
 
 **Turns are budgeted in two classes, because they run on different providers (§5.1).**
 **Type A** — preference collection, refinement, booking, cancel/reschedule — uses Job 1 on Groq only.
-**Type B** — grounded explanation — uses RAG retrieval plus Job 2 on the Anthropic API, a second provider on a second network path. Both classes now share a 1.5 s first-audio budget, but for different reasons: Type A waits on Job 1; Type B does not wait on Job 2 at all, because its first sentence is built by code from facts already resolved (P8).
+**Type B** — grounded explanation — uses guide retrieval plus Job 2 on the Anthropic API, a second provider on a second network path. Both classes now share a 1.5 s first-audio budget, but for different reasons: Type A waits on Job 1; Type B does not wait on Job 2 at all, because its first sentence is built by code from facts already resolved (P8).
 
 | # | Stage | Target (p99) | Definition | What dominates the budget |
 |---|---|---|---|---|
@@ -241,7 +241,7 @@ These are not tuning tips. Each one, if skipped, breaks a specific row above.
 ### 5.3 Security & Robustness
 - All API keys server-side only; never exposed to the frontend
 - HTTPS on the deployed URL
-- **Prompt-injection defense:** scraped listing text and RAG chunks are untrusted *data* — delimited in prompts and never interpreted as instructions; a listing description saying "ignore previous instructions" must have no effect
+- **Prompt-injection defense:** scraped listing text and guide chunks are untrusted *data* — delimited in prompts and never interpreted as instructions; a listing description saying "ignore previous instructions" must have no effect
 - No PII in logs or stored transcripts (per §3.2)
 - Session model: **stateless demo** — no login, no persistence, each session isolated
 
@@ -253,7 +253,7 @@ These are not tuning tips. Each one, if skipped, breaks a specific row above.
 | Tier | Host | Holds | Never holds |
 |---|---|---|---|
 | **Frontend** | Vercel | §4's UI, the card and citation view-models, the mic capture client | **No API keys. No provider calls. No API routes.** |
-| **Backend** | Railway | The whole voice pipeline, both LLM jobs, RAG index, precomputed OSM values, calendar/Gmail integration, all five provider credentials and the operator token | Nothing rendered directly to the tenant |
+| **Backend** | Railway | The whole voice pipeline, both LLM jobs, guide index, precomputed OSM values, calendar/Gmail integration, all five provider credentials and the operator token | Nothing rendered directly to the tenant |
 
 **The split is a hard boundary, not a convenience.** Every provider call originates on Railway. The browser talks to exactly one backend origin and to no provider directly — that is what keeps §5.3's "keys server-side only" true rather than aspirational.
 
@@ -342,9 +342,9 @@ These are not tuning tips. Each one, if skipped, breaks a specific row above.
 | 6.2 | Missing neighborhood data | Partial info + "Limited neighborhood data available" disclaimer |
 | 6.4 | Listing goes unavailable post-shortlist | Remove without user action + notify tenant (§3.1) |
 | 6.8 | Injection content in scraped data | Neutralized by §5.3; covered by a grounding-suite test |
-| 6.35 | Dataset, RAG index, or precomputed OSM values fail to load at startup — **or the build manifest disagrees with what loaded**: bundle version ≠ contract version, the embedding model on disk ≠ the one the manifest names, or a listing with no row for an OSM query | **Fail startup** (principle 5). A backend that serves a tenant from a half-loaded index will answer confidently from whatever it did load |
+| 6.35 | Dataset, guide index, or precomputed OSM values fail to load at startup — **or the build manifest disagrees with what loaded**: bundle version ≠ contract version, the embedding model on disk ≠ the one the manifest names, or a listing with no row for an OSM query | **Fail startup** (principle 5). A backend that serves a tenant from a half-loaded index will answer confidently from whatever it did load |
 | 6.36 | Retrieval returns chunks, but none actually support the question asked | Declare the gap (§6.2 wording). Retrieving something is not the same as having an answer, and this is exactly where a fluent model invents one |
-| 6.37 | Injection content inside a **RAG chunk** (as distinct from a listing field) | Same treatment as §6.8 — both are untrusted data under §5.3. Called out separately because the defence is often applied only to listing text |
+| 6.37 | Injection content inside a **guide chunk** (as distinct from a listing field) | Same treatment as §6.8 — both are untrusted data under §5.3. Called out separately because the defence is often applied only to listing text |
 | 6.38 | OSM returned nothing for a listing's transit or amenity query | Row reads "not stated" (§3.1 null rules, §4). Never blank, never `0 km`, never filled from another listing's values |
 | 6.39 | **Every** shortlisted listing becomes unavailable | Say so directly and return to constraint collection. Do not silently backfill from outside the shortlist — the tenant would receive listings they never saw chosen |
 
@@ -458,7 +458,7 @@ Sign-off requires **every** line below. Any failure → fix → **full** re-run,
 - The **curation rule** used where a locality exceeded 10 listings (§1)
 - The **pinned model IDs** for Job 1 and Job 2, with Job 2's **Suite C scores** and its `effort` setting (§5.1)
 - The **OSM precompute record**: the fixed query set, and the index date carried by every stored value (§3.4)
-- The **build manifest** (§9.1) — a machine-readable output of the build, not a report written afterwards — carrying the five items above plus the **embedding model and exact version** used to build the RAG index (§3.3). Producing it from the build is what stops the published record drifting from what was actually built
+- The **build manifest** (§9.1) — a machine-readable output of the build, not a report written afterwards — carrying the five items above plus the **embedding model and exact version** used to build the guide index (§3.3). Producing it from the build is what stops the published record drifting from what was actually built
 - The **§6 walkthrough record** (§6.H): every row exercised or its guard shown, with fault-injected rows labelled as such, and the concurrency actually tested (§6.57)
 - The **deployment record** (§5.4): both public URLs, the **Railway region chosen and the measurements that chose it**, confirmation that **app sleeping is off** (or that a keep-warm ping is running, stated as such), and the CORS allowlist actually in force
 
@@ -502,7 +502,7 @@ These two tracks share no dependencies and should run at the same time. Each end
 ### Phase 1 — Foundations
 
 **9.3 — Knowledge layer**
-- Build the **listing-scoped RAG index**: 1–3 documents per locality from the published list, **chunked semantically**, embedded with the **pinned embedding model**, stored in **ChromaDB as one collection per locality**, each chunk carrying its source attribution (§3.3). Record the embedding model and version in the build manifest
+- Build the **listing-scoped guide index**: 1–3 documents per locality from the published list, **chunked semantically**, embedded with the **pinned embedding model**, stored in **ChromaDB as one collection per locality**, each chunk carrying its source attribution (§3.3). Record the embedding model and version in the build manifest
 - **Run the fixed OSM query set once across every listing**, storing each value with its OSM attribution and retrieval date (§3.4). Verify the MCP's routing capability and **lock the commute-method disclosure** wording
 
 **9.4 — Eval harness and the view-model contract** *(before the features they test — deliberately)*

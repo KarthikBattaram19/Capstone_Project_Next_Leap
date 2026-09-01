@@ -1,12 +1,10 @@
 # Voice-based AI Property Scout — Implementation Plan
 
-**Version 3 · 2026-08-30.** This is the decision document. It says what gets built, in what order, why that order, what "done" looks like for each piece, and where you will be asked to decide something.
+This is the decision document. It says what gets built, in what order, why that order, what "done" looks like for each piece, and where you will be asked to decide something.
 
 **Companion document:** `Docs/Implementation_Plan_Addendum.md` holds the technical detail for whoever builds each task — every file, function, field, constant, test and command. Each task below ends with a pointer to its addendum section. Builders (human or agent) work from the addendum; you steer from this document.
 
 **Sources of truth:** `Docs/Problem_Statement_Detailed.md` (the specification, v3.10) governs; `Docs/Architecture.md` explains the shape. Where they disagree, the spec wins. "spec §x" and "arch §x" below refer to sections of those two documents.
-
-**Earlier versions** of this plan are kept in `Docs/versions/` (see its README for how to roll back).
 
 ---
 
@@ -23,10 +21,10 @@ A voice-first assistant for finding a rental flat in Bengaluru. The tenant speak
 | **Job 2** | The careful language model (Anthropic, `claude-sonnet-5`) that writes the explanation for "why this one?". Never invents facts; only cites what it is handed. |
 | **Type A / Type B turn** | Type A: anything that changes or confirms preferences, or books. Type B: "why?" questions that need Job 2. Decided by simple pattern matching in code, not by a model. |
 | **Listing dataset** | Up to 10 listings per locality scraped from bengaluru.rent, cleaned, owner contact details removed. |
-| **RAG index** | A searchable store of neighbourhood guide passages (Wikipedia and open city guides), one partition per locality, so answers about HSR Layout can never draw on Koramangala text. Built offline with ChromaDB. |
+| **Guide index** | A searchable store of neighbourhood guide chunks (Wikipedia and open city guides), one partition per locality, so answers about HSR Layout can never draw on Koramangala text. Built offline with ChromaDB. |
 | **OSM facts** | Distances to the nearest metro, bus stop, etc., computed once at build time from OpenStreetMap through an "MCP" tool server. Never looked up live during a conversation. |
-| **Artefact bundle** | The listings + RAG index + OSM facts + a manifest (a record of what is in the bundle and how it was built), committed to the repository and loaded when the backend starts. |
-| **Provenance** | Every fact is wrapped with its source (dataset / OSM / RAG / computed / none), and every distance with its method ("by route" or "straight line"). A fact without a source cannot exist in the code. |
+| **Artefact bundle** | The listings + guide index + OSM facts + a manifest (a record of what is in the bundle and how it was built), committed to the repository and loaded when the backend starts. |
+| **Provenance** | Every fact is wrapped with its source (dataset / OSM / guide / computed / none), and every distance with its method ("by route" or "straight line"). A fact without a source cannot exist in the code. |
 | **Contract** | The fixed shape of everything the backend sends the browser: five kinds of turn result (answered / empty / degraded / failed / needs input), card layouts, messages. Versioned; checked on every connection. |
 | **Gate** | A written go / no-go decision that must be recorded before later work starts. There are two: Gate D (dataset) and Gate L (latency). |
 | **p99** | The time within which 99 of every 100 requests finish. Latency targets are set on p99, not averages. |
@@ -43,7 +41,7 @@ These are the spec's non-negotiables, in plain words. The full list with exact n
 - **Speed preconditions (P1–P8).** The server never sleeps; connections to every provider are reused; the STT waits 400 ms of silence before ending a sentence, and waits up to another 400 ms if the sentence looks unfinished ("…under" / a bare number); audio starts on the first sentence; OSM facts are precomputed; the two calendar writes run in parallel; Job 2 runs at low effort; a "why?" answer opens with a sentence built by code from facts already known, so audio starts before Job 2 has replied.
 - **Models.** Job 1 and Job 2 are different models from different providers, pinned by exact ID. Job 2 is never replaced by Job 1 for explanations. Job 1 may be swapped to a lighter Groq model if it misses the speed targets.
 - **Data.** Bengaluru only; up to 10 listings per locality (a ceiling, never padded); duplicates merged when the address matches or coordinates are within 50 m; owner contact is always the placeholder `999999999`. A missing value is shown as "not stated" — never blank, never zero, never guessed — and never satisfies a must-have (such listings go in their own "unknown" group).
-- **Grounding.** Listing facts come only from the dataset; distances and amenities only from OSM; neighbourhood character only from the RAG index, with a citation; anything else is declared unavailable. Every distance says its method in speech, on the card badge, and in the full label, and the three must agree. Scraped text and guide passages are treated as untrusted data, never as instructions.
+- **Grounding.** Listing facts come only from the dataset; distances and amenities only from OSM; neighbourhood character only from the guide index, with a citation; anything else is declared unavailable. Every distance says its method in speech, on the card badge, and in the full label, and the three must agree. Scraped text and guide chunks are treated as untrusted data, never as instructions.
 - **Conversation.** At most 5 clarifying questions per session. Preferences are read back and confirmed before the first shortlist. Contradictions become a question, never a silent change. A refinement changes only what it touches; untouched listings keep their exact order and content. "The second one" means the second one the tenant last heard.
 - **Booking.** One Google account, two calendars (Tenant, Owner). Slots: next 7 days, 10:00–18:00 IST, one hour each, first three free ones offered. The 6-character code is the only credential; unknown and cancelled codes get the same answer; lookups are rate-limited. Availability and free/busy are re-checked at the moment of confirming. Cancel/reschedule refused once the slot has started. All time arithmetic in Asia/Kolkata. Email address read back letter by letter before sending. The PDF is generated, emailed, and discarded.
 - **Platform.** Backend on Railway (one always-on process); frontend on Vercel (draws what it is given; no server logic). No database, no transcript store, no user table; sessions live in memory and expire. The backend refuses to start if any secret is missing or the bundle does not match its manifest. Logs never contain transcript text or personal data.
@@ -167,12 +165,12 @@ Both gates have cleared. 1.1–1.3 (the knowledge layer) and 1.4–1.6 (store, c
 
 ### Task 1.1 — Collect guide documents and chunk them semantically
 - **Delivers:** a hand-written list of 1–3 guide URLs per locality; a collector that fetches them politely (1 s between requests) and keeps only readable paragraphs; a chunker that splits on paragraph boundaries and merges neighbours while they stay on the same topic (60–220 words, never cutting mid-sentence); the embedding model pinned by name and by a fingerprint of the downloaded weights file.
-- **Why now:** the RAG index needs its material, and the embedding model must be pinned before anything is indexed.
+- **Why now:** the guide index needs its material, and the embedding model must be pinned before anything is indexed.
 - **Done when:** chunker tests pass; five random chunks each read as a passage that could stand as a citation on its own.
 - **Decision:** see §5 (choice of sources).
 - Detail: addendum → Task 1.1.
 
-### Task 1.2 — Build the RAG index: one collection per locality
+### Task 1.2 — Build the guide index: one collection per locality
 - **Delivers:** the index build (one ChromaDB collection per locality, rebuilt from scratch each time), and the manifest gaining the embedding model, its fingerprint, chunk counts per locality, the guide sources, and the library versions.
 - **Why now:** partitioning by locality is what makes cross-locality contamination impossible by construction.
 - **Done when:** tests pass; a smoke query "is it noisy at night?" against Koramangala returns passages about nightlife/noise in Koramangala, not another locality.
@@ -277,7 +275,7 @@ Both gates have cleared. 1.1–1.3 (the knowledge layer) and 1.4–1.6 (store, c
 - Detail: addendum → Task 2.11.
 
 ### Task 2.12 — Job 2: grounded explanation with streaming sentences, and the claim assembler
-- **Delivers:** Job 2's strict output (sentences, each with the fact references it relies on, plus declared gaps); a stream parser that releases each sentence as soon as it is complete; a prompt that lists facts as "reference: value (source, method, date)" and wraps guide passages in untrusted-document delimiters; and the assembler that drops any sentence citing a reference not in the bundle, citing nothing, or asserting a value where every cited fact is a gap. Gap lines are humanised ("I don't have a deposit figure for this listing").
+- **Delivers:** Job 2's strict output (sentences, each with the fact references it relies on, plus declared gaps); a stream parser that releases each sentence as soon as it is complete; a prompt that lists facts as "reference: value (source, method, date)" and wraps guide chunks in untrusted-document delimiters; and the assembler that drops any sentence citing a reference not in the bundle, citing nothing, or asserting a value where every cited fact is a gap. Gap lines are humanised ("I don't have a deposit figure for this listing").
 - **Why now:** this is the only place a model writes prose the tenant hears, so it is fenced on both sides.
 - **Done when:** unit tests pass; a live check against the real client binds at least one sentence and cites nothing outside the bundle.
 - Detail: addendum → Task 2.12.

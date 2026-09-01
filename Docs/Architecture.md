@@ -63,7 +63,7 @@ flowchart TB
     class BR,OSM,WK offline
 ```
 
-<sub>[⤢ Open this diagram in a canvas](https://mermaid.live/view#pako:eNp9lN9O4zgUxl_lyEhcGYbSATQVQqK0jVj-FCgL2m324sQ-Saw6dtZ2YNDMSPsQ-4TzJCM3pFuoWF_l2D6_833Hdr4xYSWxAcu1fRYlugD3w9QAANzPU3ZHJpA7ztynk2N14mvCheeglQ9kPAdHKP3xJ3WSsr_apOnNPGXTmhwGu8pzjfEQSoKsUVpyKK2W7URibaEJtC2UWXFakm-ywmFdwuyP2TxlD1YJghtna3LhBWbCNmFVNQ6pHImgrFkZiGMynqds4qwJZCT8_OdfeCAnSK8sCUdkAI2ESgln69IaeuMojmGkDFEsOsgdKv2MLx0FtV7aCaUyC2WKTcDv55ejyIgNgFrVpJWh1RYycsP25flDrHqpngg8uSclyC9rC9SaJMjGKVMAgrDmiZzH6P1N0VEyT9mIqC4cVmtnSKKEYCHQ17AhNLmdpyxx9u9uf44-QGUlaQ6_2Qx6Gymn1_OUnZpQOlsr0eUJdJQ3ej11fyN1djVP2ayKhnzYRdUlR2lRYit2U-RZFNlenTPUZCS2dy0eY1Kh0v_b2elkcnl-HZs7woDgbeME-bfndTdPWUamQN24ZteRCZ22ePmVKfyGqunSzbQmMwuOKFxh3eVUFJzlkDWeA1ZkVFC0CXi8mKfsUS1UTVLh8k4KFV6gaJQk37EMqaLMbONKayXEJ4sivtF12prrezje2TmBybgNJ-M2Ho679wrLMN7Pdmb52U7ewXZ0BdvwePFmcXfn5HvKahQLLEhCrnTs3_cVdfhaZZTANiS3sA2n17ANS1Ry1kkTGr0fUQ41OW9NxOjBlswIc-I-OLugwdb-wWGfstdw51nJUA72669cWG3dYGsv62V9fMezjfMdTeSCjla03iH2P-PHtIN96h2-o-n4AltaTnlf_EeTX46O9g4_pH0-6OFe_722PI9P_xVIkr6smT0SfST5IXCfenuHB2tAuOfTm9f2rU9Pxnw45u1hxWasr40Sntzy02s-u-LJ2dLd-vLwjk9nV_zxolPKOCuckmwQXEOcVeQqjCH7FtNSFkqqKGUDSJlEt0hZan4wzmo0f1pbdWnONkXJBjlqT5w1tcRAI4Xxz9RtwSbY2YsRbfzjF1k5F7Q) — zoom, pan and export</sub>
+<sub>[⤢ Open this diagram in a canvas](https://mermaid.live/view#pako:eNp9VWtP2zAU_StWkPYpsD6gaBWqRCmNGK_RMtC27sONc5NYdezMdnho23_fddOUQMWsKsq1fc59nvR3wHWCwZAFqdSPPAfj2O14oRit2x-LYIbKoTmKzcfRkRjZEmFpQyaFdajoxSAk9uijGC2CnzXo-guhrks04PQGZyplmcuRxZWQSchyLZN6I9I6k8ikzoTa8NRMtoozA2XO5t_mxHmnBUf2xWjids9sznXlNl79SoRB7oRWmwT8mp4Sdmo0paEStqh6ne4-u0PDUW6y4gZRMaDzQnBykGuFr5Lya-yJxsCXLZ4ZCPkIzw0RSLlKyuVCLYXKtjm-nl1MPI0vAytFiVIo3Fwh5q3kL87uvOML8YDMonmgItjGPSeHmLCkMuSMAeNaPaCx4Ivwyu8kIooJYkmcRauZyHPmNHP45LZijW4IExn9q7mfgnWsoGmRIfusY9bdghxfEeRYuZxqKHiD42AwrWQb2tuCzi8JOi98QtbtgWjAPjQfYh3sdpAnPsh6hk5AUgGhHjrfzKig9vy3uNfT6cXZla_vBBwwqyuaC_u6ZTM6jVFlICtT7RnSQxObVwEV3m5Fdb3KhkSg5o5Gy11C2WAKdEaHpAMSDxSohBO4TXB_Tvh7saQBSQSsJpMLGvqsEgldX3MpFFkeU8y51nSBtAvci7XN1sr6lh3t7o5IELU5Pa3t8WkjXLYy_YjWO6vXenPGPvis6Hl__upwb3f0ZxGUJAvIaBRTIX39_mxYx2svk4iw0Q09jq_osaKKTprQuARrJ5gy0rYlARONHO4kMUKKoaWKLXG40zsY9DFem7uPInH5sFc-hVxLbYY7nbgb9-ENHxXHNmw85Xi4YesOoL8P77Md9LA7eMMmvQhrthTTPn9hSz4dHnYG77LtH3Sh038bW5p69a8JMcFPrWQPeR8weZeQgusMDlqE7DakBtbla29PT8Mx_VbN8sVon02iMLoJj6_C-WUYnayyax-PZyG1PLw_byINQhZkRiT0b-FMhWQVaEhjfiP47aGLgD5_BX3QhvRKUlwugoX663ElqO9aFy9Qo6ssJzMFab1dlQk4nAjwn6iXa1A5PX9WfL3z9x-IFxg6) — zoom, pan and export</sub>
 
 ### 2.2 The three moving parts
 
@@ -71,8 +71,8 @@ flowchart TB
 |---|---|---|---|
 | **Frontend** | Vercel | Draws what the backend sends it; captures the microphone; plays the audio stream | Hold a key, call a provider, run an API route, or work out a fact for itself |
 | **Backend** | Railway — **one process that stays awake** | Runs the conversation, both model jobs, retrieval, filtering, booking, PDF and email | Fetch from listing sites or OpenStreetMap while a renter is waiting |
-| **Build pipeline** | The operator's machine or CI, **offline** | Scrape, curate, gap-report, build the RAG index, precompute OpenStreetMap facts, write the manifest | Run during a conversation |
-| **Artefact bundle** | Plain files, versioned alongside the code | The dataset, the RAG index, the OpenStreetMap facts, the manifest | Change without a version bump |
+| **Build pipeline** | The operator's machine or CI, **offline** | Scrape, curate, gap-report, build the guide index, precompute OpenStreetMap facts, write the manifest | Run during a conversation |
+| **Artefact bundle** | Plain files, versioned alongside the code | The dataset, the guide index, the OpenStreetMap facts, the manifest | Change without a version bump |
 
 **[AD-1] The build pipeline is a separate program, not something the backend does at start-up.** It writes versioned files that the backend only ever reads. This keeps the dataset reproducible, makes the field-availability gap report (spec §9.1) a real deliverable, and means a scrape failure can never take the service down in the middle of a demo.
 
@@ -100,7 +100,7 @@ flowchart LR
     class F s6
 ```
 
-<sub>[⤢ Open this diagram in a canvas](https://mermaid.live/view#pako:eNp10ctu2zAQBdBfGTBb2bWejoXAQPzIqouiQTetshiRQ4uwRKokVacI8u-FJUdRDXh5RfLgzuiNcSOI5UzW5sQrtB6-fi80AMDjr4I9lOtwDs8t4fHhS7l-KO2XdaO4NW1lNIE3_Zda_SHwFrXjVrW-YC8wm61hMwDRHH5oQdZ51GJUJDoPjRFUg--sdnAyVrj-SGlvwNLvTllqSHtXsJeh0qZ3t4Mbz2FbGeNoNNsalYbzQCBV7ckOHmoBFvXRQa2cV_rwCW57cDeAyRz2r70xihwtya6-FG0ri47cpT_3DpQH5aBCLUiM6K5H9wOazmFjzOf2pCUCVxsfgD8Z4FiTFmj7M9LeKnIBZLPzr0DuyfbjjPS-p58GOpvD1mipbDPq33ZPQA2q-lJneMVrdG5HElx4Xkyd34mSUFLgvDVHyu-iNIupvMTZSQlf5VH7GnBTG5vfLcqwjPHaii4Wl3JqLe5XYRndtu7jOEmurfijF5eclqMVZhgneNtKIwqzayu5WJJkzD8tsVouF9lNK0lDXMTXVvphSUooGy0KQ5Hc37b4Ig1X11Z2sUjQarKvJY-RxE0ronCRpRMLHsGF07wBF03zFtx0DtiBm-4b9uD-857AZSxgB6sEy73tKGAN2QbPkb2dbxbMV9RQwXIomEB7LFih31nAWtQ_jWk-nlnTHSqWS6wdBaxrBXraKTxYHK9g583zX82H_P4PwqBzMg) — zoom, pan and export</sub>
+<sub>[⤢ Open this diagram in a canvas](https://mermaid.live/view#pako:eNp11Mlu2zAQANBfGShX27GsxQsCA_GSUw9Fg15S9UCRQ4swRaokVacI8u-llsiCAevkGYlvhkPJHwHVDIMNBFzqCy2IcfDtR6bAX8-_suAp34YzeK2QnJ8e8-1Tbh63paBGV4VWCE63GSn--t-GKEuNqFwW_IbpdAu7DljM4KdiaKwjig0KJ9ZB6YtLcLVRFi7aMNveEsppMPinFgZLVM56sGtp17r7zo1msC-0tjiYlSRCQbMj4EI6X7JN-7LgmztbkMI6oU5XcN-Chw6MZ3B8b41BpMQgr2XfaFUYYtH2_VNnQTgQFgpfAdmAHlr02KHJDHZaX6fHDSJYqd0E3EUDJRIVI6a95_dqBNoJpNPmKHwFNO12BvrY0i8dnfoBaMWFKQf9--EFsCRC9u10q6gk1h6Qgw2bwcjNA8uRcJxYZ_QZNw-LJI0w78PpRTBXbBbV-4Rqqc3mYZ6HeURurUVvUc7H1ny1DvPFfWsVRXF8a0VffVFOcTlYYUqimNy3kgWG6a0V9xZHHtGrxdbL5Ty9a8VJSObRrZV8WRxjTAcLw5DFq_sWnSfh-tZKewsZrkfzWtKIILtr-R3O02RkwbM_xnG880cxjvd-nOP44Ecyjo9-W-P4xbcWTCA4GcH8P4EzNfqoROPfoyYRfDRPZ4Er_NeY-UQW-Bf2nAWZ-mzWVUS9aV1elxpdnwofciJtE9cVIw4PgpwMGT1Gaqdf_ynaZz7_Ax-TdNI) — zoom, pan and export</sub>
 
 Steps 3 and 5 are **ordinary code, not a model**. That is deliberate: filtering, ranking, availability and slot arithmetic have right answers, so they are written as functions that can be tested, not asked of a model that might answer differently next time (**A4**, §17).
 
@@ -126,7 +126,7 @@ flowchart TB
     class TB tb
 ```
 
-<sub>[⤢ Open this diagram in a canvas](https://mermaid.live/view#pako:eNp1k99v2jAQgP-Vk3ngJaiEX-kiRAWqtEl7mEqZ9rDs4WJfmijBDrYzhtr-7z0CtJSJPCVn33ffneNnIY0iEYusMluZo_WwWiQa-Hn4nYglaU8WXE1YukT8gV5vBsvnRPzK0UNZaDVN7c3MZGBp05Dzd4l4PaQv93tfEtEdLL59h0Yr5oz6ZbdN6CprakC983mhnwBT85dgOC67iXiB1ZwrT9PZalcTzKc36azNYQmSeQAZOg9rtq74vajYr12eFrOv1mzA6Go3vSlmbHshss13wPUcb6G7o8d23weHfE6AlhCqouTFVmNxprH4T6MypoSmZh3pXdAuSSZkTXWSkznJEmTh0RdGu5MlKuVgrn3OIyjkJ9XVvB3wj58rLv1Ym5I0D8ltjy2iVlxRoScFTloi_ZG5OGUm-hCRFTp3Txls9lOq4o5KCTMKnLfMjTuD8WRI6fGzty2Uz-NB_S-QpjI27vTTMB3iBUqRPMJoTNF7dtyZpNHgtn8VFobh7SC6gHk8iclMUvTOCic4HOF1sfGAwsklKz2yMsqG8oOlvkRRf3KVNRqH2B-eseAh4BHC5jy03Ld9HuBT8vgpsGABEYg12TUWim8T3xD-o9aUiBgSoSjDpvJ8NXgTNt487rQUsbcNBeJwoPcFPllcH4Kvb5O3KF4) — zoom, pan and export</sub>
+<sub>[⤢ Open this diagram in a canvas](https://mermaid.live/view#pako:eNp1k1Fv2jAQx7_KKTzwElSSAOkQSkVUaZP2MJUy7WHZw8W-NFGCDbYzhtp-9x4BWspEnuz_-f73u3P87AktyZuCVzR6K0o0DpZppoC_h9-ZtyDlyIBdE9Y28_7AYJDA4jnzfpXooK6UnOXmJtEFGNq0ZN1d5r0e0hf7sy-Z1w_Tb9-hVZJ9RsO63yX0pdFrQLVzZaWeAHP9lyAa1_3Me4HlnCvP8mS5WxPMZzd50uUwBInShwKtgxVjN7yuGubrwrMq-Wr0BrRqdrObKmHaC5BtuQOuZ_kI3R05tvs-WHIlARpCaKqagx1GeoaR_ofRaF1Du2Yc4azfhQQ7FG1zghMliRpE5dBVWtkTJUppYa5cySOoxCfU5bwb8I-fSy79uNY1KR6S3R5bRCW5okRHEqwwROojMz1lZuqgiAatvacCNvspNdOezAkL8q0z7DvtheNJRPlxO9hW0pXTcP3PF7rRZtob5kEe4YWVJHE0ozHF79nT3iSPw9vhVbMgCG7D-MLM4QlMFILid69ggtEIr4ONQwoml1750augIhIfXvJLHA8nV71G4wCH0ZkXPPg8QticS4t92-cC35LDT0LKAJ4P3orMCiu5f0_8RvifWlHGm8yTVGDbOH4c-2PYOv24U4JDzrTEyuFW7yt8Mrg6yq9vyEYpPg) — zoom, pan and export</sub>
 
 The router that picks between them is **pattern matching, not a model call** — see [AD-3] in §7.2.
 
@@ -150,7 +150,7 @@ flowchart LR
     class L5 slow
 ```
 
-<sub>[⤢ Open this diagram in a canvas](https://mermaid.live/view#pako:eNqV08uOmzAUBuBXOXK2pDG3MEUIaUazZNV2V7o48WWwAjayjZJoNO9eN9AmRJpF2fkYf79tDu-EGS5ISWRvTqxD66H51moIT0N_tqQ61A2tdoca2onSQwEppTC46mB39cVMFk7Gcgc4jgLttYoOwgS4UDi25BdstzU08ULF91SxokAqrVwXAWoOCL5T-qj023Vaaa4YemOBGS2VHRwoH_Blo_EckiwhyX1I_CWHOSOscx5w4spcx5Wqf1xGAc_VTtU3LJmxdMHS_8Ne1lg6Y9mCZaubXCjXGet7FTijwTErhL4B2QzkC5DfA_sFEOexR41ehfVenP38GcItMuWvVfcgzzbr0blXIUFiyJaq78sNZ5KJInLemqMoN_Ee0wyX4fakuO_KZDxHzPTGlhuaJyLeP2iD4gsmhUzZDeNfi4LuP8WyPEaaPmAudOVfTQrO83-awPyJss-1NM5ocaeFdo5Co_w566qaRE0ahWsO217V82s2icgg7ICKh1_kvSW-E4NoSQkt4ULi1Icu_Agv4eTN94tmpPR2EhGZRo5evCp8szjMxY_fGIARzg) — zoom, pan and export</sub>
+<sub>[⤢ Open this diagram in a canvas](https://mermaid.live/view#pako:eNqV08uOmzAUBuBXOSJb0phbaBFCajVLVm13pYsTXwYrYCPbKIlG8-51gtuESLMoO__G37HN4S2imvGogkgM-kR7NA7a750C_7TkVxfVh6Yl9e7QQDcTcighIwRGWx_Mrrno2cBJG2YBp4mjuaVowU-A9cGxi37DdttAmwQqeaTKFQVCKmn7GFAxQHC9VEepXm_TUjFJ0WkDVCshzWhBOo-HjSZLkTQUSR-LJJ8KWGr4ddYBzkzq27iWzc_LxOFrvZPNHUsXLAtY9n_YtzWWLVgesHx1k4GyvTZukJ7TCiw1nKs7kC9AEYDiEdgHgJ-nARU66dc7fnbLZ_C3SKW7pfZJXmw6oLUvXIBAX1vIYag2jArKy9g6o4-82iR7zHIMw-1JMtdX6XSOqR60qTakSHmyf9JGyQImuMjoHWNfypLsP8TyIkGSPWHWd-VfTXDGin8ax-IzoR9rWZKT8kHz7Rz7RrmedZWmcZvF_pr9tld5casdxRCN3Iwo2fUneesi1_ORd37QRYwLnAffh-_X13B2-sdFUT_lzMx9Mk8MHX-R-GpwDPH7H8BAEq4) — zoom, pan and export</sub>
 
 | # | Stage | Budget |
 |---|---|---|
@@ -197,7 +197,7 @@ It follows the order in which the work actually happens — from the data gather
 |---|---|---|
 | 1 | **§3 · Before anyone speaks** | The offline build pipeline: scraping listings, curating them down to ten per area, reporting which fields the source actually publishes, indexing the neighbourhood documents, and precomputing every map fact. Everything the system can ever say is collected here. |
 | 2 | **§4 · How a single fact is carried** | The wrapper that every fact travels in — value, source, method, freshness, citation. The smallest structure in the design and the one that makes "say where it came from" impossible to forget. |
-| 3 | **§5 · What is stored** | Everything the system knows about — areas, flats, map facts, guide passages, the renter's requirements, bookings, the build record — grouped by how long each one lives, and the deliberate absence of any database, transcript store or PDF store. |
+| 3 | **§5 · What is stored** | Everything the system knows about — areas, flats, map facts, guide chunks, the renter's requirements, bookings, the build record — grouped by how long each one lives, and the deliberate absence of any database, transcript store or PDF store. |
 | 4 | **§6 · The backend, part by part** | The three paths through the backend — the conversation, booking, and the support layer beneath both — and the full list of components with the one job each of them has. |
 | 5 | **§7 · Listening and understanding** | Turning speech into text and text into requirements: the turn state machine, the 700 ms acknowledgement, how interrupting works, what the system remembers between sentences, and a Type A turn walked end to end. |
 | 6 | **§8 · Choosing the listings** | How requirements accumulate without disturbing what was already agreed, why filtering returns three groups instead of one list, how distances keep their method label, and the one listing fact that can change at runtime. |
@@ -223,7 +223,7 @@ Everything the system can ever say is collected **before the demo starts**. Noth
 flowchart LR
     S1["<b>1. Scrape</b><br/>bengaluru.rent<br/><i>strip owner names and<br/>phone numbers here</i>"] --> S2["<b>2. Curate</b><br/>keep up to 10 per area<br/>by a written rule<br/><i>never pad a thin area</i>"]
     S2 --> S3["<b>3. Gap report</b><br/>which fields the source<br/>actually publishes"]
-    S3 --> S4["<b>4. Build the RAG index</b><br/>1 to 3 guides per area,<br/>split semantically into chunks,<br/>embedded into ChromaDB"]
+    S3 --> S4["<b>4. Build the guide index</b><br/>1 to 3 guides per area,<br/>split semantically into chunks,<br/>embedded into ChromaDB"]
     S4 --> S5["<b>5. Precompute maps</b><br/>run the fixed OpenStreetMap<br/>question set for every listing"]
     S5 --> S6["<b>6. Manifest</b><br/>counts, gaps, curation rule,<br/>question set, embedding model,<br/>index date"]
     S6 --> OUT[("Artefact bundle<br/><i>read-only files</i>")]
@@ -234,7 +234,7 @@ flowchart LR
     class OUT out
 ```
 
-<sub>[⤢ Open this diagram in a canvas](https://mermaid.live/view#pako:eNp1k8tu2zAQRX9loGxaQFb8DioYBvIAsmmQImpXURcUObKIUCTLRx0jyL93JCZ20KLaSTO8587l6CXjRmBWZq0ye94xF-DrQ62Bnmr2WGebZjsroOKOWdycN9tN4863DeodU9HFwqEO46eN3PrgpAWz1-hAsx49MC3Gou2MRtCxb9B56NCRlNzW2U-YTLZQzRNnXsB1dCycOE-IFqKFYGA2BUu6zCFLFg7AYO9kCKjBRYXvLjT-pj7LBNVDJ3U6knBvc80TdpGwiwJumQWH1rhwRO87yTtoJSrhSQfBm-h4ojAeIlPqADY2SvoO_Ul7kbSXSXtZwFWUSowKD5e3ILXA5yNkNky2gF2UgtJ6ny8fa94qGcBjz3SQfMRJTe28i_rJpx6kQIVAkSrXnTM9u7k6mVkmM6tkZlXAN4fc9DYGhJ5ZfzTioh4ttvKZ1O4t6io4xHDH7Fj_FdEHaTT5CdAaB0PIB6Dhg9S7E3CVgOsEXBdwx7Rs6eyRxE3UweewI3wOfLjvQXe4wfwfVA5pQmJAT2uqUssYIgjalBN5PZLvf3x__FRnly5gS7cETdTitBqUrZgYTUm2UqFPS_GZFJIGV8z7G2zBB1o7alHlGQr80mJOq22esDy74AuG4u11spcidOXcPufcKOPKsznOpuvVX2omhjcxwVuOF0ex2Zotluy_YtMVya0_iNEPmVfzvFrk1TKvVjnNPDj92EHzD7wsz3p0PZOCfuyXOqOr7SmrEupMUDBRhTp7pSYWg6kOmmdlcBHzLNoh1BvJdo716ePrH8_zWrE) — zoom, pan and export</sub>
+<sub>[⤢ Open this diagram in a canvas](https://mermaid.live/view#pako:eNp1k8tu2zAQRX9loGxaQFZiy3ZQwzDQxEA3DVJU7SrqgiJHFhGKZPmobQT5945E1w5aVDtxhvfcefAl40ZgtoKsVWbPO-YCfP5aa6Cvmj7V2brZTAuouGMW19fNZt24602DesdUdLFwqMN4tJYbH5y0YPYaHWjWowemxRi0ndEIOvYNOg8dOpKSmzr7AZPJBqpZ4swKuI-OhQvnGdFCtBAMTG_Aki5zyJKFIzDYOxkCanBR4R8XGn9RnmWC4qGTOl1JuFNds4QtE7Ys4BOz4NAaF87ofSd5B61EJTzpIHgTHU8UxkNkSh3BxkZJ36G_aJdJe5605wXcRanEqLCLUiBILfBwxkyH2soU8ucK8zHmrZIBPPZMB8lHoNSUzruon33KQWqpEChS5L5zpmfbu4udebKzSHYWBXxxyE1vY0DomfVnIy7q0WQrD6T2aFFXwSGGB2bH-M-IPkijyU-A1jgY2nwEKj9IvbsAFwm4TMBlAQ9My5bunkncRB18DjvC58CHiQ-6wwzzf1A5pAqJAT1tqkopYxNB0K5cyMuR_Pj929O7OvvoArY0J2iiFpfloN6KidHUyVYq9Gkt3pNC0uCKeb_FFnygxaMUtbpCgR9azGm5zTOurm55yVCcfid7KUK3mtlDzo0ybnU1w-nNcvGXmonhJCZ4y_H2LDZdsnLO_it2syC55RsxepJ5NcurMq_mebXIqebB6dsMqn_gZTlkPbqeSTE87pc6o-H21K0V1Jmg1kQV6ux1SGMxmOqoOYWCi0gn0Q6d3Uq2c6w_Hb_-BnmaXMU) — zoom, pan and export</sub>
 
 **Three rules the pipeline enforces, because nothing downstream can fix them later:**
 
@@ -244,13 +244,13 @@ flowchart LR
 | Every listing gets a row for **every** OpenStreetMap question, `null` where there was no answer | Coverage is then uniform by construction. "No metro nearby" and "we never asked" stop being indistinguishable |
 | Each document chunk carries its area, its title and its URL | Citations become possible at all, and the area tag becomes the retrieval partition key (§9.2) |
 
-**Step 4 in three words that are easy to mix up.** They are not the same thing, and the document uses them precisely:
+**Step 4 in three words, kept deliberately apart.** They are not the same thing, and the document uses them precisely:
 
 | Term | What it is | When it exists |
 |---|---|---|
 | **RAG** | *Retrieval-augmented generation* — **the technique.** The model is never asked what it knows about an area; passages are looked up first, and the model is asked only to phrase those. It is a way of working, not a thing on disk | A behaviour of the system, visible in §9 |
-| **RAG index** | **The searchable store** built by step 4, holding every chunk of every area guide | Built here, offline. Loaded read-only at start-up |
-| **RAG chunk** | **One piece of one guide document** — a few paragraphs, carrying its area, title and source link. Splitting the guides is what creates them | Created here at build time. Every chunk sits in the index **whether or not any question ever retrieves it** |
+| **Guide index** | **The searchable store** built by step 4, holding every chunk of every area guide | Built here, offline. Loaded read-only at start-up |
+| **Guide chunk** | **One piece of one guide document** — a few paragraphs, carrying its area, title and source link. Splitting the guides is what creates them | Created here at build time. Every chunk sits in the index **whether or not any question ever retrieves it** |
 
 ---
 
@@ -261,7 +261,7 @@ This is the smallest structure in the design and the one that does the most work
 ```
 Fact<T>                      // in code: Provenanced<T>
   value        T or null     // "not stated" is a real value, not a blank
-  source       DATASET | OSM | RAG | COMPUTED | NONE
+  source       DATASET | OSM | GUIDE | COMPUTED | NONE
   method       null | ROUTED | STRAIGHT_LINE   // required for any distance or duration
   timing       PRECOMPUTED | LIVE              // worked out earlier, or just now
   as_of        date or null                    // the index date, when precomputed
@@ -289,7 +289,7 @@ flowchart LR
     class V,C,L view
 ```
 
-<sub>[⤢ Open this diagram in a canvas](https://mermaid.live/view#pako:eNp1ktFv2jAQxv-Vkyu1L2ElgQJLEdIEZUOK9hAqXpZputjnxKoTI8cpm6r-7zMJRQipect3vt_3-XxvjBtBLGZSmwMv0TpI0qwG_61_ZWyN3N1q97hSjcOa023hHue5vV-8om4phvBLBC9Vp1TkSiNi2D6n3zbffzz_STY_n7qKU5WqixiSze4pY79hMFhA-pYxUxNIYyt0jmzG3nvbtKvvvPk8X2z35oXq-X2-6Eh3mJvW9a5KG29pqekqqgaExllURelAK4_O2mgYjvsEJYE1KECc7tGpB6U15ATa1AXZOx_tMsGyT7BEKyBHUdA5xYfN4Ghz1ZX0XevWozXmpM9d28sukNb0Y-PGWKFqdNQEJ6Hat44E1ObQwXs819g0K5Ig_ZOA9NHjGy4lSgp8Hj-l-GY4-xrm0el3cFDClXG0_xtwo409lkej8fiaVn3A6IGmlJ9hk3wazYafwsIwnEXTK9irosOJJrjkND3TwgmOxvh5tIeIwskFDdbdPS-V9Jj1UtgFyyDpPFnAKvJ7pIRfZL9Y_rkr_zAxZEyQxFY7v13-ELbObP_VnMXOthSwdi_83FcKC4tVL77_B9Bd_28) — zoom, pan and export</sub>
+<sub>[⤢ Open this diagram in a canvas](https://mermaid.live/view#pako:eNp1ktFv2jAQxv-VUyq1L2ElgQJLEdIEZUOK9gAVL8s0XexzYtWxkeOUTVX_9zkJRQipect3vt_3-XxvATOcggQCocyRlWgdpNtMg__Wv7JgjczdKve4krVDzei2cI_z3N4vXlE1lED0JYaXqlMqcqXhCeyet9823388_0k3P5-6ipOV1EUC6Wb_lAW_YTBYwPYtC4wmEMZW6BzZLHjvbbddfe_N5_lidzAvpOf3-aIj3WFuGte7SmW8paW6q0gNCLWzKIvSgZIenTXxMBr3CUoCa5ADP92jU49SKcgJlNEF2Tsf7TLBsk-wRMshR17QOcWHzaC1uepK-65149EKc1Lnrt1lFwhr-rExYyyXGh3V4UmoDo0jDtocO3iPZwrrekUChH8SED56csOEQEGhz-OnlNwMZ1-jPD79Do6SuzKJD39DZpSxbXk0Go-vadUHjB5oSvkZNsmn8Wz4KSyKolk8vYK9SjqeaJwJRtMzLZrgaIyfR3uIKZpc0GDd3fNS2bZZL4V9uAzTzjMIIajIL5Lk7Sr71fIPXvmnSSALOAlslPP71R7DxpndP818ydmGvNIcuB_-SmJhsTrJ7_8B_v0AXg) — zoom, pan and export</sub>
 
 **The rendering rule.** One formatter takes the wrapper and returns *all three* renderings from the *same* object. The grounding test suite checks three views of one truth, not three independent pieces of code that happen to agree today.
 
@@ -311,7 +311,7 @@ flowchart TB
         FLAT["<b>Flat</b><br/><i>rent, deposit, bedrooms,<br/>floor, parking, where it is</i>"]
         MAPF["<b>Map fact</b><br/><i>nearest metro, bus stop,<br/>shops — measured in advance</i>"]
         GUIDE["<b>Area guide</b><br/><i>a Wikipedia or city-guide<br/>page about that area</i>"]
-        PASS["<b>Quoted passage</b><br/><i>a short piece of a guide,<br/>kept with its title and link</i>"]
+        PASS["<b>Guide chunk</b><br/><i>a short piece of a guide,<br/>kept with its title and link</i>"]
         REC["<b>Build record</b><br/><i>how many flats were found,<br/>which details the site did not<br/>publish, and when it was collected</i>"]
     end
 
@@ -348,7 +348,7 @@ flowchart TB
     class BOOK,CODE keep
 ```
 
-<sub>[⤢ Open this diagram in a canvas](https://mermaid.live/view#pako:eNqNVtty20YM_RUM_Uo1lmU7icajGfmWeuxUbuzED1UfllxQ3BG5y-7FrCbJvxfgUg5lJ034RHFBHOCcA1Cfk9xITKZJUZk2L4X1cH-61ECXC9nKiqaE049XN_d_LZPToCoPRueYQoaFsQi-RJBYG1iGg_3xIVgUcmR0tYFCVeiWyd8xF19SWcy9MvoJga-bxRmlPslmc3r35FU2O8nsq9mJmglouBpTwCnqlaiCDdPu7EpTJqHFStgUro0VteBzwSUcHJ-8UrMd2Mub-X1EuKyEHyJY1D6l8hvjlOeWpDWmdml3TnwYyk81rJVepdCWSP0qD8q9gHg_v72MEO9FA4XId2A0CovOQ43eGoIJDpw3TYRxpWnclr0ahQsWJSgNQj4KYvoF1ruPV-cX3xiDVVASd3l7UGvVoFQCjIVc-c0oBnFAI1YIIjPBk3bCg-hYf4ZxO7-7ixB_BuOpnkY4Ry_uwlDppE-jMEdWqS8ltrXGxkOrfEmMOfDKV4SqJVRKr1_AfbjoLcAGk-Sh3Fg5xCpNCyQymYoUdNCyEoUJWkawtlR5STp6oSrXWZL0JF8qCdr42HbIKuXKtCuCpNSsZCsc5KaqyJUod6pCLZf62RTcXH1i3ueVeqR-2eKEW8URYCehJWuAFxX7Zaso4Zf8k06ceET5CwPxMP-j9-sDCzRIL9yatKC5G3KTBbnCoXuhDs6PSkJzW3owTuqGuq3rQNR480KEu98XH3rcs2AZMQpMtO24meuJMmTInUnl8uAcEcgBVq1KT123KXuYZET7U2KvLy5uCXgRPFMbBcyNfkTrBLPzC5ydLhbXsfZPirSHzBhWYVh3NAlXzrPM96UJttcpjqI3_ey9M2ZFyp6JiuqlLdMdk5TATL5g7myxHcjjEW9QGn8Si9fqc96ia8QGMpGvuwNvaG6eqv0-UbQhYTSafVkmJRk2NKQejPeXyZdutX0vZswhE47otkUM6W77ILJjThtAaYrjweJQHvoYyWkH2Yzm2XU0dew9QBJm0xVf07L7J9BqYzlaZH9yIt6GMRENNox-6xLlNK7kGR4_iS63KkPXJenSxSGhtfSInIG62TbP09DXooW1pnUgTaupQQ7sTBsDu9s-sjGqA_O7JLFLvhHAvVBruyGsZR9iGtSOT_m1bTl5RZvwHAva4vwtpI9cNd1DiW8LTB2t9zVO917nE4Gy_zlqlfTl9KD5N6VVY-x07wDH-8dHz9LFndfnK46KSVH8b77xT_J1Sypmy4tCDKrbf_N2nB38sLr9N5PJ4eGzbGvEps8m8yLH10_Zxsdicih-nO2IqjseZGNpU6Y7ZZeknSdTdl4kdBjJ5om0DJ-yH9KoNfc4PGKd0k5ArjdJkxptLZSkPzeflwnNX01iT2GZSCxEILDkKwWJ4M3dRufJ1NuAaRIaKTyeK0HLqY4Pv_4HY2XxIg) — zoom, pan and export</sub>
+<sub>[⤢ Open this diagram in a canvas](https://mermaid.live/view#pako:eNqNVttu20gM_RVCeZU3cZykrREYcK4bJF0HTdo8rPdhpKGsgaUZ7VziGm3_fUmNnMpOu62eJA3FQ55zSPtLkhuJyRiSojKrvBTWw-PZXANdLmQLK5oSzj7e3D3-PU_Ogqo8GJ1jChkWxiL4EkFibWAeDg-GR2BRyIHR1RoKVaGbJ__EXHxJZTH3yugXBL7uZueU-jSbTOnb0_1scprZ_cmpmghouBpTwBnqhaiCDeP27EZTJqHFQtgUbo0VteBzwSUcnpzuq8kW7NXd9DEiXFXC9xEsap9S-Y1xynNL0hpTu7Q9Jz4M5acalkovUliVSP0qD8q9gng_vb-KEO9FA4XIt2A0CovOQ43eGoIJDpw3TYRxpWnchr0ahQsWJSgNQj4LYvoV1vXHm4vL74zBIiiJ27w9qaVqUCoBxkKu_HoQgzigEQsEkZngSTvhQbSs72DcTx8eIsQ1fwh5GfRyG4PqJnEahTmyRF0dsaclNh5WypdElwOvfEWQWkKlOMsO1ofLTn92lyQD5cbKPlZpVkAKk6NIPgcrlqEwQcsItipVXpKIXqjKtX4kMcmUSoI2PvYcskq5Mm2LIB01y7gSDnJTVWRJlFtVoZZzvTMCdzefmPRppZ6pX_Y34VbR_2wjtOQL8KJis2zkJPySH-nEiWeUvzENT9O_OrM-sTq99MItyRg0dH1usiAX2Lcu1MH5QUlobkMPxjFdU7d1HYgab16J8PDn7EOHex4sI0aBibYtK3M9UYYMuTOpXB6cIwI5wKpF6anrVcoGJhnR_pLY28vLewKeBc_URgFzo5_ROsHs_AZnZ7PZbaz9kyLtITOGVejXHU3ClfMg831pgu10inPoTTd418YsSNlzUVG9tGLaY5ISmMlXzJ3PNtN4MuD1SbNPYvFS3eUtukasIRP5sj3whubmpdofE0XrEQaDydd5UpJhQ0PqwfBgnnxt99qPYoYcMuKIdlXEkPa2CyI75jT-SlMcDxaH8sTHSE7by2Y0z66jqWPvAZIw67b4mjbdv4H2GsuxQvYnJ-JVGBPRYMPgjzZRTuNKnuHxk-hyqzJ0bZI2XRwS2knPyBmom03zPA1dLVpYa1YOpFlpapADW9PGwPa2i2yMasH8Nknsku8EcC_U2nYIa9mFmAa141P-bFNOXgnnLrCgFc4_hPQLV433UOK7AlNHu32J4703-Uig7B4HKyV9OT5sPqe0aowd7x3i8ODkeCdd3HldvuK4GBXF_-Yb_iJfu6RitrwoRK-6g7fvhtnhT6s7eDsaHR3tZFsiNl02mRc5vnnJNjwRoyPx82zHVN1JLxtLmzLdKbskbT2ZsvMiof1INk-kpf-W_ZBGrbnH_hHrlLYCcr1JCkmNthZK8n-bL_OEJrAmuccwTyQWIhBc8o3DRPDmYa1zOvI20D-bJDRSeLxQgjZU3b3-9h_DGfCz) — zoom, pan and export</sub>
 
 | Colour | Lifetime | Why it matters |
 |---|---|---|
@@ -356,7 +356,7 @@ flowchart TB
 | 🟦 Cyan | **Exists only during one conversation** | A refresh loses it, a second tab starts a fresh one, and nothing is written to disk |
 | 🟩 Green | **Survives the conversation** | And it survives in *Google Calendar*, not in a database of ours — the code is the way back to it |
 
-**How to read the arrows:** an arrow means "leads to" or "is made up of". *An area has up to 10 flats. Each flat has one answer for every map question we ask. An area has one to three guides, and each guide is cut into many short passages.*
+**How to read the arrows:** an arrow means "leads to" or "is made up of". *An area has up to 10 flats. Each flat has one answer for every map question we ask. An area has one to three guides, and each guide is cut into many short chunks.*
 
 ### 5.1.1 The same things, in engineering terms
 
@@ -364,12 +364,12 @@ flowchart TB
 |---|---|---|---|
 | **Flat** | `Listing` | The 18 details from spec §3.1, **each one a wrapped fact** (§4) that knows it came from the dataset, plus an id, its area (the specification's `locality` field), and a note of any duplicate merged into it | Two adverts for the same flat are merged when the address matches or the coordinates are within 50 m |
 | **Map fact** | `OsmFact` | One row of *{flat, question, answer}* — always from OpenStreetMap, always measured in advance, always stamped with the date | The question comes from a **fixed list**, so every flat has a row for every question — `null` where there was no answer. "No metro nearby" and "we never asked" stay distinguishable |
-| **Quoted passage**<br/>*(a RAG chunk)* | `RagChunk` | A short piece of an area guide, with its area, title, link and the date it was fetched. Created by splitting the guides at build time — it sits in the RAG index whether or not any question retrieves it | The area is not a label on the passage — it is the **key the whole index is split by**, which is what stops one area's text being quoted about another (§9.2) |
+| **Guide chunk** | `GuideChunk` | A short piece of an area guide, with its area, title, link and the date it was fetched. Created by splitting the guides at build time — it sits in the guide index whether or not any question retrieves it | The area is not a label on the passage — it is the **key the whole index is split by**, which is what stops one area's text being quoted about another (§9.2) |
 | **What the renter asked for** | `ConstraintSet` | Firm requirements, softer preferences, the commute point, and a flag per item saying whether it has been read back and confirmed | **Never edited in place.** Every change makes a new one, which is how "you changed only what I asked" can be proved (§8.1) |
 | **Current shortlist** | `Shortlist` | The flats being discussed, in a fixed order, in three groups: matched, unknown-on-a-detail, and excluded-with-a-reason | Grouping the cards by area on screen must never reorder it (§8.2) |
 | **Visit booking** | `Booking` | The flat, the hour (in IST), the state it is in, both calendar entry ids, and the renter's email | The states it moves through are in §10.1 |
 | **6-character code** | `ConfirmationCode` | Nothing but the code itself | It is the only credential in the system. Unknown codes and cancelled codes get **identical** answers, so it cannot be used to discover other people's bookings (§10.2) |
-| **Build record** | `DatasetManifest` | Every area with its count of flats and the total, the availability marker found, the list of details the site did not publish, the rule used to trim over-supplied areas, the map question list, **the exact embedding model and version used to build the RAG index**, and the date | This is exactly what sign-off requires published (spec §7.3). Producing it **as an output of the build** rather than writing it by hand afterwards is **[AD-2]** |
+| **Build record** | `DatasetManifest` | Every area with its count of flats and the total, the availability marker found, the list of details the site did not publish, the rule used to trim over-supplied areas, the map question list, **the exact embedding model and version used to build the guide index**, and the date | This is exactly what sign-off requires published (spec §7.3). Producing it **as an output of the build** rather than writing it by hand afterwards is **[AD-2]** |
 
 ### 5.2 What is deliberately not stored
 
@@ -390,7 +390,7 @@ flowchart LR
     class D2 kept
 ```
 
-<sub>[⤢ Open this diagram in a canvas](https://mermaid.live/view#pako:eNp10lFv2jAQAOC_cjKvRgWvQBUhJEi0vexh2t6G-3DEl8QisaOzgVZt__vkQKGr1Mez7767s_wiSm9IZKJq_alskCP8_K0dAMB6q8Uv4uAdtmAwohaPMB6vXrVg6vyRDGCEUDL2BNF2pMUrrNVWC0dHYiAXicNyx3er2BDsDs60pMXjWd9stci9OxIHjNa7G24ddNR5fpZAT71lCgneJLj2juDUkIPY0CAHCsF6B-RMuNp5mrz4fiOpQ9uSSU4-DOhjY10NTBGtSxeXymKrxcb7vXX1rfrENsbU0yegSMAP7-uWIMeWnEEeRlnaYU-m0rMBX0HkQ2yWd3Y18OcGZYshFFTBsEpl2zYbVUSKlAyR_Z6ykSnVXM0v4fhkTWwy1T_J0rees9H9bIIT_KTtqY8XzZRVSYurNp3jt3v8UpvMFE3nn7TA5QWjGS1od8Xmu4V6mHyJTafTB7X4gMFabmQuiyT-d6zkRslcDa_w8aJQwypCipqtEVnkA0nREXeYQvGSkrWIDaXvloEWBnmvhXZvQooe3V_vu_cy9oe6EVmFbSApDr3BSIXFmvGagofo_zy78hy__QN2PACz) — zoom, pan and export</sub>
+<sub>[⤢ Open this diagram in a canvas](https://mermaid.live/view#pako:eNp1kk1v4jAQhv_KyL0GFbwFqgghQaLdyx5Wu7fd9GDiSWLheCLblFZt__uOUwS0UnPKfLzPfHheRE0aRQ6isXSsO-Uj_PxdOeBv868Sv9AHcsqCVlFV4gEmk_VrJTz29IgaVIRQezUgRNNjJV5hI1nl8BE9oIusXu387Tp2CLuD05ZzHt7pW84ryHFiUNGQu8CNg575_jkDfBqMx5DA2wRuySEcO3TAxJEcMARWczEdzuwidV5-vyCxV8aiTpxibJBiZ1wLHqMyLgVOypKDW6I9By_qozcxppqUAGUC_CBqLUKhLBdWfmxlZcY5PdbkNVAD0R9it7o16xH_XqC2KoQSGxhHaYy1-U2DKFFmIXraY36ja7mQi5M5ORodu1wOT1lNlnx-czefqqn6RNvjEE80XTc1Ls-02UJ9u1Nf0qZzibPFJ1rw9QmGc1zi7gxb7JbyfvolbDab3cvlFQw22TYrsjIRP7hltpVZIcctXAdKOY4iMhCtN5oPk5eIbPXo-Q2TQ7wkQSV41-nkcv7lF9hXonJvSTco95eov0g9HdqOzUbZkOzDwMeMpVGtV1dp6hDpz7OrT563_0bBAlM) — zoom, pan and export</sub>
 
 **The absence of storage is a feature, and it should be defended.** Adding a database later would reopen every retention question the specification deliberately closed (spec §2.5, §3.2, §5.3). The one thing that genuinely needs to outlive a session — a confirmed booking — already lives in Google Calendar, and the 6-character code is how a renter reaches it again.
 
@@ -445,7 +445,7 @@ flowchart LR
     class VM out
 ```
 
-<sub>[⤢ Open this diagram in a canvas](https://mermaid.live/view#pako:eNqNVW1v4jgQ_itW-mFvpfRKeG0R4gQUnQ6Vq0RQq9OyHxxnQqwmNrWdUrS7__3GTkIDu0gb8YXMzDPPPPOSbx6TMXhDL8nknqVUGfKw2giCz_Kf2R9fNt5Uyb0GNYrUzTjnTMldKgVsvK-fyfX1-PvGC8imaLWiAaFFzOXG-06eQ4x7hiiU7AUM2VIDe3rAkBL4Oawi29Z5_YjOo2i8LpQgj4qloI2iRqrRTTR2WUd8rAqhiUmBGOtFRewMO85eytcZFTC64eNjjnC9RthwB8BSYiQx8G5qsHuA3VbR_CRg_UhGJatOXc9eqlhbighWoS4tKGjNpSBLKui2EgZR9yk1JKWaRADCvdSUx0RLklB1IZWCHPIIVJlluRGlgy4i5LdLycPk3_kEUz5geWSCvNqtoEsKEWOIQRV8W7wgLJVSA6l5E3gDdXBSHXPaJ-YKmLHU6xbbZxFggoWMSFBX8reSr5aw--9EsAoqeC24JSwM0v1qW0hmK4ydSWE7xkUp8ArigoGqXcK5lSyVymRclx5zseVugkqM0GHkeWHAmUNQb5zBkTqI-JfCTGthprUw8L7LkIdP9tykqHyhGOgPWT7t08Nfn5wumkiRHX5DnZVltwKjOLzRrFbIpFwTqoA6mKq5rprVvAzQMsMm6DoAN6biQ3agCEOaeTNs0a6a0K4jJsKkuGucHTuxSxXVUM57QlmjC3ZEZhaSTLTGgco-pjJGjDKkEIwbiraTWWyIi2NZTmX3uNAZrq2bTTeIZ2692s1qQBJZ5qxEfi1wjVHMY_S0TuOgKoi-tT4tPwzTXxmeluWFeOKwv17iucrItOAZLkHzRNgaHRNsjtjakp0lKs-X2wmcYQb8DfSJBE_LKumgLijhuF5E46SDsIOIR2pt27rGI2JXQbuzUicOc5plWO2flJ-u-drdOTKfrM7vKALQF7cjny9xYNTuHe44sW07Sjn_b_4TGFN4cUqsEg3HS-t7SEhhK094lg2v4ghoAj5uqnyB4VW71-9AVP293vPYpMP27t1nMpNqeNWKgqhDz9CYVFChsSRporVu74KofYrWaaDddjrd7hla7hpZwiWQdNjgCBffDQat_kVy3V5AW52fyMU1uZglDD7Qgj7tdOnlUnttCPpnaLIwNbUEutA_gkEQxN3by9RYqxfcNcDsV9THCfCxca4dTdtz6K8f_XDplG0a8IPjLwJ_0fbtEDmlmubZyg_n_iz0V_ibh_5s4spvuuBAYQ2e7-WgcvwO4Rf-28bDpchxnodk48WQ0CIzG-8HOtHCyPAgmDc0qgDfK3YxfrPvObWfyfLlj_8BnRCZoA) — zoom, pan and export</sub>
+<sub>[⤢ Open this diagram in a canvas](https://mermaid.live/view#pako:eNqNVW1P4zgQ_iuj8GFvpXA0bSlQVT21pTodoofUVKDTdj84zoRYJHaxHQra3f9-YycpgV2kjfqlHs8zzzzz4m8BVykGYwiyQu15zrSF6_VWAn2rfxZ_fNkGc632BvUk0SfTUnCtdrmSuA2-fobj4-n3bRDBtur1kjNgVSrUNvgOdzH53WESK_6AFu6ZxT17IZca-C5uPPvu8uaGLk-S6abSEm40z9FYzazSk5Nk6qNOxFRX0oDNEay7xWTqDTvBH-rjgkmcnIjpIUa82RBsvEPkOVgFFp9tC3aJuLvXrHzjsLmBSc1q0OazVzo1jiKBNagrB4rGCCVhxSS7b4Qh1H3OLOTMQIIo_aFhIgWjIGP6g1AaSywT1HWU1VbWF0yVEL9dDtezf5czCnlN6cGMePV70RAqmZKLJRVCl7wEnitlEFregE-oX7xUh5juS4VGbh31tsTuu4oowJVKIGoz-VurR0fY__ciOAU1PlbCEZaW6H51JYTFmnwXSrqKCVkLvMa04qjbK_HSSZYrbQth6htLeS98B9UYsccoy8qiN8eonwTHA3WU6S-FmbfCzFth8HlXEI8Q9sLmpHylOZpXWT7t85e_PnldDChZvPyGOmvHbo1WC3xiRauQzYUBppF5mKa4Ppv1snYwqqAimNaBJqbhAzvUwIlm2XW76jdF6LceM2lzmjXBD5XY5ZoZrPs9Y7xTBdciCwcJM2OooYrXrkwJo3apJBeWke1NL3bEpbasu3J4GOiCxtb3pm_Ed9dO22tOA8hUHbMR-bGiMSYxD97zNoyHaiBGznq7ejXMf2W4XdUb4lbg_nhF-6qAeSUKGoLuinA5eiZUHHnvUvaWpF5ffiaohzmKJzRvJLhdNUHP2oQyQeMFhjodpWtEWlIbV9YNLRE3CsavlTZwXLKioGz_ZOLtmG_8noPlbP1-jxIAe_Az8vkjDpy5uaMZB1e2g5TL_5Y_gXFNG6fGqtGovYy5xAwql3kmimJ8lCbIMgxpUtUDjo_6p6MBJs3f471IbT7u755Drgqlx0e9JEoG7B0aVxobNJ5lXbTe-UWU9N-iDTpo54PBcPgOrfSFrOEyzAb87ACXXpyd9UYfkhueRqw3-Ilc2pJLecbxFS0ascGQfZzqaR-j0Ts0VdmWWoZDHB3AMIrS4fnH1HjvNLrogLlXNKQOCKlwvhxd210cbm7CeOWV7RrowQmvovCqH7om8kp1zYt1GC_DRRyu6beMw8XMp9-9Qg1FOQQhBCXqkh4i98Z_2wY0FiV19Bi2QYoZqwq7DX64a6yyKn6RnExWV0gn1S6lh_tSMPdWNsc__gcL55qA) — zoom, pan and export</sub>
 
 | Colour | Means |
 |---|---|
@@ -483,7 +483,7 @@ flowchart LR
     class G,GM ext
 ```
 
-<sub>[⤢ Open this diagram in a canvas](https://mermaid.live/view#pako:eNp1k29v2jAQxr_KybxptSAIf9cIZYKisUqthhrUN81eXJILWDgxc5xS1Pa77xIKY2jkRWTfc_49Z5_9JmKdkPBEqvQ2XqGxcP8Y5sDf5Oo5FD9NvKLCGrTaOJBqAwjFRq8pB0O_S5ZGkWn5Ydlpuz1g2a4IIqO3BXH-VtoVL6gsQvHrGppNH8bzO-b-WCzm1ZDDezce1_IkYHUU-ROt1zJfQkDmRcY0akV-7TSSfqG0BTTMzsjKGGQOd8HCqeWNQp5WhqOW9I_0SVDB30NRWKkU6LyuM0OzJvstFO8wfmLb8QtKhZFU0u7gkZaysGQOrjJvZpRpswP9Qkbh7j8GcDu-Z84tKsoT5LNKcMMIzqrV2fNVKGZaLxXBIeeAt5RjbuEL6G3OpjX7-l_4fPqd4fwHzBMuXqoj-KEm70PVqv26WGFRTCmFkrsBKe_cayQRYUoOt5Sb6DU6_UGXos9pcysTu_I6m1cn1kobr9GO3KiLZ7TqdA-0OI1peKS5A-z28DKt3yF3cEbTpf2EpSn1aHCEkesmva8XYb243XdvzmD0eoRR2o3_VpbcDIftwWVY38V29wQGk_rQTiN8Q51J4HCLnfHT_k6fqFVbeCunoZkze6gqEo7IyHBzEn5nb6Hgq5fxe_AgFAmlWCobig9OwtLqYJfHwrOmJEeUmwQtTSUuDWb74McfCjMvIg) — zoom, pan and export</sub>
+<sub>[⤢ Open this diagram in a canvas](https://mermaid.live/view#pako:eNp1k21v2jAQx7_KybxptSAIj2uEmEjRWKVWQwX1TbMXl-QCFk7MHAeK2n73XcLDGBp5Edn3P__-Z5_9LiIdk_BAJEpvoyUaC4_PQQb8-TevgfhpoiXl1qDVxoFEG0DI13pFGRj6XbA0CE1jGBStptsBlu2SIDR6mxPnb6Vd8oLSIxC_bqFeH8Jo-sDcH_P5tBxyeO_G40r2Z6wOwqGv9UpmC5iR2ciIBo1wWDkN5DBX2gIaZqdkZQQyg4fZ3KnktUKeloaDhhye6P6shH8EIrdSKdBZVWeKZkX2WyA-YPTCtqMNSoWhVNLu4JkWMrdkjq4yq6eUarMDvSGjcPcfA7gfPTLnHhVlMfJZxbhmBGdV6uT1JhATrReK4JhzxFvKMLPwBfQ2Y9OKffsvfDr-znD-A2YxFy_VCfxUkfehctV-XaQwz8eUQMHdgIR37tXikDAhh1vKTfRqrW6vTeFhWt_K2C691vrNibTSxqs1Qzds4wWtPN0jLUoi6p9obg_bHbxO67bI7V3QdGEPsCShDvVOMHLduPP1KqwTNbvu3QWM3k4wStrR38riu36_2bsO67rYbJ_BwK8O7TzCN9TxZw632Bm97O_0mVq2hbdyHpo4k6eyIuGASMlwd-Lypb0Hgi9fyi_Cg0DElGChbCA-yzQsrJ7tsoglawriSLGO0dJY4sJgegh__gFqmjAC) — zoom, pan and export</sub>
 
 No model appears anywhere on this path. Details are in §10.
 
@@ -493,7 +493,7 @@ These parts touch everything, which is exactly why they are drawn once here inst
 
 ```mermaid
 flowchart LR
-    CFG["Config and boot check"] -->|"refuses to start<br/>if anything is missing"| AR[("<b>Artefact store</b><br/>dataset · RAG index ·<br/>precomputed map facts")]
+    CFG["Config and boot check"] -->|"refuses to start<br/>if anything is missing"| AR[("<b>Artefact store</b><br/>dataset · guide index ·<br/>precomputed map facts")]
     AR -->|"read-only, loaded once"| USE["Shortlist Engine<br/>Commute Service<br/>Retrieval"]
     TEL["Telemetry"] -.->|"one trace per turn,<br/>one span per component"| ALL["every component above"]
 
@@ -505,7 +505,7 @@ flowchart LR
     class USE code
 ```
 
-<sub>[⤢ Open this diagram in a canvas](https://mermaid.live/view#pako:eNp1kk1v4jAQhv_KyFx2pbAFuiXdCCEhyvbCCbqnugfHnhCrjh3ZDi1q-993YlgWVWpOzjszz3y-MekUsoJVxr3IWvgI6w23QN_y9_0jZ0tnK70DYRWUzkWQNcpnzp5gOJy_c-ax6gIGiA5CpOhZ6a_muiL_Q6y13YEO0OgQ6MnZOyw2j984m5XzhY9YCRkpynmcXZXzFKlEFAEj8G40KnPYLO5BW4WvJyH5tB6la9ouooJGtNBjAmffn45lLzbn0oQaOmsOGRgnFHk7K7Gv4s92RZ1ta-ej0SHCyu60xQRfuqYhMmzR77U8ahuMXuNeGGr7mONhtSbAAxpsyHZI4_iRkjqLEL2QCC16iJ23WWL0emiFTXJfPgk2ppGsexbu0R_-G0CUbo8p3zGjNCKEO6ygNSJCpY0pBniDOZZZiN49YzGYlvnkdnT6Hb5oFeti0r5m0hnni8F4PL6d5J9oafr_cAp_VXjG5fJaoPoSN8HxaHrzCdff0ommZCUxP9PGU3H9U3xJG90Qb3pB668vozFnNJ7U86WNVpwKv9Ropyk9y1iDvhFa0VG_cRZr2hFnBXCm6OI6Q0P_ICfRRbc9WMmK6DvMWNfS7eGdFjsvmqP48ReAZgoO) — zoom, pan and export</sub>
+<sub>[⤢ Open this diagram in a canvas](https://mermaid.live/view#pako:eNp1kk1v4jAQhv_KyFxaKWyBLqSLEBKi7F44QXuqe3DsCbHq2JHt0KK2_30nhmVRpeYUvzPzzOc7k04hmwIrjXuVlfAR1htugb7l7z9PnC2dLfUOhFVQOBdBVihfOHuGfn_-wZnHsg0YIDoIkaJnhb-Z65L8D7HSdgc6QK1DoF_OPmCxebribFbMFz5iKWSkKOdxdlPMU6QSUQSMwNvBoMhh12qFoK3Ct5OUvBqP0tVNG1FBLRroQIGz6-dj4YvNuTih-s6aQwbGCUXezkrs6njcrqi3beV8NDpEWNmdtpjgS1fXRIYt-r2WR22D0WvcC0ONH3M8rNYEeECDNdkOaSA_UlJnEaIXEqFBD7H1NkuMTg-NsEnuyifBxjSUdcfCPfrDfwOIwu0x5TtmlEaEcI8lNEZEKLUx0x6OMcciC9G7F5z2JkU-uhucnv1XrWI1HTVvmXTG-WlvOBzejfIvtDT_fziFv0o843J5K1B9ixvhcDAZf8F153SiKVlKzM-04UTc_hTf0gZj4k0uaN39ZTTmjMaTer600YpT4Zca7TSlZxmwGn0ttOoO-52zWNGWOD04U3R1raGxf3Zuoo1ue7CSTNG3SErb0AnivRY7L-qT_PkXY1QMIg) — zoom, pan and export</sub>
 
 The artefact store is **read-only at runtime**, written only by the offline build (§3).
 
@@ -553,7 +553,7 @@ stateDiagram-v2
     class SPEAKING talk
 ```
 
-<sub>[⤢ Open this diagram in a canvas](https://mermaid.live/view#pako:eNp9k11vmzAUhv-K5dxtRArQQMfFJvKxKWpVRaG7qMY0GfvQWCE2ss2yqep_n8GB0GwaFwiO3-d8-wVTyQAnWBtiYMXJsyLH6c8gF8g-3959R9PpR7RZ3a-dpf3qTMt0-_h1t3n4kiAFwoBC1oMyGukayIGLZ6cfZB30uEsfsuVus-g4EAzJsgWA7hEDA9QAc9xY2aHp8i5BJ6mYRlIgTRWAQO8RF4xTYqRymFW57O7TLNt8furinPbc-rc5deFMo8Snc3IXlUvvabv-kSaoVlCCrYoCksqWV3IBR1vkf6iFLedXXRFBDJfiXEPnrtNk23V6Z4HRweIfB_3f0PQE2dhc7_u2vBH8PQLevlVTG52fc6AV0XoFJToRbqyzqkomMIcYCk8bJQ-QTKIiDm5nHpWVVMnE9_3bIL6CK66NbbfDWQGkhAEP5lFovZ3xWeEXIbmOLdWhh2lJIR5gPyLhDRngeQB-dAUbUvVwCWVILzD7EMezqIdv5j6ZhSPY7Wpb99g4NM17s2KuwrHQrpI3GrXnpumdZ9eWNFYPg2nTxR4-gjoSzuzFesmx2dv1yXGCcsygJE1lcvxqRaQxMvstKE6MasDDTc0ul9AZX_8AuBsdZw) — zoom, pan and export</sub>
+<sub>[⤢ Open this diagram in a canvas](https://mermaid.live/view#pako:eNp9k11vmzAUhv-KRe46IgVooOOiE_nYFLWqotBdVKOajH1orBAb2WbZVPW_z2AgNJvKBYLj9znffnWIoODEyFEaa1gx_CLxcfrLzzgyz4-rZzSd3qLN6n5tLc1Xa1om28fvu83DtxhJ4BokMh6kVkhVgA-Mv1j9IGuhx13ykC53m0XLAadIFA0AZI8oaCAaqOXGyhZNlncxOglJFRIcKSIBOPqEGKeMYC2kxYzKZnefpOnm61Mb57Rnxr_JqQ2na8m_dMmdVTa9p-36ZxKjSkIBpioCSEhTXsE4HE2RH1ALU87vqsQcayZ4V0PrrtWk23VyZ4DRweI_B_3f0PQYmdhM7fu2vBP8OwLWvGVdaZV1OZASK7WCAp0w08ZZWcYTmEMEuau0FAeIJ2Ee-Tczl4hSyHjied6NH13AJVPatNviNAdcwID78zAw3jp8lnt5gC9jC3noYVIQiAbYC3FwjQd47oMXXsAalz1cQBGQM0w_R9Es7OHruYdnwQi2u9rUPTYOTXPfrZitcCw0q-SORu3aabrd7JqSxuphME26joucI8gjZrS5Wq-Zo_dmgTLzkzkUClyXOnPeGhmutUj_cGKOtKzBWOqKnm9iZ377C6xAHkc) — zoom, pan and export</sub>
 
 **The acknowledgement is the load-bearing state.** `ACK` fires the moment the final transcript is on screen and the thinking indicator is up — **before any model is called**. That ordering is the only reason the 700 ms budget is reachable at all; the specification says explicitly that no model call may sit inside L1.
 
@@ -612,7 +612,7 @@ sequenceDiagram
     TO-->>FE: shortlist ⟵ L4 under 3 s
 ```
 
-<sub>[⤢ Open this diagram in a canvas](https://mermaid.live/view#pako:eNptVF1v4jAQ_CurPFE15QjQo_DQJz4kdBLVhce8GHsBi2QdbEccqvrfbx0SjqNEiuR4x-uZ8cSfkTQKo0nk8FghSZxqsbOiyAj4EZU3VBUbtJfvUlivpS4FeViDcPAbyT8qzmehOreGy6QeLF6F-srKPTpvhTcPekwXATNFLP8Ruq0vk1Bfmg0k0FlYc3z6jklrHuneWJ9r52FGO034gM86rYGFyHNm1BU6owtq_fL-Pp9NwJUoDu4yN5_x5Ho1YX-UNrBleuigw0pQFJp2DZH1imHTRQvrSEOE0mtDIHKGqjOYEqlBTxcvTdeamMiBjSEnrS69uzZs2HyHAHflESJBVvVH21f41YOKFFoY9HpQuPtdtpr-b9AZ1jhwOg9BiCE3tOPlegt-j-DCUfM8T5uD49bcQLs9qrBfLxnCxyDmd9PIsawU7G4jOoNhDMl4FMOYB71u8vPpXs3JWOXgmbfRdGD_QJPSMqTiqiVptIxutFyTVRu9TCa3ap5BVtYyZ2ZyrLTFgsfNwmXSmnDaCw9yL1ioikMC-Awr6SvLspTw4qZ_ykRFWebn2o3LmjiMia3M-S-AjiYorZHoXCMxnbUbFcLL4NUP1nEgcyIe4R-ZVwrVvWH92rHROIa32rC32zxxUsPZWQ7z9UQMMavGqY9hA16nrb2X-DnPmXFXQ_uNoUn3FR742ab--ue064ZtqMBFcVSgLYRWfH98ZhF7UWAWTSCLFG5Flfss-mJQuEXSM8lowuZiHFUlW9teNJfJr789l3JG) — zoom, pan and export</sub>
+<sub>[⤢ Open this diagram in a canvas](https://mermaid.live/view#pako:eNptVE1v4jAQ_SujnKiasqTQpeXQEx8SWolqwzEXYw9gkYxTf6iLqv73HYeEZSmRIjme5_F7zy_-TKRRmEwgcfgekCROtdhZURUE_IjgDYVqg_b0XQvrtdS1IA9rEA5-I_lbxfksVufWcJnUjcWrWF9ZuUfnrfDmRo_pImKmiPU_Qpf1ZRbrS7OBDHoLa97vvmPyhke-N9aX2nmY0U4T3uCzzhtgJcqSGfWFLuiEWj-8vs5nE3A1ioM7zc1nPLleTdgfpQ1smR466LESFJWmXUtkvWLYdNHBetIQofTaEIiSoeoIpkZq0dPFQ9u1ISZKYGPISatr784NWzbfIcBdeYRIUITH8fYJfg0gkEILw8EAKne9y1bT_w16owYHTpcxCCmUhna8XG_B7xFcPGqe52lzcNyaG2i3RxX3G2QjeBum_G5aOZaVgt1tRG84SiF7GafwwoNBP_t5d63mw1jl4J630XRg_0CT0jKm4qwla7WML7Sck9UYvcwml2ruQQZrmTMzeQ_aYsXjduEy60z42AsPci9YqEpjAvgMg_TBsiwlvLjonzNRUdflsXHjtCaNY2IrS_4LoKcJamskOtdKzGfdRpXwMnr1g3UcyHwQj_CPLINCdW3YY-PY-CWF58aw58s8cVLj2VkO8_lEDDGr1qm3UQte5529p_g5z5lxZ0MfW0Oz_hPc8LNL_fnP6daNulCBS1JIKrSV0CreIJ9Fwm5UWPBHkSjcilD6IvmKsHiR5EeSSTyjwL4loWZ_u9umnf76C0v0cyY) — zoom, pan and export</sub>
 
 Note what is **not** in this picture: no network call to a listing site, no map lookup, no second model. A Type A turn touches three providers — speech in, the fast model, speech out — and otherwise runs on data already in memory.
 
@@ -657,7 +657,7 @@ flowchart TB
     class X,E bad
 ```
 
-<sub>[⤢ Open this diagram in a canvas](https://mermaid.live/view#pako:eNp9lF1vmzAUhv-K5VzkYlQF0iQdijJtajVNU9dJWaVKZRcGHwcvxma2GY2q_vcdIKQ0U5crMJzn_cDxE80NB5pQoUyTF8x68uNTqgn-vnx7SOlHpYiSzku9davMnq_fEV8AsaA92KnDi9-1tFDivUvpT3J2tibX3z4_pXRTGOvbUXKtt1JDN72Sa0aq2gIRtc69NHp1Ltcpfe4lcbIj3KDyKluXzOcF8NV5tu6m4Q_YPUGTfKxLSvAo_Zpw1xNqvdOm0aTVOUDYMMuJkKA4kX2wqTaeOM888CkRxmJO6Ybs__Dvez485qrmI4uCSYVk9spgWsdhdDEUsIPKB6SRvjhUydxQA4r0MjedyOZhXKMrMMnRyF33xi2-cSsEtGkcVMyifbVP-kAzUhpsuinwcSfFoTJO-u4pZnsJfHBIGoZuvUFUN1B-mB717vtPi3rfTQPWdUAoK7_vGcmxxAL7IrXmYEk83xGpyVdjWcn0lik2HVpoxX_VGAtHsANXK--mJy3kijl3BaJlCKlUMuEZMAGB89bsIJnE88UMssPtWSO5L5K4egxyo4xNJmEWZTN2wgJ018NgDsvjdDJZZMv4MnwTFkXRZbw8gW2N4YO1XOSwPNKiBZtdsLetzWOIFie0htkhqAAxy19o_P1yGS7epF3MIxbOTmgZ40cYxBC_wPJ4Ef8PFrJw3BqeBPgFxgvtvwB7HC_dBJuujfHaXXDbZRqv3QfXrTMa0BJsySTHswdPi3a3QUoTklIOguFuwEMBX2K1N5u9zmnibQ0BrSuOm-1Ksi1uqX7x-S9l-I7w) — zoom, pan and export</sub>
+<sub>[⤢ Open this diagram in a canvas](https://mermaid.live/view#pako:eNp9lFFvmzAUhf-KRR7yMKoCaZIORZk2tZqmqeukrFKlsocLvg5ewGa2GY2q_vddIKQ0U5cnuPb9zrkHx09epjl6MfNEoZssB-PYj0-JYvT78u0h8T4WBSukdVJt7So15-t3zOXIDCqHZmrp4XctDZb0bhPvJzs7W7Prb5-fEm-Ta-PaVnattlJh172Sa2BVbZCJWmVOarU6l-vEe-4lqbMj3JDyKl2X4LIc-eo8XXfd-AfNnpFJPtZlJTqSfk246wm12indKNbqHCAw9HImJBacyX6wqdKOWQcO-ZQJbWhOaYfZ_-Hf93x8zIqajywKkAWR4ZXBpI6C8GIIYIeV81kjXX6IEuwQA4n0MjedyOZhHKPNaZKjkbtuxy3tuBUC22ksVmDIfrGP-4FmrNSUdJPTcifFsdJWum6VZnsZ-OCQNUBunSZU11B-mB717vtPS3rfdYPGdkAsK7fvGfExxJzyYrXiaFg03zGp2FdtoAS1hQKmQwqt-K-axqIWysDWhbPTkxSyAqy9QtEyhCyKeMJTBIG-dUbvMJ5E88UM08PrWSO5y-OoevQzXWgTT4I0TGdwwkJy18NwjstjdzxZpMvoMngTFobhZbQ8gW215oO1TGS4PNLCBcwu4G1r8wjDxQmtATMMKlDMshcaf79cBos3aRfzEILZCS0FfoRhhNELLIsW0f9gAQTj1OgmoC8wLrT_AspxXLrxN10a49qdf9vNNK7d-9etM89nXommBMnb24fui_a8YUIvicdRAJ0HuhbabVA7vdmrjJacqZEqdcXpxF1J2NK5OpSf_wIn4I_Q) — zoom, pan and export</sub>
 
 **Why three groups.** A listing whose deposit is simply not published has not failed the renter's budget test — but it has not passed it either. Dropping it silently would turn every sparsely-filled field into an invisible filter, quietly making results worse the more fields the schema has. So unknowns become their own group the renter can opt into (spec §3.1).
 
@@ -716,7 +716,7 @@ flowchart LR
     class VM out
 ```
 
-<sub>[⤢ Open this diagram in a canvas](https://mermaid.live/view#pako:eNp1k01v4jAQhv_KyBy4hK-EDzVCrFDbC9oeClJ72OxhYk82Fk6c2k4pqvrf1ySURkjkNjOe531n7HwyrgWxmGVKH3iOxsHvbVKC_57_JKz_mh_B5dKCLulXP2F_YTBYwXbna8t0NRnClpyR9I5qOUpXy9SMVrpU5x40hH3bJIXmdUGlA57X5d56UCuy3bXAxzMxPBGtVu9kbIdIYHVtOEFFpkntZSlAZ8AVyuKH9tjiNmFLi4aw0SmEF1KVG7RkvT2CDLlrzUkHB7SQYylIXGCbsGHdr1vWdAhra6lIlbfwzSPv8wjWD0ald1fU1jV5Z9CHTgM2MpDU4XgybUpLudJe3jTrAWF0VZFYjuTqIny_boRfnrzwjhuiMgZHHy5o-rl06KQubQAKU1LtLttOvw1rHyiDN8ikUnFPpIQZBdYZvae4F87mEaXncHCQwuVxWH0EXCtt4t44naQRXqGso-qbxjNOiwttMsdoirdps5Am8yta4V-bOuMyyiL-gxN3i8V4fhM3nU1wHF3hdO3OMBJ015l0wSMkcRPmnY3nsw4MnuGtG253gX9Mgb-K0_zdin8WzRDd3MvTyQkLWEGmQCn8__SZMH_LBSUshoQJyrBWLmFf_hDWTu-OJWexMzUFrK4EOnqQ-M9g0Sa__gPfQilk) — zoom, pan and export</sub>
+<sub>[⤢ Open this diagram in a canvas](https://mermaid.live/view#pako:eNp1k01vozAQhv_KiBxyIR9APlQUsYraXqLtoYnUHpY9DPawWDGY2qZpVPW_rwNpiiKF28x4nvedsfn0mOLkxeDlUh1YgdrC721agfue_6Te8LU4gi2EAVXRr2Hq_YXRKIHtztVWWRKMYUtWC3pHuZpkySrTk0RV8tyDmnBo2iRXrCmpssCKptobB-pEtrsO-HgmhieiUfKdtOkRCYxqNCOoSbepvag4qByYRFH-0B473CbsaNEYNiqD8EKqC42GjLNHkCOznTlh4YAGCqw48QtsE7as-3XHmo1hbQyVmXQWvnnkfB7BuMGocu7Kxtg2bzW60CrAVgbSJpwGs7a0Eoly8rpdD3Ct6pr4aiKSi_D9uhV-eXLCO6aJqhgsfVi_7WfCohWqMj5IzEh2u-w63TaMeaAc3iAXUsYDnhHm5Bur1Z7iQThfRJSdw9FBcFvEYf3hMyWVjgfTLMgivEIZS_U3jeWMlhdasMBohrdp85CCxRWtdM9NnnE55RH7wfG75XK6uImbzQOcRlc41dgzjDjd9SZdsgiJ34Q5Z9PFvAeDZ3jrh9ud7x6T767iNH-_4p5FO0Q_9_J0cuL54JWkSxT89Ed9pp6755JSF6QepxwbaVPv63QMG6t2x4q5ktUNuUxTc7T0IPCfxvKc_voPGkQqRA) — zoom, pan and export</sub>
 
 ### 9.1 The RAG pipeline, end to end
 
@@ -733,7 +733,7 @@ flowchart TB
         G1 --> G2 --> G3 --> G4
     end
 
-    G4 ==>|"ships as a<br/>read-only file"| DB[("<b>The RAG index</b><br/>every chunk of every guide,<br/>each with area, title, URL, date")]
+    G4 ==>|"ships as a<br/>read-only file"| DB[("<b>The guide index</b><br/>every chunk of every guide,<br/>each with area, title, URL, date")]
 
     subgraph ON["Question time — inside one turn: first audio by 1.5 s, checked text by 6 s  (§9.2 to §9.4)"]
         direction TB
@@ -763,7 +763,7 @@ flowchart TB
     class GAP gap
 ```
 
-<sub>[⤢ Open this diagram in a canvas](https://mermaid.live/view#pako:eNqNVl1v2zgQ_CsL9SEtoDjWh-3Yl_qQXK5GD4e2blPcQ90HSlxZhGXSJak4Rtv_fktRlj-KHE4IIJmiZoazs2S-B7niGEyColLbvGTawsPdQgJdps6Wmm1KeP_mzZdFcFeLioMVa4RFHfejFDjbGciwUBrBlggc1yoEVRSVkAjwclH3-2yUvFoEXz2iu7jQmFuhZMfjrllEDDfZNOrBH6qqaAYsa8HR3Fxl05tMX00jsAoS2KAGppGFUGi1hn_ESmyQC9bMYZKD2qCEXNhdC3BCPos9TUw0ZS1XYHDNpBU5q6pdR2U2lbCwLbFd142YrpFJIZc3V2IKphSFNWEzVSoL-Ih6B-_Aucdyi_qMM_GcSQ_-XGfIAVle0mSi7xhtrSVYfLIgJC2TwSM5oPQpTupx0h58ss5yIWkRZAK7v-uASKoi73PvoXN5b5iTfooXweXllCzxt8TfUj8BJV9I_zhL4fXr6Y9FQOveGGD011ARJr9UstpBISpcBD_g_u7Ly0biA5n28XZGCjk-ddq8T83CKSStbU2RvJeNL1thy7bAVtgKQ_j88e-QomaJ4tXXvahDNt-RK_MaTbPY43QKaQganB3O3gnJ1MYCq7lQkO0g6g3AhKQH8xVVpXGfhodguuiOe7FL3f5H-n-SPG-TPNiX2yXoWyuw8-JCGHgrCYFJtmQapBJm9_vFCf68DeuQCo5MkzmnpT2khxicZc5V91wJIqOwuncZ0hNJNXltDKlpzaGcuGah-JbuPVYGfwnIvA3uqAcPbOVbwaoNFLj1VTw0Z1M6Iq0qyJnWO4cprPHqXBnBsdG2sDplaCN93YO_VAYxbErNDBpHte7AC5Q5Kad9xYWvllbXxtIAZYL95mdQ2xkqeEj9LK2bbkDV9pRr4LnGrvWp5G3-9h90bFKBRqOqR5aRbNpImPN63-3d_FNs30pz30pz30rz1N8Gv3TU_Z17Qx3VtZCHrxTjbqEED4zCqJR1bTWP_WfzQQP4_vMDreRWmi11NoXP5Bppy3MGs0rVPDxutoqJNVjaltAtpxPtJPYaCfsEFKomgcQ2u_3gjBLTi7fAlbywULJHBIliWWaq1qVSvGFw9tNnmopFYl3-LroIeRZiN-YeC8iao4O2iWryAjmOCwyN1WqFkxejPGHI25-XW8FtOYk3TyHFXOnJixij_nBwBmea7c_D5UXBjuD61-Moi0_hkgNc_zpJ0vQMrhKPezSeFzmOOrRoyJKUPSuuPyB5wzO0NR2nVQtXYJHkBzg-Ho36w2fh0kHE-skZHMV4D1ZgisMODKOIp9fPg-X9QTQ-A1uyTacMY4wPyvJ4GP-Xsj7rsyMwOjzCWRzOkpBOh6a6xy8p302JjsfmUTiPw3kSUoqd4SfvUu_a8RilvGnhY87bD24FQRisUa-Z4PRfy_dF4PYKSvYEFgHHgtUVNc1PmsRqqz7tZB5MaMPAMKg37hC5F4wOjrUf_PkvevzaLA) — zoom, pan and export</sub>
+<sub>[⤢ Open this diagram in a canvas](https://mermaid.live/view#pako:eNqNVl1v2zYU_SsXzkNaQHGsD9uxl3pIltXoMLTVmmIPdR8o8coiLJMeScUx2v73XYqy_FFkmBBAskidc3juuWS-9XLFsTeFXlGpbV4ybeHxfiGBLlNnS802JXx4-_bLondfi4qDFWuERR0NwgQ42xnIsFAawZYIHNcqAFUUlZAI8GpRDwZsHL9e9L56RHdxoTG3QsmOx13zkBhus1nYh99UVdEMWNaCo7m9zma3mb6ehWAVxLBBDUwjC6DQag1_i5XYIBesmcMkB7VBCbmwuxbghHweeZqIaMparsDgmkkrclZVu47KbCphYVtiu65bMVsjk0Iub6_FDEwpCmuCZqpUFvAJ9Q7eg3OP5Rb1GWfsOeM-_L7OkAOyvKTJRN8x2lpLsPhsQUhaJoMnckDpU5zE4yR9-GSd5ULSIsgE9nDfAZFURd7n3kPn8t4wJ_0UL4SrqxlZ4m-xvyV-Akq-kP5xnsCbN7Pvix6te2OA0V9DRZj8SslqB4WocNH7Dg_3X141Eh_JtMZ90sjxuVPnnWqWTjFpjWsmejcbZ7bClm2JrbAVBvD5rz8DCpslktdf97IO6XxPvqQ1mma5x_kU0jgNzhBn8JSEamOB1VwoyHYQ9odgAtKD-Yrq0vhPr0dguvBO-pHL3f5H8n-ynLZZHu4L7jL0Tyuw8-JSGHgnCYFJtmQapBJm9-vlCX7axnVEJUemyZzT4h7yQwzOMueqe64EkVFc3ViG9ERSTV4bQ2pacygprl0owKUbx8rgTxFJ2-iO-_DIVr4ZrNpAgVtfxUN7NqUj0qqCnGm9c5jCGq_OlREcG20Mq1OGNtQ3ffhDZRDBptTMoHFU6w68QJmTctpZXPxqaXVtLL2gTLBf_AxqPEMFD6ijpXXTDajannINPdfENT-VvM3f_oOOTSrQaFT1xDKSTVsJc17v-72bf4rtmyn1zZT6ZkoTfxv-1FMP926EeqprIg9fKcbdQgkeGIVRKesaK438Z-mwAfzw-ZFWcifNlnqbwmdyjbTpOYNZpWoeHDdbxcQaLG1M6JbTiXYS-42EfQIKVZNAYpvffXRGidnlO-BKXloo2ROCRLEsM1XrUineMDj76TNNxSKxLn-XXYQ8C7Eb84AFZM3hQRtFNb1AjpMCA2O1WuH0YpzHDHn782oruC2n0eY5oJgrPb2IMByMhmdwptkAPVxeFOwIbnAzCbPoFC4-wA1u4jhJzuAq8bRH43mR47hDC0csTtiL4gZDkjc6Q1vTiVq1cAUWcX6A45PxeDB6ES4ZhmwQn8FRjPdgBSY46sAwDHly8zJYPhiGkzOwJdt0yjDC6KAsj0bRfykbsAE7AqPjI5hHwTwO6Hxoqns8SPluSnT8Lg2DNArSOKAUO8NPxhLv2vE7SnnTwsecdx_dCnoB9Nao10xw95_Lt0XP7RaU7SksehwLVlfUNj_cNFZb9WkncxqiTYPOkl69cSfJg2B0eqzb1z_-BQJg3EA) — zoom, pan and export</sub>
 
 **Reading it in one line:** guides are cut into chunks and stored once; a question is turned into the same kind of vector, matched against **only its own area's chunks**, and the few that come back are the *only* material the model is allowed to speak from.
 
@@ -809,7 +809,7 @@ The usual objection to dense retrieval — that it is compute-heavy — is an ar
 
 ---
 
-### 9.2 RAG retrieval — partitioned, not filtered
+### 9.2 guide retrieval — partitioned, not filtered
 
 Step 6 of the pipeline above, and the step that carries the grounding guarantee. Retrieval creates nothing and fetches nothing — it **selects a handful of the chunks already sitting in the index**.
 
@@ -817,7 +817,7 @@ A question about a listing in Indiranagar can **only ever see Indiranagar's chun
 
 Why a partition and not a filter is argued under **[AD-9]** above; the short version is that the other areas' text is **not in the set that was searched**, so contamination is something the code cannot express rather than something a test might catch.
 
-**[AD-4] The RAG index runs inside the backend process.** The corpus is a few dozen documents. An in-memory index loaded at start-up beats a hosted vector database on latency, on operational surface, and on the 1.5 s first-audio budget it would otherwise sit inside.
+**[AD-4] The guide index runs inside the backend process.** The corpus is a few dozen documents. An in-memory index loaded at start-up beats a hosted vector database on latency, on operational surface, and on the 1.5 s first-audio budget it would otherwise sit inside.
 
 ### 9.3 The resolver registry — the source rules, written as code
 
@@ -838,7 +838,7 @@ flowchart LR
     class D4 none
 ```
 
-<sub>[⤢ Open this diagram in a canvas](https://mermaid.live/view#pako:eNp1k0-PmzAQxb-K5RzSSo42GDbdoihSFS6Vtn9E2tOyh8EMwQrYyDbZRqv97jUhiWi24QTMm9-bZ41fqdAF0piWtX4RFRhHHtNMEf-sg6eMPkrrpNqSEoRb5uZutZQrg8ox4hu0YaQFs_OC5Z1cZfSZzGYrkvaNCTiw6IhBq-s9mnMxCZ4-ZHQjDLRYkGJQZfTj88mU-94vDSrpDkQb4gwoK90F3Zd_bL69x_Ie-9Og0E3bOSyOwzbQHie3I4PQE76j3Fa57kyl9aDso3sh-kQWSnSHi2OvT7To_Ez_SRP2tr8qaQkYhKk9wTq1s0Sr-jAyjvpk6uCq_jyxtnix6Cu_FexB1pDX-N6lFyQoau9h46PF9CsptJo6UsEeiavATb06U4OXV1qbYNm_yIaUsq7jSZGjT8asM3qH8YTfL0LMT5-zF1m4KubtHyZ0rU08medBHsIVztufYaIU-OkCCxYQRnAbds8xWFzBrNMGTzhRluPZ5g-fg5zfxj2EYRRd4ZRWZ1qJyJFfaIXgC764SYvu5zAfJ_Wbz9acrUO2joYTHBfTgKWcpSFLo_48xqUkYAlnSThE-6cSHeejjDZoGpCFv3GvGXUVNn4NYpLRAkvoar_ob14EndObgxI0dqZDRrvWXxRMJGwNNMPPt79CdzQB) — zoom, pan and export</sub>
+<sub>[⤢ Open this diagram in a canvas](https://mermaid.live/view#pako:eNp1k11vmzAYhf-KRS6ySY4aDMk6FEWaws2k7kNkuyq9eDEvwQrYyDbpoqr_fXa-RNOGK_A5fs57LPMScFVikJCgatQzr0Fb8pDlkrhnFT7mwYMwVsgNqYDbRaHvlgux1CgtJW6D0pR0oLfOsLgTyzx4IpPJkmR-YwoWDFqi0ahmh_ospuHjpzxYcw0dlqQ8uvLg89MplLm931qUwu6J0sRqkEbYC9rLv9Y_3mOZx_7WyFXb9RbLw7AtdIfJzSAgcoSfKDZ1oXpdK3V0-urOiK6RgQrt_pLo_anivZvpgzaRj_1TC0NAI4zNCdbLrSFKNvtBcOybyb2t_XliY_AS4ZW_EnYgGigafJ_iDSnyxmWY5BAx_k5KJceW1LBDYmuwY-fO5THLOY1JsfIvoiWVaJpkVBbomlFjtdpiMmKzeYTF6XPyLEpbJ6z7R7lqlE5G0yIsIrjCufgzjFccv1xg4RyiGG7DZgzD-RXMWKXxhONVNZxtev81LNht3H0UxfEVTip5plWIDNmFVnI2Z_ObtHg2hemwqbv5dMXoKqKr-HiCQzELacZoFtEs9ucxlNKQpoym0bHaGyU-zBdQErSoWxCl_-de8sDW2LqLkJA8KLGCvnFX_dXboLdqvZfcSVb36Fb6zv0tmArYaGhPy6__AcFYNOE) — zoom, pan and export</sub>
 
 **Job 2 can reach no data except through a resolver**, and every resolver returns a wrapped fact. The grounding boundary is therefore a **dependency rule the code enforces**, not a sentence in a prompt that a model may or may not honour.
 
@@ -881,7 +881,7 @@ sequenceDiagram
     end
 ```
 
-<sub>[⤢ Open this diagram in a canvas](https://mermaid.live/view#pako:eNptk8Fu4jAQhl9llMsWNUULLaXkUAmxcEBoWQHHXCbOBKw6dtZ2yqKq777jJEWowM3hm8k_X8YfkTA5RUnk6G9NWtAviXuLZaqBf1h7o-syI9ueK7ReClmh9rBbAzpYW3Eg5y16c4PZbAOzIW8lvaO6Acw7whn1TtZdE8thAJYmgyHcTbU_WFNJ0bsGZ9MATp2jMlM3A--ad21LVIoj91FeM4t5QBbWaE86T3VL_DaewHA-HjoBFG_aHBXleyqJa1BZwvwELhzSejguRrAatJW79cPr62abAMt1XhoN93A8SHEAJfms9y222QZszpw_SAfIDX84EIdav_FJ51Cg8J0cxh6YDkmOFquKun_BaHVqEUvCg91neDd8fIphMJ7E8BLDz_7gpXeRi4UkYCrSPFhWS-UhO0FYByisKTmKcdT17sb6w11Wj1DrnEsG_RF0mRpX577LYdKV3XczxFCE3crBFEUQXGtva-f5QY4e29LlMIw1myaNyIBzGW8WYXn2NJt2SCZZCiF7FAplGUPOa8GJiVsL6Ql5Bc4lX6M2_FfzmH0JAskpuQCbb2PbNXTfLTYSJ-MYJk-NxefeZe_FnD8b_fNh2q5TmFxhRupsbjXqrD1fOIviqCRbosz5An6kEecvKY0SSKOcCqyVT6NPhsI13J60iBLWRnFUV6zt66a2Dz__AzjHOIo) — zoom, pan and export</sub>
+<sub>[⤢ Open this diagram in a canvas](https://mermaid.live/view#pako:eNptk0Fv4jAQhf_KKJctaooWWkrJoRJi4YDQsgKOuUycCVh17KztlEVV__uOkxShQm4TfzN572X8EQmTU5RA5OhvTVrQL4l7i2WqgR-svdF1mZFt6wqtl0JWqD3s1oAO1lYcyHmL3txgNtvAbMhbSe-obgDzjnBGvZN118RyGIClyWAId1PtD9ZUUvSuwdk0gFPnqMzUTcG75lvbEpViyX2U18xiHpCFNdqTzlPdEr-NJzCsj00ngOJNm6OifE8lcQ8qS5ifwIUirYfjYgSrQdu5Wz-8vm62CXC4zkuj4R6OBykOoCTXet9im23A5sz5g3SAPPCHA3Go9RtXOocChe_CYeyB6aDkaLGqqDsFo9WpRSwJD3af4d3w8SmGwXgSw0sMP_uDl96FLg4kAVORZmNZLZWH7ARhH6CwpmQpxlE3u7P1h6esHqHWObcM-iPoNDVZnecuh0nXdt95iKEIu5WDKYoQcK29rZ3nFzl6bFuXw2BrNk2aIAPObbxZhOU5p9m0QzLJoRByjkKhLGPIeS1YMfFoIT0hr8C55ctqw38NjzkvQSBZJTdg829su4bue4pNiJNxDJOnJsXn3uXsxZx_G_3zwW03KThXmJE6J7cadak9X2QWxRCVZEuUebiCH2nEDkpKuUijnAqslU-jz4CFm7g9acFHHB2rj-qKs_u6rt3rz__Uvjlq) — zoom, pan and export</sub>
 
 **Two clocks, deliberately.** Sound starts with the **code-built opener** (P8) — *"It's ₹38,000 for a 2BHK, 1.2 km in a straight line from your office. On the neighbourhood —"* — every word a wrapped fact the resolvers had already handed over, spoken while Job 2 is still producing its first token. Job 2's own sentences follow, each one only after the assembler has resolved its citation. L3 measures when sound starts; L5 measures when the fully checked text and its citations are on screen. They are different budgets because they are different promises.
 
@@ -915,7 +915,7 @@ stateDiagram-v2
     class Cancelled,Withdrawn bad
 ```
 
-<sub>[⤢ Open this diagram in a canvas](https://mermaid.live/view#pako:eNp9U8FunDAQ_RXLe6hUsSoLWVbl0EOTY6VK7aGH0sNgjxd3wV6NTWgU5d9rA1noJikHJM_Me35vZvzIhZXIS-48eLzTcCTotvdZZVj4pCYUXlvDvnybIj_f_2Lb7Sf2VSkklCXzDSEyFX-N7ckxQpDhbLuQQmYHg_TOMQEtGgk0sczokenWGqWp0-ZYBqzxSOysxckxa3CqXipGwGdrT_HmeOeHuncPAbYVDYoQTVhtfcMCDWl0bCDtPZpXaVYOwI_a2QCO_e6dZx5OaBJmY8nssLP0upwf2jeSYDDlaFi1gU1AhxE9RjqgE_oJO2n_xwahC-Jl30b1LgLjRF6U34IR2LYREfPsqO-jRDGFYRySmJShfIEOY5vkjT6BKKBdNTdGtODcHarZr9JtW25kjaAwcZ4CSbnJ9kWO9XzcDlr6pszOfxJhW0vlJq13dQ5XdJ2WM5lClYvDhUx-PBzS4k2ym_0O0vyKTIZ1eJYmlMCFbVdAfgNvS9tnuCuu2GpYpGGG2SJNZEX2P2kppGufl1Uee7dOrNYkNGKdmeciLws-A54nnFxWKurkCe-QOtAyvNLHiocpdljxklVcooK-9RV_CkXQe_v9wQheeuox4f1ZLi96Cj79BcXjUYI) — zoom, pan and export</sub>
+<sub>[⤢ Open this diagram in a canvas](https://mermaid.live/view#pako:eNp9U8Fu2zAM_RXCOQwYHCxxGgfzYYe1xwEDtsMO8w60RMVaZCmg5HpF0X-fZLtJlrbzwYBIvqf3SOoxE05SVkHmAwa607hn7Jb3RW0hflIziaCdhS_fpsjP979gufwEX5UiJllBaJkIVPq1rmcPTCjj2XUxReAGS_zOg0BDViJPLDN6ZLp1VmnutN1XEWsDMRy1OHhwlqbqc8UI-OzcId2c7vzQ9P4hwpaiJRGjOTQutBBpWJOHgXUIZF-luXCAYdQOA3r43fsAAQ9kc3CpZHbYOX5dzg8dWsk42Go0rExkE9hRQo-RDvlAYcJO2v-xweSjeNmbpN4nYBrJi_JbtIKMSYiUh72-TxLFFMZxSGJSRvIFOo5tkjf6ROaI9vXcGGHQ-ztSs1-ljakWsiFUlPvAkaRaFNtyQ818XA5ahrYqjn9y4YzjarFq1s0Gr-g6LWcyRWojdicy-XG3W5Vvkt1s17jaXJHJuA7P0oQSdGZbl7i5wbelbQtal1dsDZ6lUUHFWZooyuJ_0la4uvR5WuWxd5eJizWJjbjMzHORpwWfAc8Tzk8rlXRmOWQdcYdapnf6WGdxjh3V8VBnkhT2JtTZUyrDPrjvD1bEVOCeYqQ_yvOznsNPfwH8WVJi) — zoom, pan and export</sub>
 
 | State | What it means | What can happen next |
 |---|---|---|
@@ -1040,7 +1040,7 @@ flowchart TB
     class N ask
 ```
 
-<sub>[⤢ Open this diagram in a canvas](https://mermaid.live/view#pako:eNp9k1FvmzAQx7-K5bwSBUgDHYoiZUoiTZoyKW2flj0c9lGsgKG2EYuqfvcZE1HG2iFefNz97v-_w6-UVRxpQrOialkOypDHr2dJ7PP480y3xDRKEpRcn-kvMp9vyNaG1-lmK3WLCvl6kW7WqVpscnsiQhOTI1Gom8LYihvJFe77wn1Zm-tQJSuTC_lMSjAsR-4RkJzcUC6hx700QmGJ0lg8GNKCJqmQ3Fa6pLWweba3fYGc9g9P3x_XC7GZCNj1Anb4rICPlNed6ypzysHZcjLct7ZrZ7Gl0Np2mxAPPfEAohjxnBQGNaSiEObalfOqld5fY3JgZ6ZE2_QfG5LsT6cfpw9sHPumR0Suv8m6MUNjIC8NaiMqSVJgl15MdduINKgcqWexArTeYWYzNZJMFEUywxXGmHraqOqCySxK4_Devx3nreAmT8L6t8eqolLJLAiC-zCe0KrLjcVZxjAeWEEEyzv4lOWvQgyiCasF--v1tAyzJXun8S9x7Eef0u5WAfjLCQ2VGmAYYvgOY2EU_g_mgw8TGOjBZ4qQ4QALV9FyGOEHPtMgXY5hdqfdAsaRrR3i-Lz3dm4U49ihszMOHDtJ1KMlqhIEtxf69Uzt4ks804ScKccM3JV8s0nQmOrhKhlNjGrQo03NweBOgL0YZR98-wOgYVVC) — zoom, pan and export</sub>
+<sub>[⤢ Open this diagram in a canvas](https://mermaid.live/view#pako:eNp9k1FvmzAQx7-KRV6JAqSBLooiZUoiTZoyKW2flj0c9lGsgE1tIxZV_e4zBlHG2iFe7rj73f_vw68elQy9NfGyQjY0B2XI49eLIPZ5_HnxdsTUShAUTF-8X2Q-35KdTW_S7U7oBhWyzSLdblK12OY2IlwTkyNRqOvC2I6e5BoPXeOhrMxt6BLS5Fw8kxIMzZH5BAQjPcoVdLiXmissURiLB0Ma0CTlgtlOV7Thts7Oti-Q8-Hh6fvjZsG3EwH7TsAenxWwkfKqdS0zpxycLSfDfWvacRZbcq3ttAnx2BGPwIsRz0mhUEHKC25ubTuTjfD_OiYHdmZKtEP_sSHI4Xz-cf7AxqkbekJk-puoajMMBvJSozZcCpICvXZiZL8RYVA5UseiBWi9x8xWaiQZL4r1DFeYYOpro-QV17M4TaL7oA_nDWcmX0fVb5_KQqr1LAzD-yiZ0OS1ZzGaUUwGVhjD8g4-ZQWrCMN4wmrA_nodLcNsSd9p7EuSBPGntLtVCMFyQkOlBhhGGL3DaBRH_4MFEMAEBnrwmSJkOMCiVbwcjvADn2mYLscwu9N2AePMzh7iOD74e3cU49yxtTNOnFpJnk-8ElUJnLVX-vXi2dWXeLHBxWOYgbuUb20Z1EY-3AS1n4yq0WbqioHBPQd7O8o-_fYH8rdWIg) — zoom, pan and export</sub>
 
 ```
 TurnOutcome =
@@ -1096,7 +1096,7 @@ flowchart LR
     class OK good
 ```
 
-<sub>[⤢ Open this diagram in a canvas](https://mermaid.live/view#pako:eNp9k01v2zAMhv8KoRx2cVZ_JcGMLAPq9NQNGbpLgXkHWaIbobaUSfLarO1_H223jdOg88miyIcvP_TAhJHIMlbV5k5sufXw9arQQN_5z4J9t0agc-A83biC_YLpdAV59FCwiz9o9-BQWPTL0p6tdhYdav-lYE8DII8670dtHuGaWBf3yoM2evoXrfnYhyzV6oqr-o7vPzjYIq_9FsQWxW1_K7ingwMKK9o4jFKK9sDBUha0yzO1IkFHqfboHiGPSd2ae-6QvLUEpSXe98TacNmb-I1FHCmND0qPLAMwIeB5q2WNQEU7ZTQ0g7ae6rcIwmhvufAvDiN2csJORuyU2N_4DioKdoSheMCutYNg5bzSN1R_GMoF_G6Rzkf09ISejuizblBNiVJ2lIZGXUPXBJTw-VW70Ug9gu634VpVlGOUYHaSYHZIsLmkwW52OETvjPX9SAZHUXPn1lgN2wOVqutsIkvkFQbOW3OL2SSezRMsn4_TOyX9Not394EwtbHZJCyjMuFvcP2GPOMqrBKxeMXJT4tFOH8Xl84iHiZvcCXtxAsMY4wPMBHP4__BQh6-1XZjzAtNikrgQVo050nK3690FmM0H9HgfOjb2JRHQR4HeRLkaUBj6Bsxvr_uihkbNpe9IhawBm3DlaSXTitBw2qwYBkUTGLF25rG9kROvPXmx14LlnnbYsDaneQe14qeC28G49M_031b3Q) — zoom, pan and export</sub>
+<sub>[⤢ Open this diagram in a canvas](https://mermaid.live/view#pako:eNp9k01v2zAMhv8K4R52cVZ_JcGCLgPq9tQNGbpLgXkHWqIbobaUSfKarO1_H20njdui88nix8OXpPQQCCMpWEBQ1eZerNF6-HpdaODv_GcRfLdGkHPgPHtcEfyCyWQJefxQBJd_yO7AkbDkz0p7utxYcqT9lyJ4GgB53EU_avMIN8y63CoP2ujJX7LmY59yppbXqOp73H1wsCas_RrEmsRd7xXo-eCA04o2ieKMsz0gWK5C9uxULVnQi1I7co-QJ6zuAj064mgtQWlJ255YG5S9CW8t0UhpclT6wjIAUwaet1rWBNy0U0ZDM2jrqX5NIIz2FoU_BIzY6Rt2OmJnzP6GG6g42TGG84G60Q6ClfNK33L_USTn8LslPr-gZ2_o2Yg-7RbVlCRlR2l41zV0QyAJn5-1G008I-h-G9Sq4hqjAtM3BabHAqsrXuxqQ0P2xljfr2QIFDU6d0HVcHugUnW9OJElYUWh89bc0eIkmc5SKvfHyb2Sfr1INttQmNrYxUlUxmWKr3D9DdnjKqpSMX_GyU_zeTR7F5dNY4zSV7iS78QBRgklR5hIZsn_YBFGr7XdGnOgSVEJOkqLZ5hm-H6n04Ti2YgG58PcxqY8DvMkzNMwz0JeQz-Isf-ma2ZsWF31ioIQgoZsg0p2b50vBa-roYIPRSCpwrbmxT11Ydh682OnBbu8bYkt7UaipwvFbwabvfnpH1CkXL0) — zoom, pan and export</sub>
 
 A missing key discovered at start-up costs a redeploy. The same missing key discovered mid-conversation costs the demo (spec §6.35, §6.55).
 
@@ -1116,7 +1116,7 @@ flowchart TB
 
     subgraph BE["Backend — Railway · one process that stays awake"]
         B1["Python · FastAPI · asyncio"]
-        B2["ChromaDB, embedded<br/><i>RAG index of area guides</i>"]
+        B2["ChromaDB, embedded<br/><i>guide index of area guides</i>"]
         B3["Plain-code engines<br/><i>filter · rank · slots</i>"]
     end
 
@@ -1148,7 +1148,7 @@ flowchart TB
     class D1,D2,D3 build
 ```
 
-<sub>[⤢ Open this diagram in a canvas](https://mermaid.live/view#pako:eNp9VV1z2zYQ_CsY-jGUI5L6mGg8njFNy02nSTiWGz9UfTgCRwkVBLAAaFmT5L_3IJmOZMXVkwDcLvYWC_BbxI3AaBLVymz4Eqxn9_lcM_q5tlpYaJZsevPXPMqt2Ti0bN6m_WTAvqLlqObR3_va8JsmVPYZn_z5P47K-v1qzO4QuO8G99sGZ9zKxh_jUsJdtUKaB2NXCv1FZd9fXshLDo1vLTLQgjUKthXw1cV7eXmMzgj9gNXM8BV69o79dn9fMq4kau9eKlGLuX7VVr5rizhpsWvrDqTawLZTbDSyxhqOzjG_BM-ch61jsIEVHqnIQ-_l1i-N7rBTcP6q_NgNwW01l-YYFTq_XlqzhiKPGa4rFAJF1__d1S2TWuATMzUDi8AWrRToTjzIgwelAql74TSp24XUVPfMU0vldye3E2JBr7r_Thl_TPcro8q7L1_DBtY80vbWMQ5KoWCitVIvGDBu9CPNg5dGHwkrgy0FYkNE606OaxD5knnDPIXlpJkymHJrzb9d_e-mYkl3QDW5egoJ_V9pT042kh_i0g7Hyb-6VafQAUFn69CQ8-cgO3CQFiTuxZ7ChkGkMQuF7BoUuQZ2B33HbteUof8P3p8f_yhC9lqpKNmyQUXH1Sk1dR2GMdvH6WjbIvhJVwgatJ3Sik4bVGvbc0uRP1FaBDu_NKhn3iL6T9CwT9dlB17TsKYrepqpInh6G_K2z-DPDR2uQXvJGV-2ekUJ2C1QRB_kinoREmLGpd_-Kq0Hdkxv2EWvd_n99PbO5tF3up37svyGUdUug88TwT22R4bUUeYoi3Q7RM9otWWUdnQdwx7CFThXYM1qDMtqciYqhBpj561Z4eQsHY4yrJ6HvY0UfjlJm6eYG2Xs5KxfJVUGr7iqFy5ecxy_cCUjyAbwNtcwxWT0iovemMdnthrrjP9kEx_G4_7oTbbBMIF-9lrZLld7OhT44aDRMc8AxZt0JK0_Gh7Q0aMeT9N4mpF1h9N5EudpnGfkwuF0mcRlGpdZXA7icrhr63C5SOIijYtsrzCKozVaui2CPj_f5pFf4ppe1QmbRwJraBV9Jn5QEbTezOjxjCbethhHbSPAYyEhPCr7yR__AQFqIJ0) — zoom, pan and export</sub>
+<sub>[⤢ Open this diagram in a canvas](https://mermaid.live/view#pako:eNp9VV1z2jgU_St3nMeaFGw-pkwmM3Ecst3Ztp6QbR7KPlxL16BFWF5ZDmHa_ve9ApxAaMoTku45OvfoSP4eCCMpGENQaLMWC7QO7pNZCfyrm3xusVrA5ObbLEisWddkYdZE3V4fvpIVpGfBP7ta_5v0uOwzPbnzf2su63bzEdwRCtcO7jcVTYVVlTvGRYy7aqQyD8YuNbmL3L6_vFCXAivXWAIsJVQaNzmK5cV7dXmMjhn9QPnUiCU5eAd_3N9nILSi0tXPlVTKWfmqrWTbFnPyYtvWHSq9xk2r2JQElTWC6hrcAh3UDjc14BqXdKQi8b1nG7cwZYudYO2uso_tEOtNKZQ5RvnOrxfWrDBNQqBVTlKSbPufN0oSqFLSE5gC0BLCdq4-cSHxLmQaVdnxB8r9zlXJdXumQmm3PbutFIvlsv1fa-OO6X5lVXb35avfwJpH3t7WIFBrkiAbq8o5IAhTPvI8OmXKI2GZNyYlqpho1cqpKyKxAGfAcVxOmsm8LbfW_NfW_2ly6LVHVLCvpxDf_1Xp2MtKiUNc1OIE-1c0-hTaZ-h05Ruq3TmqFuyleYk7saewgRdpzFwTXKNm19Buoe_gdsUp-n30_v74V-rT1yjN2VYVaT6uVqkpCj8MYReoo21T7ydfIqzItkpzPm3UjW3OLYf-RGnq7fxSUTl1lsh9wgo-XWcteMXDgi_paaZS7-ntSwZfNqxphaVTAsSiKZecgO0CR_RBLbkXqTAEodzmV2k9sGNyAxedzuWP0_s7nQU_-H7uypIb4KptBvcT3j3YIX3qOHOcRb4dsmNKvQFOO9Utww4iNNZ1SgUU5Jf1-EzmhAWFtbNmSeOzaDCMKd8PO2sl3WIcVU-hMNrY8Vk37-UxvuLKn7lEIWj0zNUbYtzHt7kGEfWGr7j4lXncsxVUxOKFTX4YjbrDN9n6gx5249fKtrna0ZGkDweNjkSMJN-kY2nd4eCAjp_1cBKFk5itO5xOemEShUnMLhxOZ70wi8IsDrN-mA22bR0up70wjcI03ikMQghWZPm6SP8J-j4L3IJW_LKOYRZIKrDR_Kn46cuwcWbKLygvOdvw3QiaSqKjVKF_WfbTP_8Hrq4isQ) — zoom, pan and export</sub>
 
 **Everything the system is built from, and why each piece is there:**
 
@@ -1258,7 +1258,7 @@ evals/
 | **AD-1** | The build pipeline is a separate offline program producing versioned files | Scraping at start-up — a source outage would take the service down, and the dataset would stop being reproducible |
 | **AD-2** | The manifest is a build output | Writing the sign-off artefacts by hand at the end — they drift from what was actually built |
 | **AD-3** | A pattern-matching router picks the turn type before Job 1 | A model classifier — it spends the acknowledgement budget twice |
-| **AD-4** | The RAG index runs in-process — **ChromaDB, embedded** | A hosted vector database — a network hop inside the 1.5 s first-audio budget, for a corpus of a few dozen documents |
+| **AD-4** | The guide index runs in-process — **ChromaDB, embedded** | A hosted vector database — a network hop inside the 1.5 s first-audio budget, for a corpus of a few dozen documents |
 | **AD-5** | The frontend works nothing out; view-models arrive complete | Formatting in the UI — it puts the method label two codebases away from the number it labels, which is exactly how the two drift apart |
 | **AD-6** | The eval harness skips audio | End-to-end audio in CI — non-determinism against a 100%-three-times bar |
 | **AD-7** | No database | Postgres or Redis for sessions and bookings — it reopens every retention question the specification deliberately closed (spec §2.5, §3.2, §5.3), and the calendar is already the booking's record of truth |

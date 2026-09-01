@@ -15,7 +15,7 @@ The problem it addresses isn't finding listings — it's judging whether one fit
 
 **[`Architecture.md`](./Docs/Architecture.md)** is how the system is structured to meet it — components, data model, turn lifecycles, error taxonomy, and the decisions taken with their alternatives.
 
-**[`Implementation_Plan.md`](./Docs/Implementation_Plan.md)** is the build plan as a decision document — plain language: the 39 tasks in five phases, why that order, what "done" means for each, and a table of every decision the owner will be asked to make (the two gates, the model pins, the region). Its companion, **[`Implementation_Plan_Addendum.md`](./Docs/Implementation_Plan_Addendum.md)**, is the technical reference builders work from: for every task, the files, interfaces, tests and step-by-step instructions. Earlier versions of the plan are kept in [`Docs/versions/`](./Docs/versions/README.md).
+**[`Implementation_Plan.md`](./Docs/Implementation_Plan.md)** is the build plan as a decision document — plain language: the 39 tasks in five phases, why that order, what "done" means for each, and a table of every decision the owner will be asked to make (the two gates, the model pins, the region). Its companion, **[`Implementation_Plan_Addendum.md`](./Docs/Implementation_Plan_Addendum.md)**, is the technical reference builders work from: for every task, the files, interfaces, tests and step-by-step instructions.
 
 | You are about to… | Read |
 |---|---|
@@ -50,10 +50,10 @@ flowchart LR
     S <--> A["Anthropic · Job 2<br/>grounded explanation"]
     S <--> T["Smallest.ai<br/>TTS"]
     S <--> C["Google Calendar<br/>+ Gmail"]
-    S --- L["Static dataset ·<br/>RAG index ·<br/>precomputed OSM"]
+    S --- L["Static dataset ·<br/>guide index ·<br/>precomputed OSM"]
 ```
 
-**Every provider call originates on the backend.** The browser talks to exactly one origin and holds no keys. The dataset, the closed RAG index and all OpenStreetMap values are resolved at **build time** and served from local storage — no scraping, no retrieval fetching and no OSM lookups happen inside a tenant's turn.
+**Every provider call originates on the backend.** The browser talks to exactly one origin and holds no keys. The dataset, the closed guide index and all OpenStreetMap values are resolved at **build time** and served from local storage — no scraping, no retrieval fetching and no OSM lookups happen inside a tenant's turn.
 
 Three structures carry most of the correctness, and are worth knowing before reading any code — all detailed in [`Architecture.md`](./Docs/Architecture.md):
 
@@ -100,11 +100,10 @@ Both are pinned by **exact model ID, never a `latest` alias** — the CI guarant
 │   ├── Problem_Statement_Summary.md       # condensed working summary
 │   ├── Architecture.md                    # how it is structured
 │   ├── Implementation_Plan.md             # the build plan — decisions, order, done-when
-│   ├── Implementation_Plan_Addendum.md    # per-task technical reference for builders
-│   └── versions/                          # earlier plan versions + how to roll back
+│   └── Implementation_Plan_Addendum.md    # per-task technical reference for builders
 ├── frontend/                 # Vercel — UI, view-models, mic client. No keys.
 ├── backend/                  # Railway — pipeline, both LLM jobs, calendar, PDF
-├── data/                     # scraped listings, RAG index, precomputed OSM values
+├── data/                     # scraped listings, guide index, precomputed OSM values
 ├── scripts/                  # scrape, build index, precompute OSM
 └── evals/                    # Suites A, B, C + latency instrumentation
 ```
@@ -144,7 +143,7 @@ The build is ordered by **what can invalidate what**, not by what is satisfying 
 
 **Then, in order**
 
-3. **Knowledge layer** — the listing-scoped RAG index, and the OSM query set run once across every listing with attribution and retrieval date.
+3. **Knowledge layer** — the listing-scoped guide index, and the OSM query set run once across every listing with attribution and retrieval date.
 4. **Eval harness and the view-model contract** — deliberately before the features they test: Job 2 is validated *against Suite C*, so Suite C exists first, and the card/citation view-model is a contract shared by the suite, the backend and the UI.
 5. **Voice pipeline**, then **shortlist and refinement**, then **grounded explanation**.
 6. **Booking, PDF and email**, then the **UI**, then hardening and sign-off.

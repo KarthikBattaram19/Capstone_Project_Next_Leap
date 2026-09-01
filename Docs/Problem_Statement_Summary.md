@@ -16,7 +16,7 @@ Tenants don't struggle to *find* listings. They struggle to judge whether a list
 | Listings | **Up to 10 per locality**, scraped once from bengaluru.rent |
 | Locality set | **Not pinned in advance** — whatever the source has available pins for. The list, per-locality counts and total are an **output of §9.1**, documented after the scrape |
 | "Up to" | A **ceiling, not a target.** Under-supplied localities keep their real count (never padded); over-supplied ones are curated to the 10 best-populated records by a documented rule |
-| RAG corpus | **1–3 documents per *locality*** (not per listing), shared by that locality's ≤10 listings |
+| guide corpus | **1–3 documents per *locality*** (not per listing), shared by that locality's ≤10 listings |
 
 ---
 
@@ -76,7 +76,7 @@ All amenity/transit/POI claims come from the OpenStreetMap MCP, resolved **once 
 |---|---|
 | Listing facts (every schema field) | Scraped dataset. **No fallback** — absent means `null` |
 | Amenities, transit, distances | OSM MCP (precomputed) |
-| Neighborhood character, safety | Closed RAG index, with citation |
+| Neighborhood character, safety | Closed guide index, with citation |
 | Anything else | Not asserted — declared unavailable |
 
 ---
@@ -130,14 +130,14 @@ Budgeted in two classes because they run on different providers. **Type A** = Gr
 **Measurement:** p99 over all suite runs + 20 timed interactions; hard failure at 2× any target; **per-component instrumentation** (STT-interim, STT-final, retrieval, LLM first/last token, TTS first byte, each API call) so a miss is diagnosable without a re-run. These are engineering targets, not measurements — a measured spike must confirm or openly renegotiate the table before the UI is built on it.
 
 ### 5.3 Security
-Keys server-side only · HTTPS · **scraped text and RAG chunks are untrusted data**, delimited and never executed as instructions · no PII in logs or transcripts · **stateless demo**, no login, sessions isolated.
+Keys server-side only · HTTPS · **scraped text and guide chunks are untrusted data**, delimited and never executed as instructions · no PII in logs or transcripts · **stateless demo**, no login, sessions isolated.
 
 ### 5.4 Deployment — Vercel (frontend) + Railway (backend)
 
 | Tier | Holds | Never holds |
 |---|---|---|
 | **Vercel** | UI, card and citation view-models, mic client | **No keys, no provider calls, no API routes** |
-| **Railway** | Whole pipeline, both LLM jobs, RAG index, precomputed OSM, calendar/Gmail, all keys | Nothing rendered directly to the tenant |
+| **Railway** | Whole pipeline, both LLM jobs, guide index, precomputed OSM, calendar/Gmail, all keys | Nothing rendered directly to the tenant |
 
 Every provider call originates on Railway — that is what makes "keys server-side only" true rather than aspirational. **No Vercel API routes**: serverless functions can't hold the persistent connections P2 needs and reintroduce the cost P1 excludes. Railway: app sleeping off, one long-lived process, healthcheck configured, **region chosen by measurement** (provider proximity usually beats user proximity; Smallest.ai being India-based may invert it). Cross-origin: **explicit CORS allowlist, never `*`**; mic WebSocket goes browser → Railway directly, never proxied; **contract version pinned** (sent in the frontend's first WebSocket message; a mismatch is refused by name), **backend deployed first** — two hosts deploy independently, so production skew is possible with green CI. The contract is the WebSocket message set (`hello`, `audio`, `transcript`, `ack`, `audio_out`, `outcome`) plus the HTTP endpoints for booking, health, contract and the operator toggle (§9.4).
 
@@ -163,7 +163,7 @@ Secrets (all Railway env vars, none in Vercel, none in the repo, all checked at 
 | **6.A Audio & browser** | Mic permission denied · **TTS autoplay blocked** (fall back to full text + one-tap enable) · **barge-in** stops playback immediately · backgrounded tab is not end-of-speech · refresh loses the conversation but **a confirmed booking survives via its code** |
 | **6.B STT** | Deepgram down as a *distinct* failure from the LLM · **locality spoken that was never scraped** — say so, never silently substitute · ambiguous amounts confirmed in words **and** digits |
 | **6.C Understanding** | Question budget exhausted → proceed on what was confirmed, label the rest unknown · "the second one" re-anchored to **what the tenant last heard** · schema-invalid extraction never partially parsed |
-| **6.D Grounding** | Index fails to load, or the build manifest disagrees with what loaded (bundle version, embedding model, OSM coverage) → **fail startup** · retrieval returning chunks that don't answer the question → declare the gap · injection inside a **RAG chunk**, not just listing text |
+| **6.D Grounding** | Index fails to load, or the build manifest disagrees with what loaded (bundle version, embedding model, OSM coverage) → **fail startup** · retrieval returning chunks that don't answer the question → declare the gap · injection inside a **Guide chunk**, not just listing text |
 | **6.E Booking** | **Free/busy re-checked at confirm**, never trusted from offer time · **listing availability re-checked at confirm too** — a different question, answered before either calendar write · concurrent sessions racing a slot · **all slot arithmetic in `Asia/Kolkata`** — the backend is deliberately outside India · the code is the only credential: rate-limited, unknown and cancelled codes answer identically |
 | **6.F Delivery** | **Email address read back character by character before sending** — the highest-error input in the system · the **code is authoritative, not the PDF** |
 | **6.G Infrastructure** | TTS down → turn completes in text · 429s reported as themselves · missing secret fails startup · combined failures degrade to the most conservative answer |
@@ -207,7 +207,7 @@ Login/accounts · post-visit feedback · cross-session history · mobile app · 
 
 **Phase 1 — Foundations**
 
-- **9.3 Knowledge layer** — listing-scoped RAG index (1–3 docs per locality; semantic chunks, pinned embedding model, ChromaDB with one collection per locality — recorded in the manifest); **OSM query set run once across every listing**, stored with attribution and retrieval date; commute-method disclosure locked.
+- **9.3 Knowledge layer** — listing-scoped guide index (1–3 docs per locality; semantic chunks, pinned embedding model, ChromaDB with one collection per locality — recorded in the manifest); **OSM query set run once across every listing**, stored with attribution and retrieval date; commute-method disclosure locked.
 - **9.4 Eval harness and the view-model contract** — *before the features they test.* Enough of Suite C to validate Job 2 must exist first, and the **card and citation view-model shape is a contract** between the suite, the backend and the UI — not something discovered while building §9.9. Backend contract version — and the contract's message set and endpoints — defined here too.
 
 **Phase 2 — The conversation**
