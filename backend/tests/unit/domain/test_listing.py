@@ -1,18 +1,26 @@
 from datetime import date
 
-from scout.domain.listing import BhkType, Coordinates, Listing, ListingRecord, Parking
+from scout.domain.listing import (
+    SCHEMA_FIELDS,
+    BhkType,
+    Coordinates,
+    Listing,
+    ListingRecord,
+    Parking,
+)
 from scout.domain.provenance import Source, Timing
 
 
 def make_record(**over):
     base = {
         "id": "kor-001",
-        "source_url": "https://bengaluru.rent/x",
+        "source_url": "file://data/Bangalore_Properties_List.xlsx#row=1",
         "scraped_on": date(2026, 9, 1),
         "locality": "Koramangala",
         "bhk_type": BhkType.BHK2,
         "bedrooms": 2,
         "bathrooms": 2,
+        "balconies": 1,
         "rent": 35000,
         "deposit": None,
         "maintenance_charges": None,
@@ -25,6 +33,7 @@ def make_record(**over):
         "total_floors": 5,
         "lift": True,
         "parking": Parking.BOTH,
+        "parking_available": True,
         "amenities": ["gym"],
         "available_from": None,
         "availability_status": True,
@@ -61,3 +70,23 @@ def test_unknown_field_name_is_an_error():
 
     with pytest.raises(KeyError):
         Listing.from_record(make_record()).field("owner_phone")
+
+
+def test_balconies_is_a_searchable_field():
+    listing = Listing.from_record(make_record(balconies=2))
+    assert "balconies" in SCHEMA_FIELDS
+    assert listing.field("balconies").value == 2
+
+
+def test_a_bare_parking_yes_never_becomes_a_four_wheeler_claim():
+    # The sheet says only Yes/No. `parking` must stay null rather than assert BOTH.
+    rec = make_record(parking=None, parking_available=True)
+    listing = Listing.from_record(rec)
+    assert listing.field("parking").value is None
+    assert listing.field("parking_available").value is True
+
+
+def test_every_schema_field_exists_on_the_record():
+    rec = make_record()
+    for name in SCHEMA_FIELDS:
+        assert hasattr(rec, name), name

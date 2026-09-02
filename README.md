@@ -53,7 +53,7 @@ flowchart LR
     S --- L["Static dataset ·<br/>guide index ·<br/>precomputed OSM"]
 ```
 
-**Every provider call originates on the backend.** The browser talks to exactly one origin and holds no keys. The dataset, the closed guide index and all OpenStreetMap values are resolved at **build time** and served from local storage — no scraping, no retrieval fetching and no OSM lookups happen inside a tenant's turn.
+**Every provider call originates on the backend.** The browser talks to exactly one origin and holds no keys. The dataset, the closed guide index and all OpenStreetMap values are resolved at **build time** and served from local storage — no source fetching, no retrieval fetching and no OSM lookups happen inside a tenant's turn.
 
 Three structures carry most of the correctness, and are worth knowing before reading any code — all detailed in [`Architecture.md`](./Docs/Architecture.md):
 
@@ -85,7 +85,7 @@ Both are pinned by **exact model ID, never a `latest` alias** — the CI guarant
 | Text-to-speech | Smallest.ai, streaming |
 | Maps / transit | OpenStreetMap MCP — [jagan-shanmugam/open-streetmap-mcp](https://github.com/jagan-shanmugam/open-streetmap-mcp) |
 | Calendar & email | Google Calendar + Gmail, single OAuth |
-| Listings source | bengaluru.rent (scraped once) |
+| Listings source | `data/Bangalore_Properties_List.xlsx` — a supplied spreadsheet, imported once |
 | Frontend host | Vercel |
 | Backend host | Railway |
 
@@ -105,7 +105,7 @@ Both are pinned by **exact model ID, never a `latest` alias** — the CI guarant
 │   └── Implementation_Plan_Addendum.md    # per-task technical reference for builders
 ├── data/
 │   ├── raw/                            # ignored: raw HTML, guide pages, MCP responses
-│   ├── SOURCE_NOTES.md                 # what bengaluru.rent actually publishes
+│   ├── SOURCE_NOTES.md                 # what the supplied spreadsheet publishes
 │   ├── GATE_D.md · GATE_L.md           # the two written gate decisions
 │   ├── guides/sources.json             # 1–3 guide URLs per locality
 │   └── bundle/                         # committed, versioned, read-only at runtime
@@ -133,7 +133,7 @@ Both are pinned by **exact model ID, never a `latest` alias** — the CI guarant
 │   │   ├── booking/                    # service, reconcile, pdf
 │   │   ├── presentation/viewmodel.py   # the only thing the browser receives
 │   │   ├── api/                        # ws (mic gateway), http (bookings, health, contract, admin)
-│   │   └── pipeline/                   # offline build: recon, scrape, curate, gap_report,
+│   │   └── pipeline/                   # offline build: import_sheet, curate, gap_report,
 │   │                                   #   chunking, build_index, precompute_osm, manifest
 │   └── tests/unit/ · tests/integration/
 ├── evals/
@@ -180,7 +180,7 @@ The build is ordered by **what can invalidate what**, not by what is satisfying 
 
 **Phase 0 — de-risk (both tracks at once)**
 
-1. **Data** — scrape and curate up to 10 listings per locality; publish the locality list, counts and total; document the availability marker and which schema fields the source actually publishes.
+1. **Data** — import and curate up to 10 listings per locality; publish the locality list, counts and total; document the availability marker and which schema fields the supplied spreadsheet actually carries.
    *Gate:* a missing marker or a thinner-than-assumed schema means **stop and amend the spec** — it changes the filter vocabulary, the cards and the eval coverage.
 2. **Infrastructure** — deploy a **walking skeleton** to Railway and Vercel (health check, mic WebSocket, one stub turn touching every provider) and run the **latency spike on it**, comparing candidate regions.
    *Gate:* confirm the latency budget against measurement or renegotiate it in writing. **This has to run on real infrastructure** — measured locally it tells you nothing about the cross-provider, cross-region reality the budget is made of.
@@ -238,7 +238,7 @@ If you contribute one thing to this codebase, know these:
 2. **"Couldn't ask" and "nothing found" must never look alike.** An empty shortlist because nothing matched is a *result*; an empty shortlist because a service failed is an *error*. Rendering them identically is the likeliest way this system misleads someone.
 3. **Every distance names its method.** *"About 15 minutes to the metro"* is a red-line failure. A straight-line figure heard as a travel time understates a Bengaluru commute enough to change someone's decision — so the words *by route* or *straight line* are mandatory, in speech and on the card.
 4. **`null` is a real value, and it never satisfies a must-have.** Unstated fields read *"not stated"* — never blank, never zero, never inferred. Unknowns surface as their own group rather than being silently dropped or silently counted.
-5. **Scraped text and retrieved chunks are untrusted data**, delimited in prompts and never executed as instructions.
+5. **Imported text and retrieved chunks are untrusted data**, delimited in prompts and never executed as instructions.
 6. **Slot arithmetic is always `Asia/Kolkata`**, never server-local time. The backend is deliberately hosted outside India.
 7. **Never ask a renter for personal or financial details.** Rent, deposit and budget are the only money topics. The single exception is the email address at the confirmation step, because the PDF cannot be sent without it — read back letter by letter, used once, and gone with the session. Extraction has no field to hold anything else, so this survives a prompt edit.
 

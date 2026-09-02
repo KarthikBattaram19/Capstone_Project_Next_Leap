@@ -57,6 +57,7 @@ SCHEMA_FIELDS: tuple[str, ...] = (
     "bhk_type",
     "bedrooms",
     "bathrooms",
+    "balconies",
     "rent",
     "deposit",
     "maintenance_charges",
@@ -69,6 +70,7 @@ SCHEMA_FIELDS: tuple[str, ...] = (
     "total_floors",
     "lift",
     "parking",
+    "parking_available",
     "amenities",
     "available_from",
     "availability_status",
@@ -88,6 +90,7 @@ class ListingRecord(BaseModel):
     bhk_type: BhkType | None = None
     bedrooms: int | None = None
     bathrooms: int | None = None
+    balconies: int | None = None
     rent: int | None = None
     deposit: int | None = None
     maintenance_charges: int | None = None
@@ -100,6 +103,9 @@ class ListingRecord(BaseModel):
     total_floors: int | None = None
     lift: bool | None = None
     parking: Parking | None = None
+    # A source may say parking exists without saying which kind. Then `parking`
+    # stays None and only this is set — never guess `BOTH` from a bare "yes".
+    parking_available: bool | None = None
     amenities: list[str] | None = None
     available_from: date | None = None
     availability_status: bool | None = None

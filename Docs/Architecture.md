@@ -4,7 +4,7 @@
 
 **The problem.** Renters do not struggle to *find* listings. They struggle to judge whether a listing fits their life — is the commute realistic, is the area safe, is the extra room worth the extra rent.
 
-**The system.** A voice-first AI property scout for **Bengaluru only**. You talk to it. It collects your preferences by voice, shortlists real listings scraped from bengaluru.rent (**up to 10 per area** — the specification's word is *locality* — a ceiling, not a target), explains every choice and names a source for it, and books a site visit on Google Calendar for both you and the owner.
+**The system.** A voice-first AI property scout for **Bengaluru only**. You talk to it. It collects your preferences by voice, shortlists listings imported from the supplied spreadsheet `data/Bangalore_Properties_List.xlsx` (**up to 10 per area** — the specification's word is *locality* — a ceiling, not a target), explains every choice and names a source for it, and books a site visit on Google Calendar for both you and the owner.
 
 **The five things it must do:**
 
@@ -41,7 +41,7 @@ flowchart TB
     end
 
     subgraph OFFLINE["Data sources"]
-        BR["bengaluru.rent<br/><i>listings</i>"]
+        BR["Supplied spreadsheet<br/><i>listings</i>"]
         OSM["OpenStreetMap<br/><i>metro, bus, amenities</i>"]
         WK["Wikipedia and city guides<br/><i>neighbourhood character</i>"]
     end
@@ -71,10 +71,10 @@ flowchart TB
 |---|---|---|---|
 | **Frontend** | Vercel | Draws what the backend sends it; captures the microphone; plays the audio stream | Hold a key, call a provider, run an API route, or work out a fact for itself |
 | **Backend** | Railway — **one process that stays awake** | Runs the conversation, both model jobs, retrieval, filtering, booking, PDF and email | Fetch from listing sites or OpenStreetMap while a renter is waiting |
-| **Build pipeline** | The operator's machine or CI, **offline** | Scrape, curate, gap-report, build the guide index, precompute OpenStreetMap facts, write the manifest | Run during a conversation |
+| **Build pipeline** | The operator's machine or CI, **offline** | Import, curate, gap-report, build the guide index, precompute OpenStreetMap facts, write the manifest | Run during a conversation |
 | **Artefact bundle** | Plain files, versioned alongside the code | The dataset, the guide index, the OpenStreetMap facts, the manifest | Change without a version bump |
 
-**[AD-1] The build pipeline is a separate program, not something the backend does at start-up.** It writes versioned files that the backend only ever reads. This keeps the dataset reproducible, makes the field-availability gap report (spec §9.1) a real deliverable, and means a scrape failure can never take the service down in the middle of a demo.
+**[AD-1] The build pipeline is a separate program, not something the backend does at start-up.** It writes versioned files that the backend only ever reads. This keeps the dataset reproducible, makes the field-availability gap report (spec §9.1) a real deliverable, and means an import failure can never take the service down in the middle of a demo.
 
 ### 2.3 One conversation, end to end
 
@@ -195,7 +195,7 @@ It follows the order in which the work actually happens — from the data gather
 
 | # | Section | What it covers |
 |---|---|---|
-| 1 | **§3 · Before anyone speaks** | The offline build pipeline: scraping listings, curating them down to ten per area, reporting which fields the source actually publishes, indexing the neighbourhood documents, and precomputing every map fact. Everything the system can ever say is collected here. |
+| 1 | **§3 · Before anyone speaks** | The offline build pipeline: importing listings, curating them down to ten per area, reporting which fields the source actually carries, indexing the neighbourhood documents, and precomputing every map fact. Everything the system can ever say is collected here. |
 | 2 | **§4 · How a single fact is carried** | The wrapper that every fact travels in — value, source, method, freshness, citation. The smallest structure in the design and the one that makes "say where it came from" impossible to forget. |
 | 3 | **§5 · What is stored** | Everything the system knows about — areas, flats, map facts, guide chunks, the renter's requirements, bookings, the build record — grouped by how long each one lives, and the deliberate absence of any database, transcript store or PDF store. |
 | 4 | **§6 · The backend, part by part** | The three paths through the backend — the conversation, booking, and the support layer beneath both — and the full list of components with the one job each of them has. |
@@ -205,10 +205,10 @@ It follows the order in which the work actually happens — from the data gather
 | 8 | **§10 · Booking, cancelling, rescheduling** | The states a booking moves through, the four mechanisms that keep it correct (confirm-time re-check, parallel writes, explicit IST arithmetic, the code as the only credential), and what happens on confirmation. |
 | 9 | **§11 · What the renter sees** | The frontend, which works nothing out for itself: it draws finished view-models. Also the card rules, the three audio behaviours the browser forces on the design, and the small set of messages that cross the wire between the two hosts, and the **voice agent persona** — who the renter hears, and the rules that keep her in bounds. |
 | 10 | **§12 · When something goes wrong** | The five shapes a turn can end in and why an empty result and a failure can never be confused, what still works when each provider is down, and why the system refuses to start rather than fail mid-sentence. |
-| 11 | **§13 · Running it** | The complete tech stack; deploying two hosts without skew; measuring each turn so a missed budget is diagnosable; keeping scraped text from issuing instructions; where the keys live. |
+| 11 | **§13 · Running it** | The complete tech stack; deploying two hosts without skew; measuring each turn so a missed budget is diagnosable; keeping imported text from issuing instructions; where the keys live. |
 | 12 | **§14 · Proving it works** | The three test suites, what each one proves, why the harness skips real audio, and where determinism comes from. |
 | 13 | **§15 · The decisions** | The eleven design decisions, each with the alternative that was rejected and the reason. |
-| 14 | **§16 · What is left open** | The four things this document cannot settle yet — chiefly that neither the scrape nor the latency measurement has happened. |
+| 14 | **§16 · What is left open** | The four things this document cannot settle yet — chiefly that neither the import nor the latency measurement has happened. |
 | 15 | **§17 · Appendix** | The four rules taken from the specification, the seven principles this architecture adds on top of them, and a one-page index of the guardrails that hold them — G1–G15, each with the place in the system that enforces it. |
 
 Reading in order works, but each section stands on its own; **§4 is the one worth reading first** if you only read one, because almost everything else leans on it.
@@ -221,7 +221,7 @@ Everything the system can ever say is collected **before the demo starts**. Noth
 
 ```mermaid
 flowchart LR
-    S1["<b>1. Scrape</b><br/>bengaluru.rent<br/><i>strip owner names and<br/>phone numbers here</i>"] --> S2["<b>2. Curate</b><br/>keep up to 10 per area<br/>by a written rule<br/><i>never pad a thin area</i>"]
+    S1["<b>1. Import</b><br/>Bangalore_Properties_List.xlsx<br/><i>no owner names or<br/>phone numbers in this source</i>"] --> S2["<b>2. Curate</b><br/>keep up to 10 per area<br/>by a written rule<br/><i>never pad a thin area</i>"]
     S2 --> S3["<b>3. Gap report</b><br/>which fields the source<br/>actually publishes"]
     S3 --> S4["<b>4. Build the guide index</b><br/>1 to 3 guides per area,<br/>split semantically into chunks,<br/>embedded into ChromaDB"]
     S4 --> S5["<b>5. Precompute maps</b><br/>run the fixed OpenStreetMap<br/>question set for every listing"]
@@ -377,7 +377,7 @@ flowchart TB
 
 ```mermaid
 flowchart LR
-    A["Personal data"] -->|"removed at scrape time"| A2["never enters<br/>the bundle"]
+    A["Personal data"] -->|"removed at import time"| A2["never enters<br/>the bundle"]
     B["Conversation"] -->|"in memory, expires"| B2["gone when the<br/>session ends"]
     C["PDF"] -->|"emailed"| C2["nothing retained"]
     D["Booking"] -->|"written to"| D2["Google Calendar<br/><i>the record of truth</i>"]
@@ -566,7 +566,7 @@ stateDiagram-v2
 
 ### 7.2 Turning speech into text, then picking a lane
 
-Speech goes to Deepgram over **one WebSocket that stays open** for the whole session — opening a new one per utterance would spend the L1 budget on a handshake. Deepgram is configured to declare end-of-speech after a **400 ms** silence (P3) — the single largest term inside L1, and deliberately no shorter: natural pauses before a number or an area name run roughly 200–500 ms, and a window inside that range cuts people off. On top of it sits a **content-aware hold** (P3b): if the words so far end in *under*, *near*, *with*, *and*, *to* or a bare number, the orchestrator waits up to 400 ms more before treating the silence as the end — plain pattern matching, with Deepgram's utterance-end event at about a second as the hard stop. It is primed with the name of **every area in the scraped dataset**, generated from the dataset rather than typed by hand (spec §5.1).
+Speech goes to Deepgram over **one WebSocket that stays open** for the whole session — opening a new one per utterance would spend the L1 budget on a handshake. Deepgram is configured to declare end-of-speech after a **400 ms** silence (P3) — the single largest term inside L1, and deliberately no shorter: natural pauses before a number or an area name run roughly 200–500 ms, and a window inside that range cuts people off. On top of it sits a **content-aware hold** (P3b): if the words so far end in *under*, *near*, *with*, *and*, *to* or a bare number, the orchestrator waits up to 400 ms more before treating the silence as the end — plain pattern matching, with Deepgram's utterance-end event at about a second as the hard stop. It is primed with the name of **every area in the imported dataset**, generated from the dataset rather than typed by hand (spec §5.1).
 
 **[AD-3] Choosing between Type A and Type B is pattern matching, not a model call.** Explanation-shaped requests — *why*, *what is the area like*, *is the commute realistic* — are matched against the current shortlist context before Job 1 runs. Asking a model which model to call would spend the acknowledgement budget twice, for a decision a short list of patterns gets right.
 
@@ -685,7 +685,7 @@ Real routing for the second case is an opt-in path, taken only if the latency bu
 
 ### 8.4 Availability — the one listing fact that can change after the build
 
-Everything else in the dataset is frozen at build time. **Availability is not**: a flat can be taken off the market between the scrape and the demo, or between being offered and being confirmed. It is therefore the only listing field with a runtime owner.
+Everything else in the dataset is frozen at build time. **Availability is not**: a flat can be taken off the market between the import and the demo, or between being offered and being confirmed. It is therefore the only listing field with a runtime owner.
 
 | Where it acts | What happens |
 |---|---|
@@ -695,7 +695,7 @@ Everything else in the dataset is frozen at build time. **Availability is not**:
 
 **This is a different re-check from the calendar one (§10.2).** Free/busy asks *"is the owner free at 4pm?"*; this asks *"is this flat still on the market at all?"* Both run at confirm time, both can send the renter back, and confusing them is how a demo ends up booking a visit to a flat that no longer exists.
 
-**[AD-11] The flag lives in an in-memory overlay, not in the artefact bundle.** The bundle is read-only at runtime (§5.2) and there is no database (AD-7), so the toggle writes to a small in-process map that shadows the dataset's value, and it dies with the process — a restart returns every flat to the state the scrape found. That is honest demo scope: it keeps "no database" true, and the only thing lost on restart is a demonstration toggle, never a booking.
+**[AD-11] The flag lives in an in-memory overlay, not in the artefact bundle.** The bundle is read-only at runtime (§5.2) and there is no database (AD-7), so the toggle writes to a small in-process map that shadows the dataset's value, and it dies with the process — a restart returns every flat to the state the import found. That is honest demo scope: it keeps "no database" true, and the only thing lost on restart is a demonstration toggle, never a booking.
 
 ---
 
@@ -791,7 +791,7 @@ The usual objection to dense retrieval — that it is compute-heavy — is an ar
 |---|---|
 | Sparse (BM25) | Its one strength is exact proper nouns — and the area name is handled by the partition, so it never needs matching |
 | Hybrid | A second index and fusion weights, to reorder about twenty chunks. Held as the escalation below, not built now |
-| Domain-adapted | Needs in-domain training data. The scrape has not happened yet (§16) |
+| Domain-adapted | Needs in-domain training data. The dataset is a supplied spreadsheet, not a labelled corpus (§16) |
 | Multilingual · Cross-modal | English only is explicit MVP scope; the corpus is text |
 | Hierarchical · Fusion-based | Built for long documents and large heterogeneous corpora. This is neither |
 
@@ -828,7 +828,7 @@ Why a partition and not a filter is argued under **[AD-9]** above; the short ver
 
 ```mermaid
 flowchart LR
-    C1["Listing fact<br/><i>rent, floor, parking</i>"] --> R1["Dataset resolver"] --> D1[("Scraped dataset")]
+    C1["Listing fact<br/><i>rent, floor, parking</i>"] --> R1["Dataset resolver"] --> D1[("Imported dataset")]
     C2["Amenity or transit"] --> R2["OSM resolver"] --> D2[("Precomputed<br/>map facts")]
     C3["Neighbourhood<br/>character, safety"] --> R3["Document resolver"] --> D3[("This area's<br/>chunks only")]
     C4["Anything else"] --> R4["Unavailable resolver"] --> D4["Declares:<br/>'I don't have that'"]
@@ -1134,7 +1134,7 @@ flowchart TB
     end
 
     subgraph BUILD["Build pipeline — offline, Python"]
-        D1["Scraper<br/><i>bengaluru.rent</i>"]
+        D1["Importer<br/><i>supplied spreadsheet</i>"]
         D2["OpenStreetMap MCP<br/><i>map facts</i>"]
         D3["Guide indexer<br/><i>semantic chunking<br/>of Wikipedia, city guides</i>"]
     end
@@ -1184,7 +1184,7 @@ flowchart TB
 | **Which** English embedding model (the *strategy* is settled — dense, [AD-10]) | Must run in-process, be pinned to an exact version, and be the same model at build time and question time (§9.1) |
 | The PDF generator | Must run server-side and hold no state — the PDF is deleted after sending |
 | The tracing library | Must produce the span names §13.3 lists |
-| The scraping library | Must strip personal data before anything is written to disk (§3) |
+| The spreadsheet reader | Must strip personal data before anything is written to disk (§3); the supplied sheet carries none |
 
 **Two things to notice about this stack.** First, **two model providers, deliberately** — if one is down, the demo loses one capability rather than all of them (§12.2), and Anthropic's model is not served by Groq, so it is two keys either way. Second, **the only things called during a conversation are the five providers in the amber box** — everything purple happens days earlier.
 
@@ -1211,7 +1211,7 @@ The point of per-component timing is that a missed budget can be explained **wit
 
 Logs carry no personal data and no transcript text (spec §3.2, §5.3): span names and durations, not content.
 
-### 13.4 Keeping scraped text from giving instructions
+### 13.4 Keeping imported text from giving instructions
 
 Listing descriptions and document chunks are text from the open internet. They are passed to the model inside explicit delimiters, with a standing instruction that everything inside them is data to be read, never instructions to be followed.
 
@@ -1260,7 +1260,7 @@ evals/
 
 | # | Decision | What was rejected, and why |
 |---|---|---|
-| **AD-1** | The build pipeline is a separate offline program producing versioned files | Scraping at start-up — a source outage would take the service down, and the dataset would stop being reproducible |
+| **AD-1** | The build pipeline is a separate offline program producing versioned files | Importing at start-up — a source failure would take the service down, and the dataset would stop being reproducible |
 | **AD-2** | The manifest is a build output | Writing the sign-off artefacts by hand at the end — they drift from what was actually built |
 | **AD-3** | A pattern-matching router picks the turn type before Job 1 | A model classifier — it spends the acknowledgement budget twice |
 | **AD-4** | The guide index runs in-process — **ChromaDB, embedded** | A hosted vector database — a network hop inside the 1.5 s first-audio budget, for a corpus of a few dozen documents |
@@ -1280,7 +1280,7 @@ Stated plainly, so nothing here reads as more settled than it is.
 
 | Open item | What it could change |
 |---|---|
-| **The scrape has not happened yet.** If bengaluru.rent publishes fewer fields than assumed | The data model (§5), the card layout (§11) and Suite A's coverage all move. The wrapper absorbs a missing field gracefully — it becomes a `null` with `source: DATASET` — but the **vocabulary of things a renter can filter on genuinely depends on what the scrape finds** |
+| **The supplied spreadsheet carries only 14 of the 23 schema fields** (see `data/SOURCE_NOTES.md`) | The data model (§5), the card layout (§11) and Suite A's coverage all move. The wrapper absorbs a missing field gracefully — it becomes a `null` with `source: DATASET` — but the **vocabulary of things a renter can filter on genuinely depends on what the sheet carries** |
 | **The latency budget has not been measured.** L3 leans on P8, and P3's 400 ms window leans on pause timings not yet observed on Indian-English speakers. If the spike misses the targets | The fast model, the hosting region, or the targets themselves change (§7, §8, §9). Component boundaries are drawn so that **swapping the fast model is a config change, not a rewrite** |
 | **How many people can use it at once** is bounded by provider rate limits, not by this design | The single-process model is a demo-scope decision. Exactly one thing would have to move to scale horizontally: the in-memory session map (spec §6.57) |
 | **Nothing here is measured** | Like the specification's budget, this document is derived from requirements, not from a running system. The first thing that should update it is the latency spike's real numbers |
@@ -1296,7 +1296,7 @@ Almost every structural choice in this document exists to make one of these hard
 | Rule | In plain terms |
 |---|---|
 | **Say where it came from** | Every fact names its source, how it was worked out, and how fresh it is. Distances must say *by route* or *straight line* — out loud, on the card badge, and in the full label — and all three must say the same thing. A bare `[OSM]` is an automatic failure. |
-| **One source per kind of claim** | Listing details come only from the scraped dataset (missing means "not stated", never guessed). Amenities and transit come only from OpenStreetMap. Neighbourhood character comes only from a small, fixed set of documents. Anything else is declared unavailable rather than answered. |
+| **One source per kind of claim** | Listing details come only from the imported dataset (missing means "not stated", never guessed). Amenities and transit come only from OpenStreetMap. Neighbourhood character comes only from a small, fixed set of documents. Anything else is declared unavailable rather than answered. |
 | **Answer fast, or say why not** | Budgets per turn: your words appear as you say them (within 300 ms), the system acknowledges within 700 ms of you finishing, starts speaking within 1.5 s, shows the shortlist within 3 s, books within 5 s. These hold only while the setup conditions P1–P7 hold (see §2.5). |
 | **A failure is not an empty result** | *"I couldn't check"* and *"nothing matched"* must never look alike. Nothing is ever invented to paper over a failure, and no operation is left half-done without saying so. |
 
@@ -1310,7 +1310,7 @@ Every structural choice above traces back to one of these.
 |---|---|---|
 | **A1** | **A fact carries its own provenance** | No bare number crosses a boundary. Every fact is wrapped (§4) with its source, method and date. A distance without a method label is **impossible to represent**, not merely discouraged |
 | **A2** | **The source rules are structural, not written in a prompt** | One resolver per kind of claim (§9.3). The explanation path can only reach data through resolvers, so the grounding table becomes a call graph |
-| **A3** | **Anything that can be worked out before the conversation, is** | Scrape, index and map facts are build-time files (§3). While a renter waits, the system fetches **nothing** |
+| **A3** | **Anything that can be worked out before the conversation, is** | Import, index and map facts are build-time files (§3). While a renter waits, the system fetches **nothing** |
 | **A4** | **The model never decides what is true or what matches** | Job 1 turns speech into requirements. Job 2 phrases facts it is handed. **Filtering, ranking, availability and slot arithmetic are ordinary code** (§8, §10) — testable, and unaffected by a model answering differently tomorrow |
 | **A5** | **A result and a failure are different shapes** | The five outcomes (§12.1). "Nothing matched" and "couldn't check" cannot share a rendering path, because they are not the same type |
 | **A6** | **State lives where its lifetime belongs** | The conversation is in memory and dies with the session. Bookings live in Google Calendar. There is no database (§5.2, AD-7) |
@@ -1325,10 +1325,10 @@ The rules above are stated in §17.1 and §17.2. This is where each one is actua
 | **G1** | **An uncitable sentence never reaches the renter** | §9.4 — the assembler discards any sentence whose citation does not resolve | An invented fact being spoken, and prompt injection having any route out |
 | **G2** | **A fact without provenance cannot be represented** | §4 — the wrapper; a distance with no method label does not type-check | A bare number crossing a boundary and losing where it came from (**A1**) |
 | **G3** | **One resolver per kind of claim** | §9.3 — the explanation path can only reach data through resolvers | Listing details, map facts and neighbourhood character being mixed or guessed (**A2**) |
-| **G4** | **Nothing is fetched while a renter waits** | §3 — scrape, index and map facts are build-time files; §2.1 shows no arrow from the backend to a source site | A live scrape blowing the latency budget, or a source site being down mid-conversation (**A3**) |
+| **G4** | **Nothing is fetched while a renter waits** | §3 — import, index and map facts are build-time files; §2.1 shows no arrow from the backend to a source site | A live fetch blowing the latency budget, or a source being unavailable mid-conversation (**A3**) |
 | **G5** | **The model never decides what is true or what matches** | §8 and §10 — filtering, ranking, availability and slot arithmetic are ordinary, testable code | A model answering differently tomorrow and changing what a renter is shown (**A4**) |
 | **G6** | **A result and a failure are different types** | §12.1 — five outcomes, enforced by the compiler | *"Nothing matched"* and *"I couldn't check"* being rendered the same way (**A5**) |
-| **G7** | **Scraped text is data, never instructions** | §13.4 — explicit delimiters, Job 2 has no tools and no write path, and G1 drops whatever survives | Text in a listing description steering the model |
+| **G7** | **Imported text is data, never instructions** | §13.4 — explicit delimiters, Job 2 has no tools and no write path, and G1 drops whatever survives | Text in a listing description steering the model |
 | **G8** | **Free/busy is re-read at the moment of confirmation** | §10.2 | Two renters being given the same slot |
 | **G9** | **Both calendar entries are written together, failures queued for retry** | §10.2 (P6) | A half-booked visit that nobody is told about |
 | **G10** | **Every date calculation names `Asia/Kolkata`** | §10.2 — the backend runs outside India, so a naive timestamp is a live bug | Slots computed in the server's local time |

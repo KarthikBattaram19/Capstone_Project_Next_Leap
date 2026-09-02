@@ -12,11 +12,11 @@
 
 ---
 
-## 1. Scrape and source reconnaissance (Tasks 0.4–0.5)
+## 1. Import and source inventory (Tasks 0.4–0.5)
 
 | id | Scenario | Required behaviour | Where | Status |
 |---|---|---|---|---|
-| EC-SCR-01 | `robots.txt` disallows crawling the listing pages | **Stop.** Gate D records "cannot scrape"; nothing downstream is built. Not routed around. | plan §5, add. 0.4 step 1 | SPEC |
+| EC-SCR-01 | The listing source cannot be used on legal or licence grounds | **Stop.** Gate D records it; nothing downstream is built. Not routed around. This fired once: bengaluru.rent was ruled out and replaced by the supplied spreadsheet. | plan §5, add. 0.4 | CLOSED |
 | EC-SCR-02 | robots.txt is *unclear* (no explicit rule, or a rule that only covers some paths) | `SOURCE_NOTES.md` allows `allowed \| disallowed \| unclear` — but Gate D's three boxes have no branch for "unclear" | add. 0.4 step 4 vs 0.6 step 6 | ⚠ |
 | EC-SCR-03 | No availability marker exists on the page | Gate D **STOP** box. | add. 0.6 | SPEC |
 | EC-SCR-04 | A marker exists but the selector is empty (`SEL["available_marker"] = ("", None)`) | `soup.select_one("")` — every listing gets `availability_status` falsy, `curate()` keeps nothing, and the bundle is empty with no error raised | add. 0.5 step 5, 0.6 | ⚠ |
@@ -53,7 +53,7 @@
 | EC-DUP-02 | Two flats ~110 m apart | Kept separate | SPEC |
 | EC-DUP-03 | **Twenty different flats in one society** ("Prestige Acropolis") | Kept separate. Merging requires the same locality **and** agreement on stated rent and BHK; a shared society name is a building, not a flat (§16.6 · add. 0.5) | FIXED |
 | EC-DUP-04 | Same society name in two different localities | Kept separate — `_same_flat` returns `False` unless `a.locality == b.locality` (§16.6 · add. 0.5) | FIXED |
-| EC-DUP-05 | Two records with identical `detail_score` | **Newest** wins, matching the written `RULE`: `curate` sorts on the negated scrape ordinal (§16.8 · add. 0.6) | FIXED |
+| EC-DUP-05 | Two records with identical `detail_score` | **Newest** wins, matching the written `RULE`: `curate` sorts on the negated as-of ordinal (§16.8 · add. 0.6) | FIXED |
 | EC-DUP-06 | Both records have `coordinates=None` and no society name | Never merged — genuine duplicates survive | SPEC (accepted) |
 | EC-DUP-07 | Merge is not transitive (A~B, B~C, A≁C) | First-wins ordering decides; the result depends on `detail_score` sort order | ⚠ minor |
 
@@ -229,7 +229,7 @@
 | EC-SL-14 | Requested `four_wheeler`, listing has `none` | Excluded, reason names the field and the value | SPEC |
 | EC-SL-15 | Boundary: rent exactly equal to `rent_max` | Included (`<=`). Suite A a-011/a-012 pin both sides | SPEC |
 | EC-SL-16 | Cards grouped by locality on screen | Grouping **never** reorders `order` | SPEC |
-| EC-SL-17 | Operator flips availability, then the process restarts | The overlay dies with the process; every listing returns to the scrape's value. Bookings are unaffected — they live in the calendar | SPEC (AD-11) |
+| EC-SL-17 | Operator flips availability, then the process restarts | The overlay dies with the process; every listing returns to the import's value. Bookings are unaffected — they live in the calendar | SPEC (AD-11) |
 | EC-SL-18 | `suggest_relaxations` when `rent_max` is small | Suggests +20 % rounded down to the nearest ₹1,000 — for a ₹5,000 cap that is ₹6,000 | SPEC |
 
 ---
@@ -412,7 +412,7 @@ Every row below was an `⚠` in an earlier draft of this document. Each has now 
 | 5 | `_coerce` raised on any value Job 1 phrased unexpectedly, and nothing caught it | Every `_coerce` call sits in one `try`; a failure returns a `Contradiction` carrying `_unusable(...)` — a question, not a stack trace | add. 2.5 (`apply_edit`) |
 | 6 | Society-name dedupe collapsed every flat in one tower into one listing | Merging now requires the same locality **and** agreement on stated rent and BHK; a shared society name alone is a building, not a flat | add. 0.5 (`_agrees`, `_same_flat`, two new tests) |
 | 7 | Cancelled code: arch §10.1 said it "answers cancelled", the spec and the service say it is indistinguishable from unknown | **The specification wins.** A cancelled code gets the same 404 and the same sentence as one that never existed — anything else is an oracle for code guessers | arch §10.1, §10.2 |
-| 8 | The curation tie-break sorted oldest-first while its own written rule said "newest" | Sort on the negated scrape ordinal, so the code does what `RULE` promises | add. 0.6 (`curate`) |
+| 8 | The curation tie-break sorted oldest-first while its own written rule said "newest" | Sort on the negated as-of ordinal, so the code does what `RULE` promises | add. 0.6 (`curate`) |
 | 9 | `rent_max = 0` read as *no constraint*, because `0 == False` in Python | `_is_constrained` tests for `None` and empty collections explicitly, never falsiness; a non-positive rent is also caught upstream as a contradiction | add. 2.6 (`_is_constrained`), 2.5 (`_check` 2b) |
 | 10 | A correct sentence — "there is no metro within 3 km" — was dropped as if it were a fabrication | A gap-citing sentence is dropped only when it asserts a value **and** does not deny one. Declaring a gap is an answer | add. 2.12 (`_DENIES`, new test) |
 | 11 | Lane B ignored ordinals, so "how far is the metro from the second one" explained the wrong listing | `parse_ordinal` (pattern matching, no model call) resolves the ordinal against what the renter last heard, before lane B picks a listing | add. 2.2 (`parse_ordinal`), 2.13 (`_lane_b`) |
@@ -421,7 +421,7 @@ Every row below was an `⚠` in an earlier draft of this document. Each has now 
 | 14 | The persona's "at most 3 sentences" was never tested | Every fixed conversational line lives in `CONVERSATIONAL_REPLIES`, and a test asserts the cap over all of them. The shortlist reading and Type B explanations are explicitly exempt — their length is set by the facts | add. 2.9 (persona test), 2.10 (`CONVERSATIONAL_REPLIES`) |
 | 15 | Every routed distance was spoken as a "walk", and a 40 m distance rendered "0.0 km" | The verb comes from the distance (walk only at ≤ 1500 m), and sub-kilometre distances render in metres | add. 0.2 (`_km`, `render_commute`, two new tests) |
 
-**What was deliberately not changed.** The ⚠ rows still open above this section are either accepted demo scope (an in-memory availability overlay and reconcile queue, no owner-name stripping beyond phones and emails), or they depend on evidence nobody has yet — chiefly what bengaluru.rent actually publishes (Task 0.4) and whether the latency budget survives real infrastructure (Gate L). Those are for Gate D and Gate L to answer, not for a document edit.
+**What was deliberately not changed.** The ⚠ rows still open above this section are either accepted demo scope (an in-memory availability overlay and reconcile queue, no owner-name stripping beyond phones and emails), or they depend on evidence nobody has yet — chiefly whether the latency budget survives real infrastructure (Gate L). The listing-source question that used to sit here is settled: bengaluru.rent is out of scope, the source is the supplied spreadsheet `data/Bangalore_Properties_List.xlsx`, and its field inventory is recorded in `data/SOURCE_NOTES.md` (Task 0.4). What remains is for Gate D and Gate L to answer, not for a document edit.
 
 ## 17. Guardrail regression list (the fifteen things a change must not make harder)
 
@@ -435,7 +435,7 @@ From arch §17.3 — every one deserves at least one test that fails if the guar
 | G4 nothing fetched while a renter waits | No `external.osm` span in any trace (P5 check) |
 | G5 no model decides what is true or what matches | Shortlist and slot engines are pure; Suites A/B run without Job 2 |
 | G6 result and failure are different types | `test_empty_and_failed_are_different_shapes`; the frontend class-disjointness test |
-| G7 scraped text is data, never instructions | Suite C c-004, c-018 |
+| G7 imported text is data, never instructions | Suite C c-004, c-018 |
 | G8 free/busy re-read at confirm | `test_confirm_rechecks_freebusy_and_reoffers` |
 | G9 both calendar writes together, failures queued | `test_half_landed_write_is_booked_and_queued_for_retry` |
 | G10 every date names `Asia/Kolkata` | `test_server_local_time_is_never_used` + `ruff DTZ` clean |

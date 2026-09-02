@@ -20,7 +20,7 @@ A voice-first assistant for finding a rental flat in Bengaluru. The tenant speak
 | **Job 1** | The fast language model (Groq, `gpt-oss-120b`) that turns the tenant's sentence into structured edits to their preferences. Never explains anything. |
 | **Job 2** | The careful language model (Anthropic, `claude-sonnet-5`) that writes the explanation for "why this one?". Never invents facts; only cites what it is handed. |
 | **Type A / Type B turn** | Type A: anything that changes or confirms preferences, or books. Type B: "why?" questions that need Job 2. Decided by simple pattern matching in code, not by a model. |
-| **Listing dataset** | Up to 10 listings per locality scraped from bengaluru.rent, cleaned, owner contact details removed. |
+| **Listing dataset** | Up to 10 listings per locality taken from the supplied spreadsheet `data/Bangalore_Properties_List.xlsx`, cleaned. The sheet carries no owner contact details. |
 | **Guide index** | A searchable store of neighbourhood guide chunks (Wikipedia and open city guides), one partition per locality, so answers about HSR Layout can never draw on Koramangala text. Built offline with ChromaDB. |
 | **OSM facts** | Distances to the nearest metro, bus stop, etc., computed once at build time from OpenStreetMap through an "MCP" tool server. Never looked up live during a conversation. |
 | **Artefact bundle** | The listings + guide index + OSM facts + a manifest (a record of what is in the bundle and how it was built), committed to the repository and loaded when the backend starts. |
@@ -41,7 +41,7 @@ These are the spec's non-negotiables, in plain words. The full list with exact n
 - **Speed preconditions (P1–P8).** The server never sleeps; connections to every provider are reused; the STT waits 400 ms of silence before ending a sentence, and waits up to another 400 ms if the sentence looks unfinished ("…under" / a bare number); audio starts on the first sentence; OSM facts are precomputed; the two calendar writes run in parallel; Job 2 runs at low effort; a "why?" answer opens with a sentence built by code from facts already known, so audio starts before Job 2 has replied.
 - **Models.** Job 1 and Job 2 are different models from different providers, pinned by exact ID. Job 2 is never replaced by Job 1 for explanations. Job 1 may be swapped to a lighter Groq model if it misses the speed targets.
 - **Data.** Bengaluru only; up to 10 listings per locality (a ceiling, never padded); duplicates merged when the address matches or coordinates are within 50 m; owner contact is always the placeholder `999999999`. A missing value is shown as "not stated" — never blank, never zero, never guessed — and never satisfies a must-have (such listings go in their own "unknown" group).
-- **Grounding.** Listing facts come only from the dataset; distances and amenities only from OSM; neighbourhood character only from the guide index, with a citation; anything else is declared unavailable. Every distance says its method in speech, on the card badge, and in the full label, and the three must agree. Scraped text and guide chunks are treated as untrusted data, never as instructions.
+- **Grounding.** Listing facts come only from the dataset; distances and amenities only from OSM; neighbourhood character only from the guide index, with a citation; anything else is declared unavailable. Every distance says its method in speech, on the card badge, and in the full label, and the three must agree. Imported listing text and guide chunks are treated as untrusted data, never as instructions.
 - **Conversation.** At most 5 clarifying questions per session. Preferences are read back and confirmed before the first shortlist. Contradictions become a question, never a silent change. A refinement changes only what it touches; untouched listings keep their exact order and content. "The second one" means the second one the tenant last heard.
 - **Booking.** One Google account, two calendars (Tenant, Owner). Slots: next 7 days, 10:00–18:00 IST, one hour each, first three free ones offered. The 6-character code is the only credential; unknown and cancelled codes get the same answer; lookups are rate-limited. Availability and free/busy are re-checked at the moment of confirming. Cancel/reschedule refused once the slot has started. All time arithmetic in Asia/Kolkata. Email address read back letter by letter before sending. The PDF is generated, emailed, and discarded.
 - **Platform.** Backend on Railway (one always-on process); frontend on Vercel (draws what it is given; no server logic). No database, no transcript store, no user table; sessions live in memory and expire. The backend refuses to start if any secret is missing or the bundle does not match its manifest. Logs never contain transcript text or personal data.
@@ -61,15 +61,15 @@ The order follows the spec's §9: **do first whatever could invalidate everythin
 
 **Work that can run in parallel:** the data track (0.4–0.6) alongside the infrastructure track (0.7–0.10); the knowledge layer (1.1–1.3) alongside the store/contract/harness (1.4–1.6) once both gates clear; the UI (3.5–3.6) can start against the contract from Task 1.5 before Phase 2 finishes.
 
-**Working conventions (short form):** one commit per task; tests are written before the code they test; provider SDK signatures are checked against the installed library before use (the plan's provider shapes are from vendor docs dated 2026-08-30 and can drift); secrets live only in `backend/.env` locally and Railway variables in production; raw scrape output is never committed. Full conventions and the repository file tree: addendum → *Conventions* and *File structure*.
+**Working conventions (short form):** one commit per task; tests are written before the code they test; provider SDK signatures are checked against the installed library before use (the plan's provider shapes are from vendor docs dated 2026-08-30 and can drift); secrets live only in `backend/.env` locally and Railway variables in production; raw guide fetches are never committed. Full conventions and the repository file tree: addendum → *Conventions* and *File structure*.
 
 ## 5. Decisions you will be asked to make
 
 | When | Decision | What you will have in hand | If it goes the wrong way |
 |---|---|---|---|
 | Task 0.1 | Only if Python 3.12 is not installed: install it, or prove the libraries work on 3.14. | The result of `pip install chromadb onnxruntime` on 3.14. | Build breaks on missing wheels later. |
-| Task 0.4 | If bengaluru.rent's robots.txt or terms forbid crawling: **stop** and take it to the spec. Not something to route around. | The robots.txt verdict, recorded in `data/SOURCE_NOTES.md`. | Nothing downstream can be built. |
-| Task 0.6 — **Gate D** | One of: **Proceed** (availability marker exists, every schema field is published) · **Proceed with spec amendment** (list the missing fields; amend spec §3.1/§4/§7.1 in the same commit) · **Stop** (no reliable availability marker). | Locality list and counts, the availability marker (or "none found"), the fields the site does not publish, whether floor area is carpet or built-up, the scrape's cost in pages/minutes/requests. | Building on a dataset that cannot say whether a listing is still available. |
+| Task 0.4 | **Settled.** The listing source is the supplied spreadsheet `data/Bangalore_Properties_List.xlsx`; bengaluru.rent is out of scope and is never fetched. No crawling decision remains. | The field inventory, recorded in `data/SOURCE_NOTES.md`. | — |
+| Task 0.6 — **Gate D** | One of: **Proceed** (availability marker exists, every schema field is published) · **Proceed with spec amendment** (list the missing fields; amend spec §3.1/§4/§7.1 in the same commit) · **Stop** (no reliable availability marker). | Locality list and counts, the availability marker (or "none found"), the fields the sheet does not carry, whether floor area is carpet or built-up, and the import's cost in rows and minutes. | Building on a dataset that cannot say whether a listing is still available. |
 | Task 0.10 — **Gate L** | One of: **Proceed** (every speed row met at p99, no 2× violation; choose the region and say why) · **Proceed with renegotiation** (name the rows that missed; update spec §5.2 and this plan's rules in one commit) · **Change the model** (Job 1 missed; switch to a lighter Groq model and re-run). | A table of p99 timings per stage for two Railway regions (US and Singapore), cold-start numbers, the false end-of-speech rate on Indian-English speech, and which preconditions were actually in force. | A speed budget that is quietly ignored — the failure mode the spec names. |
 | Task 1.1 | Which 1–3 guide pages to use per locality (Wikipedia plus up to two open city guides; no listing portals or advertising copy). Localities with no usable source are recorded as empty — Suite C must then prove the assistant says so. | The locality list from Gate D. | Contaminated or thin neighbourhood answers. |
 | Task 1.3 | Accept the commute wording as locked, and note whether routing worked for ≥ 90 % of listings. If not, most transit claims will say "in a straight line" and the demo should expect that. | The routed / straight-line / null split printed by the precompute. | A demo that surprises you. |
@@ -79,7 +79,7 @@ The order follows the spec's §9: **do first whatever could invalidate everythin
 | Task 4.1 | If any production latency row misses: renegotiate spec §5.2 and this plan's rules in one commit, then re-run. | `Docs/LATENCY_REPORT.md`. | Sign-off on numbers that were not met. |
 | Task 4.3 | Sign off. | Three green CI runs of 60/60, the manual spot-check, the published artefacts list. | — |
 
-**What this plan does not tell you:** it carries no estimates of build time or running cost (provider bills, Railway, Vercel). Gate D records the scrape's cost; Gate L and the latency report record timings; nothing else is costed. If you want a cost view, that is a separate piece of work.
+**What this plan does not tell you:** it carries no estimates of build time or running cost (provider bills, Railway, Vercel). Gate D records the import's cost; Gate L and the latency report record timings; nothing else is costed. If you want a cost view, that is a separate piece of work.
 
 ---
 
@@ -88,7 +88,7 @@ The order follows the spec's §9: **do first whatever could invalidate everythin
 Nothing after this phase is safe until both gates clear. Tasks 0.1–0.3 are shared groundwork; 0.4–0.6 are the data track; 0.7–0.10 the infrastructure track. Run the two tracks in parallel.
 
 ### Task 0.1 — Repository scaffold, toolchain, CI skeleton
-- **Delivers:** a Python backend project (pinned to Python 3.12, every dependency pinned to an exact version), a Next.js frontend project, an example environment file listing every secret's name, a CI workflow that runs the tests, and the ignore rules that commit the bundle but never raw scrape output.
+- **Delivers:** a Python backend project (pinned to Python 3.12, every dependency pinned to an exact version), a Next.js frontend project, an example environment file listing every secret's name, a CI workflow that runs the tests, and the ignore rules that commit the bundle but never raw guide fetches.
 - **Why now:** everything else needs somewhere to live and a green test run to start from.
 - **Done when:** backend unit tests pass, the frontend builds, CI is green on the scaffold.
 - **Decision:** see §5 (Python 3.12 vs 3.14).
@@ -102,27 +102,27 @@ Nothing after this phase is safe until both gates clear. Tasks 0.1–0.3 are sha
 
 ### Task 0.3 — Domain records: listing, OSM fact, guide chunk, manifest
 - **Delivers:** the data shapes — the listing record with exactly the spec's fields (each may be null), the fixed set of OSM queries to run for every listing, the guide-chunk record, and the manifest that records what the bundle contains and how it was built (versions, counts, curation rule, missing fields, embedding model fingerprint).
-- **Why now:** the scraper (0.5), the index (1.2) and the OSM precompute (1.3) all write these shapes.
+- **Why now:** the importer (0.5), the index (1.2) and the OSM precompute (1.3) all write these shapes.
 - **Done when:** 17 unit tests pass.
 - Detail: addendum → Task 0.3.
 
 ### Data track — Tasks 0.4 to 0.6 → Gate D
 
-### Task 0.4 — Source reconnaissance: what bengaluru.rent actually publishes
-- **Delivers:** evidence, not code. A notes file recording the robots.txt verdict, the URL pattern per locality, where each schema field appears on the page, whether an availability marker exists, which fields the site does not publish, and whether floor area is carpet or built-up.
-- **Why now:** the scrape has not happened; the selectors and the availability marker are unknown until someone looks. This task looks at four pages and writes down what it finds.
-- **Done when:** the notes file is complete in its fixed skeleton (so Task 0.6 can read it mechanically) and committed; raw HTML is not committed.
-- **Decision:** see §5 (stop if crawling is disallowed).
+### Task 0.4 — Source inventory: what the supplied spreadsheet publishes
+- **Delivers:** evidence, not code. A notes file recording which schema field maps to which sheet column, which fields the sheet does not carry, whether an availability marker exists, whether floor area is carpet or built-up, and how each column was produced.
+- **Why now:** the importer (0.5) and the gap report (0.6) both read this inventory; nothing downstream can assume a field the sheet lacks.
+- **Done when:** the notes file is complete in its fixed skeleton (so Task 0.6 can read it mechanically) and committed.
+- **Status: done.** `data/SOURCE_NOTES.md` records 14 of 23 schema fields present, no availability marker, no PII, and `area_basis` unknown. It also records that rent, deposit and the other descriptive columns are **randomly generated placeholders**, not observed market data.
 - Detail: addendum → Task 0.4.
 
-### Task 0.5 — Scraper: parse, strip PII before writing, dedupe
-- **Delivers:** the scraper that reads every locality's listings, removes phone numbers and emails *before* anything touches disk, merges duplicates (same address or within 50 m; the more detailed record wins), and writes all parsed records (no cap yet). Fields the site does not publish stay null.
+### Task 0.5 — Importer: read the spreadsheet, dedupe, write records
+- **Delivers:** the importer that reads `data/Bangalore_Properties_List.xlsx` into `ListingRecord[]`, maps each column to its schema field, merges duplicates (within 50 m and otherwise identical; the more detailed record wins), and writes all parsed records (no cap yet). Fields the sheet does not carry stay null. The PII guard is kept as a defence-in-depth assertion even though this source has no contact details.
 - **Why now:** the dataset is the first thing that can invalidate the project.
-- **Done when:** unit tests pass on a saved sample page (with dummy contact details), one full scrape has run, and a search of the output finds no 10-digit numbers and no `@`.
+- **Done when:** unit tests pass on a small fixture sheet, one full import has run, and a search of the output finds no 10-digit numbers and no `@`.
 - Detail: addendum → Task 0.5.
 
 ### Task 0.6 — Curate to ≤ 10 per locality, gap report, manifest → **Gate D**
-- **Delivers:** the curation step (available listings only; per locality keep the 10 most detailed; ties broken by scrape date then id; the rule is written down as a sentence), a report of which fields are actually published, the first half of the manifest, and the committed listings file.
+- **Delivers:** the curation step (available listings only; per locality keep the 10 most detailed; ties broken by as-of date then id; the rule is written down as a sentence), a report of which fields are actually published, the first half of the manifest, and the committed listings file.
 - **Why now:** this is the moment to decide whether the dataset can carry the product.
 - **Done when:** `data/GATE_D.md` has exactly one box ticked; if the spec had to be amended, it is amended in the same commit, and the locality list and total are written back into spec §1 and §3.1.
 - **Decision:** **Gate D** — see §5.

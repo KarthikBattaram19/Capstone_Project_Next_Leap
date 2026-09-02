@@ -20,6 +20,7 @@ deepgram-sdk==7.8.0
 distro==1.9.0
 docstring_parser==0.18.0
 durationpy==0.11
+et_xmlfile==2.0.0
 fastapi==0.141.1
 filelock==3.32.5
 flatbuffers==25.12.19
@@ -62,6 +63,7 @@ numpy==2.5.2
 oauthlib==3.3.1
 onnxruntime==1.29.0
 openai==3.7.0
+openpyxl==3.1.5
 opentelemetry-api==1.44.0
 opentelemetry-exporter-otlp-proto-common==1.44.0
 opentelemetry-exporter-otlp-proto-grpc==1.44.0
@@ -105,7 +107,7 @@ respx==0.23.1
 rich==15.0.0
 rpds-py==2026.6.3
 ruff==0.16.5
--e git+https://github.com/KarthikBattaram19/Capstone_Project_Next_Leap.git@3bcbab94fbb4c11f8b02b9147a068ab9d1d41183#egg=scout&subdirectory=backend
+-e git+https://github.com/KarthikBattaram19/Capstone_Project_Next_Leap.git@75321054118149685b4ae64b56a67346f510ae89#egg=scout&subdirectory=backend
 shellingham==1.5.4
 six==1.17.0
 smallestai==5.12.0

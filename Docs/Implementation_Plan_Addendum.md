@@ -43,7 +43,7 @@ Copied from the spec and architecture. Every task's requirements implicitly incl
 **Grounding (spec §3.5, §2.3):**
 - Listing facts → dataset only · amenities/transit/distances → OSM only · neighbourhood character → closed guide index with citation · anything else → **declared unavailable**
 - Every distance names its method — **`by route` or `straight line` in speech, a badge on the card, the full label in the expanded view/snapshot/Sources** — and all three must agree. A bare `[OSM]` is an automatic failure. Straight-line answers carry their caveat **in the same breath**
-- Scraped text and guide chunks are **untrusted data**: delimited in prompts, never executed as instructions
+- Imported text and guide chunks are **untrusted data**: delimited in prompts, never executed as instructions
 
 **Conversation (spec §2.1, §2.2, §6):**
 - Max **5** clarifying questions per session · all constraints **read back and confirmed** before the first shortlist · contradictory edits → a question, never silent breakage · refinements change only the affected part; untouched listings and their order are **byte-identical** · "the second one" resolves against **what the tenant last heard**
@@ -118,7 +118,7 @@ The order is the spec's §9 order — **by what can invalidate what**:
 
 | Phase | Spec | What it settles | Gate |
 |---|---|---|---|
-| **0 — De-risk** | §9.1, §9.2 | The scaffold, the fact wrapper, the scrape, the walking skeleton, the latency spike | **Gate D** (dataset) and **Gate L** (latency) — both must clear in writing |
+| **0 — De-risk** | §9.1, §9.2 | The scaffold, the fact wrapper, the import, the walking skeleton, the latency spike | **Gate D** (dataset) and **Gate L** (latency) — both must clear in writing |
 | **1 — Foundations** | §9.3, §9.4 | The guide index, OSM precompute, artefact store + boot checks, the contract, the eval harness | Suite C skeleton exists before Job 2 is written |
 | **2 — Conversation** | §9.5, §9.6, §9.7 | Voice pipeline, Job 1, shortlist engine, Type A turn, retrieval, Job 2, Type B turn | Suites A, B, C green; Job 2 scores recorded |
 | **3 — Product** | §9.8, §9.9 | Booking/cancel/reschedule, PDF + email, the UI, promotion to the real deployment | §6.E/§6.F exercised; backend-first deploy |
@@ -137,7 +137,7 @@ Tasks are numbered `P.N`. **Parallelism worth taking** (spec §9): 0.4–0.6 (da
 ### Two deliberate deviations from the README's planned tree
 
 1. **The build pipeline lives in `backend/scout/pipeline/`** (run as `python -m scout.pipeline.<step>`), not in a root `scripts/` directory, so it shares the domain models with the backend without path hacks. `scripts/` at root holds only operator helpers (`google_auth.py`, `latency_spike.py`).
-2. **The artefact bundle is committed** under `data/bundle/` (listings, OSM facts, the persisted Chroma directory, the manifest). The architecture says the bundle is "versioned alongside the code" (arch §2.2) and the backend refuses to start without it; at ≤ a few hundred listings and a few MB of index it is small enough to track. Raw scrape output (`data/raw/`) stays ignored. `.gitignore` is amended in Task 0.1.
+2. **The artefact bundle is committed** under `data/bundle/` (listings, OSM facts, the persisted Chroma directory, the manifest). The architecture says the bundle is "versioned alongside the code" (arch §2.2) and the backend refuses to start without it; at ≤ a few hundred listings and a few MB of index it is small enough to track. Raw intermediate output (`data/raw/`) stays ignored. `.gitignore` is amended in Task 0.1.
 
 ---
 
@@ -151,7 +151,7 @@ Tasks are numbered `P.N`. **Parallelism worth taking** (spec §9): 0.4–0.6 (da
 ├── Implementation_Plan.md              # this file
 ├── data/
 │   ├── raw/                            # ignored: raw HTML, guide pages, MCP responses
-│   ├── SOURCE_NOTES.md                 # what bengaluru.rent actually publishes (Task 0.4)
+│   ├── SOURCE_NOTES.md                 # what the supplied spreadsheet publishes (Task 0.4)
 │   ├── GATE_D.md · GATE_L.md           # the two written gate decisions
 │   ├── guides/sources.json             # 1–3 guide URLs per locality (Task 1.1)
 │   └── bundle/                         # committed, versioned, read-only at runtime
@@ -221,7 +221,7 @@ Tasks are numbered `P.N`. **Parallelism worth taking** (spec §9): 0.4–0.6 (da
 │   │   │   ├── ws.py                   # the mic WebSocket gateway
 │   │   │   └── http.py                 # bookings, health, contract, admin toggle
 │   │   └── pipeline/                   # offline build (AD-1)
-│   │       ├── recon.py · scrape.py · curate.py · gap_report.py
+│   │       ├── import_sheet.py · curate.py · gap_report.py
 │   │       ├── chunking.py · build_index.py · precompute_osm.py · manifest.py
 │   └── tests/unit/ · tests/integration/
 ├── evals/
@@ -268,7 +268,7 @@ If 3.12 is absent, install it from python.org before continuing. Do **not** proc
 
 `backend/pyproject.toml` contains four tables:
 
-- `[project]` — `name = "scout"`, `version = "0.1.0"`, `description = "Voice-based AI property scout — Bengaluru (backend)"`, `requires-python = ">=3.12,<3.13"`, and `dependencies` listing, in this order: `fastapi`, `uvicorn[standard]`, `pydantic>=2`, `pydantic-settings`, `websockets`, `httpx`, `anthropic`, `groq`, `deepgram-sdk`, `smallestai`, `chromadb`, `onnxruntime`, `google-api-python-client`, `google-auth`, `google-auth-oauthlib`, `reportlab`, `beautifulsoup4`, `lxml`, `mcp`, `python-dateutil`.
+- `[project]` — `name = "scout"`, `version = "0.1.0"`, `description = "Voice-based AI property scout — Bengaluru (backend)"`, `requires-python = ">=3.12,<3.13"`, and `dependencies` listing, in this order: `fastapi`, `uvicorn[standard]`, `pydantic>=2`, `pydantic-settings`, `websockets`, `httpx`, `anthropic`, `groq`, `deepgram-sdk`, `smallestai`, `chromadb`, `onnxruntime`, `google-api-python-client`, `google-auth`, `google-auth-oauthlib`, `reportlab`, `beautifulsoup4`, `lxml`, `openpyxl`, `mcp`, `python-dateutil`.
 - `[project.optional-dependencies]` — `dev = ["pytest", "pytest-asyncio", "ruff", "respx", "freezegun"]`.
 - `[tool.pytest.ini_options]` — `asyncio_mode = "auto"`, `testpaths = ["tests"]`.
 - `[tool.ruff]` — `line-length = 100`, `target-version = "py312"`.
@@ -308,7 +308,7 @@ Then delete anything under `frontend/src/app/api/` if the generator created it, 
 
 (The four `# Runtime` entries `BUNDLE_DIR`, `CORS_ALLOWED_ORIGINS`, `JOB1_MODEL` and `JOB2_MODEL` are the only ones shipped with a value in the example; every key, id and voice id is left empty.)
 
-Amend `.gitignore`: remove the lines `data/listings.json`, `data/index/`, `data/embeddings/`, `data/osm_cache/` and add three lines — the comment `# Raw scrape output and MCP responses are not source; the curated bundle IS committed`, then the ignore pattern `data/raw/`, then the negation `!data/bundle/`.
+Amend `.gitignore`: remove the lines `data/listings.json`, `data/index/`, `data/embeddings/`, `data/osm_cache/` and add three lines — the comment `# Raw source and MCP responses are not source; the curated bundle IS committed`, then the ignore pattern `data/raw/`, then the negation `!data/bundle/`.
 
 Keep `*.sqlite` ignored but add `!data/bundle/chroma/**` beneath it so Chroma's persisted store is tracked.
 
@@ -424,7 +424,7 @@ Run `git add backend/scout/domain backend/tests/unit/domain` then `git commit -m
 
 - [ ] **Step 1: Write the failing tests**
 
-`backend/tests/unit/domain/test_listing.py` imports `date` from `datetime`, `BhkType`, `Coordinates`, `Listing`, `ListingRecord`, `Parking` from `scout.domain.listing`, and `Source`, `Timing` from `scout.domain.provenance`. It defines a helper `make_record(**over)` that builds a base dict with `id="kor-001"`, `source_url="https://bengaluru.rent/x"`, `scraped_on=date(2026, 9, 1)`, `locality="Koramangala"`, `bhk_type=BhkType.BHK2`, `bedrooms=2`, `bathrooms=2`, `rent=35000`, `deposit=None`, `maintenance_charges=None`, `maintenance_included=None`, `property_type="apartment"`, `furnishing="semi_furnished"`, `square_footage=1100`, `area_basis="unknown"`, `floor=3`, `total_floors=5`, `lift=True`, `parking=Parking.BOTH`, `amenities=["gym"]`, `available_from=None`, `availability_status=True`, `society_name="Prestige Acropolis"`, `coordinates=Coordinates(lat=12.93, lng=77.62)`, `merged_from=[]`; applies `base.update(over)`; and returns `ListingRecord(**base)`. Four tests follow:
+`backend/tests/unit/domain/test_listing.py` imports `date` from `datetime`, `BhkType`, `Coordinates`, `Listing`, `ListingRecord`, `Parking` from `scout.domain.listing`, and `Source`, `Timing` from `scout.domain.provenance`. It defines a helper `make_record(**over)` that builds a base dict with `id="kor-001"`, `source_url="file://data/Bangalore_Properties_List.xlsx#row=1"`, `scraped_on=date(2026, 9, 1)`, `locality="Koramangala"`, `bhk_type=BhkType.BHK2`, `bedrooms=2`, `bathrooms=2`, `balconies=1`, `rent=35000`, `deposit=None`, `maintenance_charges=None`, `maintenance_included=None`, `property_type="apartment"`, `furnishing="semi_furnished"`, `square_footage=1100`, `area_basis="unknown"`, `floor=3`, `total_floors=5`, `lift=True`, `parking=Parking.BOTH`, `parking_available=True`, `amenities=["gym"]`, `available_from=None`, `availability_status=True`, `society_name="Prestige Acropolis"`, `coordinates=Coordinates(lat=12.93, lng=77.62)`, `merged_from=[]`; applies `base.update(over)`; and returns `ListingRecord(**base)`. Four tests follow:
 
 - `test_record_keeps_null_as_null()` — `rec = make_record()`; asserts `rec.deposit is None`.
 - `test_listing_wraps_every_field_with_dataset_provenance()` — `listing = Listing.from_record(make_record())`; `rent = listing.field("rent")`; asserts `rent.value == 35000 and rent.source is Source.DATASET`, and `rent.timing is Timing.PRECOMPUTED and rent.as_of == date(2026, 9, 1)`; then `deposit = listing.field("deposit")` and asserts `deposit.value is None and deposit.source is Source.DATASET` (comment: null, not absent).
@@ -451,7 +451,7 @@ Expected: FAIL — `ModuleNotFoundError: No module named 'scout.domain.listing'`
 - `class Parking(str, Enum)` — `TWO_WHEELER = "two_wheeler"`, `FOUR_WHEELER = "four_wheeler"`, `BOTH = "both"`, `NONE = "none"`.
 - `class AreaBasis(str, Enum)` — `CARPET = "carpet"`, `BUILT_UP = "built_up"`, `UNKNOWN = "unknown"`.
 - `class Coordinates(BaseModel, frozen=True)` with fields `lat: float` and `lng: float`.
-- The constant `SCHEMA_FIELDS: tuple[str, ...]`, preceded by the comment "The searchable schema (spec §3.1). Every one is Optional: null is a real value.", holding exactly these 21 names in this order: `"locality"`, `"bhk_type"`, `"bedrooms"`, `"bathrooms"`, `"rent"`, `"deposit"`, `"maintenance_charges"`, `"maintenance_included"`, `"property_type"`, `"furnishing"`, `"square_footage"`, `"area_basis"`, `"floor"`, `"total_floors"`, `"lift"`, `"parking"`, `"amenities"`, `"available_from"`, `"availability_status"`, `"society_name"`, `"coordinates"`.
+- The constant `SCHEMA_FIELDS: tuple[str, ...]`, preceded by the comment "The searchable schema (spec §3.1). Every one is Optional: null is a real value.", holding exactly these 23 names in this order: `"locality"`, `"bhk_type"`, `"bedrooms"`, `"bathrooms"`, `"balconies"`, `"rent"`, `"deposit"`, `"maintenance_charges"`, `"maintenance_included"`, `"property_type"`, `"furnishing"`, `"square_footage"`, `"area_basis"`, `"floor"`, `"total_floors"`, `"lift"`, `"parking"`, `"parking_available"`, `"amenities"`, `"available_from"`, `"availability_status"`, `"society_name"`, `"coordinates"`.
 - `class ListingRecord(BaseModel)` with the docstring `"""On-disk shape. Owner names/phones never enter this model (spec §3.2)."""` and these fields:
 
 | Field | Type | Default |
@@ -464,6 +464,7 @@ Expected: FAIL — `ModuleNotFoundError: No module named 'scout.domain.listing'`
 | `bhk_type` | `BhkType \| None` | `None` |
 | `bedrooms` | `int \| None` | `None` |
 | `bathrooms` | `int \| None` | `None` |
+| `balconies` | `int \| None` | `None` |
 | `rent` | `int \| None` | `None` |
 | `deposit` | `int \| None` | `None` |
 | `maintenance_charges` | `int \| None` | `None` |
@@ -476,6 +477,7 @@ Expected: FAIL — `ModuleNotFoundError: No module named 'scout.domain.listing'`
 | `total_floors` | `int \| None` | `None` |
 | `lift` | `bool \| None` | `None` |
 | `parking` | `Parking \| None` | `None` |
+| `parking_available` | `bool \| None` | `None` |
 | `amenities` | `list[str] \| None` | `None` |
 | `available_from` | `date \| None` | `None` |
 | `availability_status` | `bool \| None` | `None` |
@@ -546,209 +548,136 @@ Run `git add backend/scout/domain backend/tests/unit/domain` then `git commit -m
 
 ## Data track (spec §9.1) — Tasks 0.4 to 0.6 → Gate D
 
-### Task 0.4: Source reconnaissance — what bengaluru.rent actually publishes
+### Task 0.4: Source inventory — what the supplied spreadsheet publishes
 
-The scrape has not happened (arch §16). Selectors, the availability marker and the real field list are **unknown until this task runs**, so this task produces evidence, not code that pretends to know.
+**Status: done.** The listing source is `data/Bangalore_Properties_List.xlsx`, a
+spreadsheet supplied by the project owner. bengaluru.rent is **out of scope**:
+it is never fetched, and no listing data comes from it. This task produced
+evidence, not code.
 
 **Files:**
-- Create: `backend/scout/pipeline/__init__.py`, `backend/scout/pipeline/recon.py`, `data/SOURCE_NOTES.md`
-- Output (ignored): `data/raw/recon/*.html`, `data/raw/recon/robots.txt`
+- Create: `data/SOURCE_NOTES.md`
 
 **Interfaces:**
-- Produces: `data/SOURCE_NOTES.md` with (a) the URL pattern per locality, (b) the CSS/XPath per §3.1 field, (c) the availability marker or the statement that none exists, (d) the fields the site does not publish, (e) whether square footage is stated as carpet or built-up, (f) the robots.txt verdict.
+- Produces: `data/SOURCE_NOTES.md` with (a) the sheet column per §3.1 field, (b) the fields the sheet does not carry, (c) the availability marker or the statement that none exists, (d) whether square footage is stated as carpet or built-up, (e) how each column was produced.
 
-- [ ] **Step 1: Check the terms before fetching anything**
+- [x] **Step 1: Inventory the sheet**
 
-Run a short inline Python script from PowerShell (`python - <<'EOF'` … `EOF`) that does the following: `import httpx`; fetch `r = httpx.get("https://bengaluru.rent/robots.txt", timeout=20, follow_redirects=True)`; then `print(r.status_code)` and `print(r.text[:3000])` — that is, print the HTTP status code and the first 3000 characters of the robots.txt body.
+Read the workbook and record, for every field in `SCHEMA_FIELDS`, which column
+carries it or that none does. Recorded result: **14 of 23 fields present**;
+`maintenance_charges`, `maintenance_included`, `area_basis`, `floor`, `lift`,
+`amenities`, `available_from` and `availability_status` are absent. `parking`
+is present but coarser than the schema — a `Yes`/`No`, not two-/four-wheeler.
 
-Record the verdict at the top of `data/SOURCE_NOTES.md`. If robots.txt or the site's terms disallow crawling the listing pages, **stop and raise it** — that is a Gate D outcome ("cannot scrape") the spec has to absorb, not something to route around.
+- [x] **Step 2: Record the shape and the caveats**
 
-- [ ] **Step 2: Write the reconnaissance fetcher**
+`data/SOURCE_NOTES.md` records 9,180 rows over 566 localities, every row
+carrying coordinates; no availability marker; and **no PII** — the sheet has no
+owner names, phone numbers or email addresses.
 
-`backend/scout/pipeline/recon.py` contains the following. Its module docstring reads "Fetch a handful of pages and save them raw, so selectors are chosen from evidence." It begins with `from __future__ import annotations`, then imports `argparse`, `re`, `time`, `Path` from `pathlib`, and `httpx`.
+It also records the provenance of each column, which is the load-bearing
+caveat: coordinates are real (copied from Makaan sale listings), `locality` is
+derived from those coordinates by OpenStreetMap reverse geocoding, and **rent,
+deposit and the remaining descriptive columns are randomly generated
+placeholders, not observed market data**. Any evaluation that treats a rent in
+this dataset as a real market figure is measuring the generator. The grounding
+discipline is unaffected and still testable; the demo must simply not be
+presented as real pricing.
 
-Module constants:
-- `RAW = Path("data/raw/recon")`
-- `UA = "scout-capstone-recon/0.1 (+contact: repo owner; single low-rate fetch for a student project)"`
+- [x] **Step 3: Commit**
 
-Functions:
-- `fetch(url: str, dest: Path) -> None` — first creates the destination's parent directory with `dest.parent.mkdir(parents=True, exist_ok=True)`; then opens `httpx.Client(headers={"User-Agent": UA}, timeout=30, follow_redirects=True)` as `c`, does `r = c.get(url)`, calls `r.raise_for_status()`, and writes `r.text` to `dest` with `encoding="utf-8"`; after the client block it prints `f"saved {dest} ({len(r.text)} chars)"`; finally it calls `time.sleep(2.0)` — with the comment "be polite; this is reconnaissance, not a crawl".
-- `slug(s: str) -> str` — returns `re.sub(r"[^a-z0-9]+", "-", s.lower()).strip("-")`.
-
-Under `if __name__ == "__main__":` it builds `ap = argparse.ArgumentParser()`, adds a positional argument `"urls"` with `nargs="+"` and help text `"landing page, one locality page, two listing pages"`, and for each `u` in `ap.parse_args().urls` calls `fetch(u, RAW / f"{slug(u)}.html")`.
-
-- [ ] **Step 3: Fetch the landing page, one locality index page and two listing detail pages**
-
-Run (PowerShell): `python -m scout.pipeline.recon https://bengaluru.rent/ <one-locality-index-url> <listing-url-1> <listing-url-2>`
-
-Open each saved file and, for every field in `SCHEMA_FIELDS` (Task 0.3), find where it appears and note the selector. Look specifically for: the availability / "Not for rent" marker; whether rent, deposit and maintenance are separate; whether parking distinguishes two- and four-wheeler; whether floor area says *carpet* or *built-up*; whether coordinates exist (map embed, `data-lat` attributes, a JSON blob).
-
-- [ ] **Step 4: Write `data/SOURCE_NOTES.md`**
-
-Use this exact skeleton so Task 0.6 can read it mechanically. The file is a Markdown document with these headings and lines, in this order:
-
-- Top-level heading: `# bengaluru.rent — source notes (recon on YYYY-MM-DD)`
-- Section `## robots.txt / terms` — containing the verbatim relevant lines and the verdict, written as `<verbatim relevant lines and the verdict: allowed | disallowed | unclear>`.
-- Section `## Locality discovery` — a bullet list with four lines: `- Locality list URL: …`, `- Locality index URL pattern: …`, `- Listing URL pattern: …`, `- Pagination: …`.
-- Section `## Availability marker` — two bullets: `- Marker: <css selector / text> | NONE FOUND` and `- "Not for rent" / transparency-only pins look like: …`.
-- Section `## Field map (schema field → selector → example value → published?)` — a Markdown table with the columns `field`, `selector`, `example`, `published`. Its example rows are:
-
-| field | selector | example | published |
-|---|---|---|---|
-| locality | … | Koramangala | yes |
-| bhk_type | … | 2 BHK | yes |
-| … every field in SCHEMA_FIELDS … | | | |
-
-- Section `## Square footage basis` — one line holding one of `carpet | built_up | not stated`.
-- Section `## PII observed (to strip)` — two bullets: `- owner name: selector …` and `- phone: selector … (also appears inside description text? yes/no)`.
-
-- [ ] **Step 5: Commit the notes (not the raw HTML)**
-
-Run `git add backend/scout/pipeline/__init__.py backend/scout/pipeline/recon.py data/SOURCE_NOTES.md` then `git commit -m "data: source reconnaissance notes for bengaluru.rent"`.
+Run `git add data/SOURCE_NOTES.md` then `git commit -m "data: source inventory for the supplied spreadsheet; bengaluru.rent out of scope"`.
 
 ---
 
-### Task 0.5: Scraper — parse, strip PII before writing, dedupe
+### Task 0.5: Importer — read the spreadsheet, dedupe, write records
+
+The source carries no contact details, so nothing needs stripping. The PII
+guard is kept anyway as a defence-in-depth assertion: if a future sheet ever
+carries a phone number, the build fails loudly rather than publishing it.
 
 **Files:**
-- Create: `backend/scout/pipeline/scrape.py`, `backend/scout/pipeline/pii.py`, `backend/scout/pipeline/dedupe.py`
-- Test: `backend/tests/unit/pipeline/test_pii.py`, `backend/tests/unit/pipeline/test_dedupe.py`, `backend/tests/unit/pipeline/test_parse_listing.py` with fixture `backend/tests/fixtures/listing_sample.html` (one saved detail page from Task 0.4, **with PII already replaced by dummy values** before committing)
-- Output (ignored): `data/raw/listings/<locality>/<id>.html`, `data/raw/listings_all.json`
+- Create: `backend/scout/pipeline/__init__.py`, `backend/scout/pipeline/import_sheet.py`, `backend/scout/pipeline/pii.py`, `backend/scout/pipeline/dedupe.py`
+- Test: `backend/tests/unit/pipeline/test_pii.py`, `backend/tests/unit/pipeline/test_dedupe.py`, `backend/tests/unit/pipeline/test_import_sheet.py` with fixture `backend/tests/fixtures/listing_sample.xlsx` (a 5-row workbook with the same header row as the real sheet)
+- Output (ignored): `data/raw/listings_all.json`
 
 **Interfaces:**
-- Consumes: `ListingRecord`, `Coordinates`, enums from Task 0.3; selectors from `data/SOURCE_NOTES.md`
+- Consumes: `ListingRecord`, `Coordinates`, enums from Task 0.3; the column map from `data/SOURCE_NOTES.md`
 - Produces:
-  - `strip_pii(text: str) -> str` — removes Indian phone numbers (10 digits starting 6–9, with optional +91/0 and separators) and email addresses
-  - `parse_listing(html: str, url: str, locality: str, scraped_on: date) -> ListingRecord` — raises `ParseError` on a page missing its required id
-  - `dedupe(records: list[ListingRecord]) -> tuple[list[ListingRecord], dict[str, list[str]]]` — exact address or coordinates within 50 m; most-detailed record wins; returns merged map
-  - `python -m scout.pipeline.scrape --out data/raw/listings_all.json` writes every parsed record (all localities, no cap yet)
+  - `strip_pii(text: str) -> str` — removes Indian phone numbers (10 digits starting 6-9, with optional +91/0 and separators) and email addresses
+  - `import_sheet(path: Path, as_of: date) -> list[ListingRecord]` — raises `SheetSchemaError` on a missing required column
+  - `dedupe(records: list[ListingRecord]) -> tuple[list[ListingRecord], dict[str, list[str]]]` — exact society/locality match or coordinates within 50 m; most-detailed record wins; returns merged map
+  - `haversine_m(lat1, lng1, lat2, lng2) -> float` — used by dedupe and by Task 1.3
+  - `python -m scout.pipeline.import_sheet --out data/raw/listings_all.json` writes every parsed record (all localities, no cap yet)
+
+**Column map** (sheet column to schema field). Fields not listed stay `None`;
+`area_basis` is always `AreaBasis.UNKNOWN`.
+
+| sheet column | schema field | conversion |
+|---|---|---|
+| `locality` | `locality` | trimmed string |
+| `bhk_type` | `bhk_type` | `BhkType` by exact value (`1BHK`/`2BHK`/`3BHK`/`3BHK+`) |
+| `bedrooms` | `bedrooms` | int |
+| `bathrooms` | `bathrooms` | int |
+| `balconies` | `balconies` | int |
+| `Rent` | `rent` | int, rupees per month |
+| `Deposit` | `deposit` | int, rupees |
+| `property_type` | `property_type` | `PropertyType` by exact value |
+| `furnishing` | `furnishing` | `Furnishing` by exact value |
+| `square_feet` | `square_footage` | int |
+| `total_floors` | `total_floors` | int; the literal text `Not Applicable` (every `independent_house` and `villa` row) or a blank becomes `None` |
+| `parking_available` | `parking_available` | `True` when `Yes`, `False` when `No`. **`parking` itself stays `None`** — the sheet does not say two- or four-wheeler, and a bare "yes" is never inflated into `both` |
+| `society_name` | `society_name` | trimmed string |
+| `Latitude`, `Longitude` | `coordinates` | `Coordinates(lat=..., lng=...)` |
+
+`id` is `f"{locality-slug}-{Sl.:05d}"`. `source_url` is
+`f"file://data/Bangalore_Properties_List.xlsx#row={Sl.}"` — the sheet is the
+source, so the reference is the row, not a web page. `scraped_on` carries the
+date the sheet was taken as of. The column `Society Type` has no schema home and is **not imported**.
 
 - [ ] **Step 1: Write the failing tests**
 
 `backend/tests/unit/pipeline/test_pii.py` imports `strip_pii` from `scout.pipeline.pii` and defines three tests:
-- `test_strips_indian_mobile_numbers_in_all_common_forms()` — with input `s = "Call Ramesh on 9876543210 or +91 98765-43210 or 098765 43210 today"` and `out = strip_pii(s)`, asserts that `"98765"` is not in `out` and `"43210"` is not in `out`, and asserts that `"[phone removed]"` is in `out`.
-- `test_strips_emails()` — asserts that `"@"` is not in `strip_pii("mail owner.name@example.com now")`.
-- `test_leaves_rent_and_pincode_alone()` — with `s = "Rent 35000, deposit 200000, pincode 560034"`, asserts `strip_pii(s) == s`.
+- `test_strips_indian_mobile_numbers_in_all_common_forms()` - with input `s = "Call Ramesh on 9876543210 or +91 98765-43210 or 098765 43210 today"` and `out = strip_pii(s)`, asserts that `"98765"` is not in `out` and `"43210"` is not in `out`, and asserts that `"[phone removed]"` is in `out`.
+- `test_strips_emails()` - asserts that `"@"` is not in `strip_pii("mail owner.name@example.com now")`.
+- `test_leaves_rent_and_pincode_alone()` - with `s = "Rent 35000, deposit 200000, pincode 560034"`, asserts `strip_pii(s) == s`.
 
 `backend/tests/unit/pipeline/test_dedupe.py` imports `date` from `datetime`, `Coordinates` and `ListingRecord` from `scout.domain.listing`, and `dedupe` from `scout.pipeline.dedupe`. It defines a helper `rec(id, lat, lng, society=None, rent=None, deposit=None)` that returns `ListingRecord(id=id, source_url=f"u/{id}", scraped_on=date(2026, 9, 1), locality="Koramangala", coordinates=Coordinates(lat=lat, lng=lng), society_name=society, rent=rent, deposit=deposit)`. Its tests:
-- `test_within_50m_merges_and_most_detailed_wins()` — builds `a = rec("a", 12.9350, 77.6200, rent=30000)` (commented "1 field") and `b = rec("b", 12.9351, 77.6200, rent=30000, deposit=100000)` (commented "2 fields → wins"); with `kept, merged = dedupe([a, b])` asserts `[k.id for k in kept] == ["b"]` and `merged == {"b": ["a"]}`.
-- `test_beyond_50m_stays_separate()` — builds `a = rec("a", 12.9350, 77.6200)` and `b = rec("b", 12.9360, 77.6200)` (commented "~110 m north"); with `kept, merged = dedupe([a, b])` asserts `len(kept) == 2` and `merged == {}`.
-- `test_exact_society_and_address_merges_without_coordinates()` — builds `a = ListingRecord(id="a", source_url="u/a", scraped_on=date(2026, 9, 1), locality="X", society_name="Prestige Acropolis, 5th Block", rent=1)` and `b = ListingRecord(id="b", source_url="u/b", scraped_on=date(2026, 9, 1), locality="X", society_name="Prestige Acropolis, 5th Block", rent=1, deposit=2)`; with `kept, merged = dedupe([a, b])` asserts `[k.id for k in kept] == ["b"]`.
-- `test_two_flats_in_one_tower_are_not_one_flat()` — builds `a = rec("a", 12.9350, 77.6200, society="Prestige Acropolis", rent=30000)` and `b = rec("b", 12.9350, 77.6200, society="Prestige Acropolis", rent=52000)` — the same pin, the same building, different flats; with `kept, merged = dedupe([a, b])` asserts `len(kept) == 2 and merged == {}`.
-- `test_same_society_in_two_localities_stays_separate()` — builds two records with an equal `society_name` and no coordinates but `locality="Koramangala"` and `locality="HSR Layout"`; asserts `len(dedupe([a, b])[0]) == 2`.
+- `test_within_50m_merges_and_most_detailed_wins()` - builds `a = rec("a", 12.9350, 77.6200, rent=30000)` (commented "1 field") and `b = rec("b", 12.9351, 77.6200, rent=30000, deposit=100000)` (commented "2 fields wins"); with `kept, merged = dedupe([a, b])` asserts `[k.id for k in kept] == ["b"]` and `merged == {"b": ["a"]}`.
+- `test_beyond_50m_stays_separate()` - builds `a = rec("a", 12.9350, 77.6200)` and `b = rec("b", 12.9360, 77.6200)` (commented "~110 m north"); with `kept, merged = dedupe([a, b])` asserts `len(kept) == 2` and `merged == {}`.
+- `test_exact_society_and_address_merges_without_coordinates()` - builds `a = ListingRecord(id="a", source_url="u/a", scraped_on=date(2026, 9, 1), locality="X", society_name="Prestige Acropolis, 5th Block", rent=1)` and `b = ListingRecord(id="b", source_url="u/b", scraped_on=date(2026, 9, 1), locality="X", society_name="Prestige Acropolis, 5th Block", rent=1, deposit=2)`; with `kept, merged = dedupe([a, b])` asserts `[k.id for k in kept] == ["b"]`.
+- `test_two_flats_in_one_tower_are_not_one_flat()` - builds `a = rec("a", 12.9350, 77.6200, society="Prestige Acropolis", rent=30000)` and `b = rec("b", 12.9350, 77.6200, society="Prestige Acropolis", rent=52000)` - the same pin, the same building, different flats; with `kept, merged = dedupe([a, b])` asserts `len(kept) == 2 and merged == {}`.
+- `test_same_society_in_two_localities_stays_separate()` - builds two records with an equal `society_name` and no coordinates but `locality="Koramangala"` and `locality="HSR Layout"`; asserts `len(dedupe([a, b])[0]) == 2`.
 
-`backend/tests/unit/pipeline/test_parse_listing.py` imports `date` from `datetime`, `Path` from `pathlib`, and `parse_listing` from `scout.pipeline.scrape`. It defines the constant `SAMPLE = Path(__file__).parents[2] / "fixtures" / "listing_sample.html"` and one test:
-- `test_parses_the_saved_sample_without_pii()` — calls `rec = parse_listing(SAMPLE.read_text(encoding="utf-8"), "https://bengaluru.rent/sample", "Koramangala", date(2026, 9, 1))`; asserts `rec.locality == "Koramangala"`; asserts `rec.rent is not None` (commented "the sample page shows a rent"); sets `dumped = rec.model_dump_json()`; asserts `"@"` is not in `dumped`; then does `import re` and asserts `not re.search(r"(?<!\d)[6-9]\d{9}(?!\d)", dumped)` (commented "no 10-digit mobiles anywhere").
+`backend/tests/unit/pipeline/test_import_sheet.py` imports `date` from `datetime`, `Path` from `pathlib`, `pytest`, `AreaBasis` and `BhkType` from `scout.domain.listing`, and `import_sheet` and `SheetSchemaError` from `scout.pipeline.import_sheet`. It defines the constant `SAMPLE = Path(__file__).parents[2] / "fixtures" / "listing_sample.xlsx"` and these tests:
+- `test_maps_every_supplied_column()` - calls `recs = import_sheet(SAMPLE, date(2026, 9, 2))`; asserts `len(recs) == 5`; takes `r = recs[0]` and asserts `r.locality` is a non-empty string, `r.rent is not None`, `r.deposit is not None`, `r.bhk_type in set(BhkType)`, and `r.coordinates is not None`.
+- `test_fields_the_sheet_lacks_are_none_not_guessed()` - with `r = import_sheet(SAMPLE, date(2026, 9, 2))[0]`, asserts `r.amenities is None`, `r.lift is None`, `r.floor is None`, `r.available_from is None`, `r.availability_status is None`, `r.maintenance_charges is None`, and `r.area_basis is AreaBasis.UNKNOWN`.
+- `test_a_bare_yes_never_becomes_a_four_wheeler_claim()` - asserts that for every record `r.parking is None` and `r.parking_available in {True, False}`, so a `Yes` in the sheet is never inflated into `Parking.BOTH`.
+- `test_balconies_is_imported()` - asserts every record's `balconies` is an `int`.
+- `test_output_carries_no_pii()` - sets `dumped = "".join(r.model_dump_json() for r in import_sheet(SAMPLE, date(2026, 9, 2)))`; asserts `"@"` is not in `dumped`; then does `import re` and asserts `not re.search(r"(?<!\d)[6-9]\d{9}(?!\d)", dumped)` (commented "no 10-digit mobiles anywhere").
+- `test_missing_required_column_is_an_error()` - asserts, with `pytest.raises(SheetSchemaError)`, that importing a workbook without a `locality` column fails.
 
-- [ ] **Step 2: Run to verify they fail**
+Run: FAIL.
 
-Run: `python -m pytest backend/tests/unit/pipeline -q`
-Expected: FAIL — module not found
+- [ ] **Step 2: Implement**
 
-- [ ] **Step 3: Implement PII stripping**
+`backend/scout/pipeline/pii.py` and `backend/scout/pipeline/dedupe.py` are unchanged from their original specification: `strip_pii` with the phone and email patterns, and `dedupe` with `haversine_m`, the 50 m radius, the "most fields present wins" rule, and the guard that two records with the same coordinates but different rents are two flats in one tower, not one flat.
 
-`backend/scout/pipeline/pii.py` contains the following. Its module docstring reads "Owner names and phone numbers are removed BEFORE anything is written to disk (spec §3.2)." It imports `re` and defines two compiled regular expressions:
-- `_PHONE = re.compile(r"(?<!\d)(?:\+?91[\s\-]?|0)?[6-9]\d{4}[\s\-]?\d{5}(?!\d)")` — an optional `+91`/`91`/`0` prefix with optional space or hyphen, then a digit 6–9 and four more digits, an optional space or hyphen, then five digits, bounded on both sides by non-digits.
-- `_EMAIL = re.compile(r"[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}")`
+`backend/scout/pipeline/import_sheet.py` has the module docstring "Import the supplied spreadsheet once. The sheet carries no PII; the guard is defence in depth." It uses `from __future__ import annotations`; imports `argparse`, `json`, `re`, `date` from `datetime`, `Path` from `pathlib`, `load_workbook` from `openpyxl`; imports `AreaBasis`, `BhkType`, `Coordinates`, `Furnishing`, `ListingRecord`, `Parking`, `PropertyType` from `scout.domain.listing`; and imports `strip_pii` from `scout.pipeline.pii`.
 
-Function `strip_pii(text: str) -> str` first replaces every `_EMAIL` match with `"[email removed]"` (`text = _EMAIL.sub("[email removed]", text)`), then returns `_PHONE.sub("[phone removed]", text)`.
+- `class SheetSchemaError(ValueError)` — raised when a required column is absent.
+- `SHEET = "Bangalore_Properties_List"` and `REQUIRED = ("locality", "bhk_type", "Rent", "Deposit", "Latitude", "Longitude")`.
+- `import_sheet(path, as_of)` opens the workbook read-only, reads the header row into a `{name: index}` map, raises `SheetSchemaError` naming any member of `REQUIRED` that is absent, and then builds one `ListingRecord` per non-empty row using the column map above. Every text value passes through `strip_pii` before it reaches the record.
+- Under `if __name__ == "__main__":` it builds `ap = argparse.ArgumentParser()`, adds `--sheet` with `default="data/Bangalore_Properties_List.xlsx"` and `--out` with `default="data/raw/listings_all.json"`, parses `args = ap.parse_args()`, and writes the imported records to `args.out` as JSON.
 
-- [ ] **Step 4: Implement dedupe**
+- [ ] **Step 3: Run**
 
-`backend/scout/pipeline/dedupe.py` contains the following. Its module docstring reads "Merge adverts for the same flat: exact address OR coordinates within 50 m (spec §3.1)." It begins with `from __future__ import annotations`, imports `math`, and imports `SCHEMA_FIELDS` and `ListingRecord` from `scout.domain.listing`.
+Run: `python -m pytest backend/tests/unit/pipeline -q` to pass.
+Run: `python -m scout.pipeline.import_sheet` writes `data/raw/listings_all.json`.
 
-Module constant: `MERGE_RADIUS_M = 50.0`.
+- [ ] **Step 4: Commit**
 
-Functions:
-- `haversine_m(lat1: float, lng1: float, lat2: float, lng2: float) -> float` — uses Earth radius `r = 6_371_000.0`; computes `p1, p2 = math.radians(lat1), math.radians(lat2)` and `dp, dl = math.radians(lat2 - lat1), math.radians(lng2 - lng1)`; then `a = math.sin(dp / 2) ** 2 + math.cos(p1) * math.cos(p2) * math.sin(dl / 2) ** 2`; returns `2 * r * math.asin(math.sqrt(a))`.
-- `detail_score(rec: ListingRecord) -> int` — returns `sum(1 for f in SCHEMA_FIELDS if getattr(rec, f) is not None)`, the count of non-null schema fields.
-- `_agrees(a: ListingRecord, b: ListingRecord) -> bool` — returns `False` if `rent` is stated on both and differs, or `bhk_type` is stated on both and differs; otherwise `True`. Two adverts that disagree on what the flat *is* are not the same flat, however close together they sit.
-- `_same_flat(a: ListingRecord, b: ListingRecord) -> bool` — returns `False` unless `a.locality == b.locality` (a shared society name in two localities is two societies), and `False` unless `_agrees(a, b)`. Then: if both `a.coordinates` and `b.coordinates` are truthy, returns whether `haversine_m(a.coordinates.lat, a.coordinates.lng, b.coordinates.lat, b.coordinates.lng) <= MERGE_RADIUS_M`. If either coordinate is missing, falls back to the exact-address arm: both `society_name`s truthy and equal, compared trimmed and case-insensitively. Otherwise `False`.
-  **Why the rent/BHK guard exists.** A society name is a *building*, and a portal usually pins every unit in a tower at one coordinate — so "same society" and "within 50 m" both hold for twenty genuinely different flats. Requiring the stated rent and BHK to agree keeps the spec's 50 m rule while stopping a tower from collapsing into one listing (`eval.md` EC-DUP-03/04).
-- `dedupe(records: list[ListingRecord]) -> tuple[list[ListingRecord], dict[str, list[str]]]` — initialises `kept: list[ListingRecord] = []` and `merged: dict[str, list[str]] = {}`; iterates over `records` sorted by `key=lambda r: (-detail_score(r), r.id)` (most-detailed first, then id); for each `rec` finds `winner = next((k for k in kept if _same_flat(k, rec)), None)`; if `winner is None` appends `rec` to `kept`, else does `merged.setdefault(winner.id, []).append(rec.id)`. After the loop, for each `k` in `kept` whose `k.id` is in `merged`, sets `k.merged_from = merged[k.id]`. Returns `sorted(kept, key=lambda r: r.id), merged`.
-
-- [ ] **Step 5: Implement the scraper**
-
-`backend/scout/pipeline/scrape.py` — the selectors come from `data/SOURCE_NOTES.md`; the constants block is the only place they live. The module contains the following.
-
-Its module docstring reads "Scrape bengaluru.rent once. PII is stripped at parse time, before any write." It begins with `from __future__ import annotations`; imports `argparse`, `json`, `re`, `time`, `date` from `datetime`, `Path` from `pathlib`, `httpx`, `BeautifulSoup` from `bs4`; imports `AreaBasis`, `BhkType`, `Coordinates`, `Furnishing`, `ListingRecord`, `Parking`, `PropertyType` from `scout.domain.listing`; and imports `strip_pii` from `scout.pipeline.pii`.
-
-Module constants:
-- `RAW = Path("data/raw/listings")`
-- `UA = "scout-capstone/0.1 (student project; low-rate single scrape)"`
-- `SEL` — a dict introduced by the comment "Selectors: fill from data/SOURCE_NOTES.md. Each is (css_selector, attribute_or_None)." and closed by a comment rule. Each key maps to a `(css_selector, attribute_or_None)` tuple:
-
-| key | css selector placeholder | attribute |
-|---|---|---|
-| `locality_links` | `<css for locality links on the landing page>` | `"href"` |
-| `listing_links` | `<css for listing links on a locality page>` | `"href"` |
-| `next_page` | `<css for pagination next>` | `"href"` |
-| `available_marker` | `<css that exists only on available pins>` | `None` |
-| `bhk` | `<css>` | `None` |
-| `bathrooms` | `<css>` | `None` |
-| `rent` | `<css>` | `None` |
-| `deposit` | `<css>` | `None` |
-| `maintenance` | `<css>` | `None` |
-| `property_type` | `<css>` | `None` |
-| `furnishing` | `<css>` | `None` |
-| `sqft` | `<css>` | `None` |
-| `floor` | `<css>` | `None` |
-| `lift` | `<css>` | `None` |
-| `parking` | `<css>` | `None` |
-| `amenities` | `<css>` | `None` |
-| `available_from` | `<css>` | `None` |
-| `society` | `<css>` | `None` |
-| `lat` | `<css>` | `"data-lat"` |
-| `lng` | `<css>` | `"data-lng"` |
-
-Exception class: `class ParseError(ValueError)` with an empty body (`pass`).
-
-Helper functions:
-- `_text(soup: BeautifulSoup, key: str) -> str | None` — unpacks `sel, attr = SEL[key]`; does `node = soup.select_one(sel)`; returns `None` if `node is None`; otherwise returns `(node.get(attr) if attr else node.get_text(" ", strip=True)) or None`.
-- `_int(s: str | None) -> int | None` — returns `None` if `s is None`; otherwise `digits = re.sub(r"[^\d]", "", s)` and returns `int(digits) if digits else None`.
-- `_bhk(s: str | None) -> tuple[BhkType | None, int | None]` — returns `None, None` if `s` is falsy; does `m = re.search(r"(\d+)\s*(RK|BHK)", s, re.I)` and returns `None, None` if no match; sets `n, kind = int(m.group(1)), m.group(2).upper()`; if `kind == "RK"` returns `BhkType.RK1, 1`; otherwise returns `{1: BhkType.BHK1, 2: BhkType.BHK2, 3: BhkType.BHK3}.get(n, BhkType.BHK3_PLUS), n`.
-- `_enum(cls, s: str | None)` — returns `None` if `s` is falsy; computes `key = re.sub(r"[^a-z]", "_", s.lower()).strip("_")`; for each `member` in `cls`, if `member.value in key` returns `member`; otherwise returns `None`.
-
-`parse_listing(html: str, url: str, locality: str, scraped_on: date) -> ListingRecord`:
-- First does `html = strip_pii(html)` — with the comment "before anything is read, so nothing downstream can keep it".
-- `soup = BeautifulSoup(html, "lxml")`.
-- `listing_id = re.sub(r"[^a-z0-9]+", "-", url.lower()).strip("-")[-40:]`; if `listing_id` is empty, raises `ParseError(f"no id derivable from {url}")`.
-- `bhk_type, bedrooms = _bhk(_text(soup, "bhk"))`.
-- `sqft_raw = _text(soup, "sqft") or ""`; `basis` is `AreaBasis.CARPET` if `"carpet"` is in `sqft_raw.lower()`, else `AreaBasis.BUILT_UP` if `"built"` is in `sqft_raw.lower()`, else `AreaBasis.UNKNOWN`.
-- `lat, lng = _text(soup, "lat"), _text(soup, "lng")`.
-- `floor_raw = _text(soup, "floor") or ""`; `floors = [int(x) for x in re.findall(r"\d+", floor_raw)]`.
-- `maint = _text(soup, "maintenance") or ""`; `amen_raw = _text(soup, "amenities")`.
-- Returns a `ListingRecord` built with: `id=listing_id`, `source_url=url`, `scraped_on=scraped_on`, `locality=locality`, `bhk_type=bhk_type`, `bedrooms=bedrooms`, `bathrooms=_int(_text(soup, "bathrooms"))`, `rent=_int(_text(soup, "rent"))`, `deposit=_int(_text(soup, "deposit"))`, `maintenance_charges=_int(maint) if "includ" not in maint.lower() else None`, `maintenance_included=("includ" in maint.lower()) if maint else None`, `property_type=_enum(PropertyType, _text(soup, "property_type"))`, `furnishing=_enum(Furnishing, _text(soup, "furnishing"))`, `square_footage=_int(sqft_raw)`, `area_basis=basis`, `floor=floors[0] if floors else None`, `total_floors=floors[1] if len(floors) > 1 else None`, `lift=(lambda s: None if s is None else "yes" in s.lower())(_text(soup, "lift"))`, `parking=_enum(Parking, _text(soup, "parking"))`, `amenities=[a.strip() for a in amen_raw.split(",") if a.strip()] if amen_raw else None`, `available_from=None` (commented "parsed by dateutil below if the site states it"), `availability_status=soup.select_one(SEL["available_marker"][0]) is not None`, `society_name=_text(soup, "society")`, `coordinates=Coordinates(lat=float(lat), lng=float(lng)) if lat and lng else None`.
-
-`crawl(base: str, out: Path, delay_s: float = 2.0) -> None`:
-- Sets `today = date.today()` and `records: list[ListingRecord] = []`.
-- Opens `httpx.Client(headers={"User-Agent": UA}, timeout=30, follow_redirects=True)` as `c`; parses `landing = BeautifulSoup(c.get(base).text, "lxml")`.
-- For each `a` in `landing.select(SEL["locality_links"][0])`: sets `loc_url, locality = httpx.URL(base).join(a["href"]), a.get_text(strip=True)` and fetches `page = c.get(str(loc_url)).text`; then loops `while True`:
-  - `soup = BeautifulSoup(page, "lxml")`.
-  - For each `link` in `soup.select(SEL["listing_links"][0])`: `url = str(httpx.URL(base).join(link["href"]))`; `html = c.get(url).text`; `dest = RAW / re.sub(r"\W+", "-", locality) / (re.sub(r"\W+", "-", url)[-60:] + ".html")`; creates `dest.parent` with `mkdir(parents=True, exist_ok=True)`; writes `strip_pii(html)` to `dest` with `encoding="utf-8"` — commented "PII gone before disk"; then tries `records.append(parse_listing(html, url, locality, today))`, catching `ParseError as e` and printing `"skip:", e`; then `time.sleep(delay_s)`.
-  - After the listing loop, `nxt = soup.select_one(SEL["next_page"][0])`; if `nxt` is falsy, `break`; otherwise `page = c.get(str(httpx.URL(base).join(nxt["href"]))).text` and the loop continues.
-- After the client block: creates `out.parent` with `mkdir(parents=True, exist_ok=True)`; writes `json.dumps([r.model_dump(mode="json") for r in records], indent=2)` to `out` with `encoding="utf-8"`; prints `f"wrote {len(records)} records to {out}"`.
-
-Under `if __name__ == "__main__":` it builds `ap = argparse.ArgumentParser()`, adds `--base` with `default="https://bengaluru.rent/"` and `--out` with `default="data/raw/listings_all.json"`, parses `args = ap.parse_args()`, and calls `crawl(args.base, Path(args.out))`.
-
-Replace every `<css …>` placeholder in `SEL` with the selector recorded in `data/SOURCE_NOTES.md`. If a field has no selector because the site does not publish it, set its entry to `("", None)` and `_text` will return `None` — the field stays `null`, which is the correct answer. If the site publishes `available_from`, parse it with `dateutil.parser.parse(...).date()` in the same style as the other fields.
-
-- [ ] **Step 6: Save a fixture page and make the parse test pass**
-
-Copy one fetched detail page to `backend/tests/fixtures/listing_sample.html`, replace any real owner name/phone/email in it with `Owner Name` / `9999999999` / `owner@example.com`, then run:
-
-Run: `python -m pytest backend/tests/unit/pipeline -q`
-Expected: all pass
-
-- [ ] **Step 7: Run the scrape once**
-
-Run (PowerShell): `python -m scout.pipeline.scrape --out data/raw/listings_all.json`
-
-Inspect `data/raw/listings_all.json`: count per locality, how many have `availability_status=True`, how many nulls per field. Grep it for 10-digit numbers and `@` — there must be none.
-
-- [ ] **Step 8: Commit code and fixture (never `data/raw/`)**
-
-Run `git add backend/scout/pipeline backend/tests/unit/pipeline backend/tests/fixtures/listing_sample.html` then `git commit -m "feat: scraper with PII stripping before write, 50 m dedupe, parse fixture"`.
+Run `git add backend/scout/pipeline backend/tests/unit/pipeline backend/tests/fixtures/listing_sample.xlsx` then `git commit -m "data: importer for the supplied spreadsheet, with dedupe and a PII guard"`.
 
 ---
 
@@ -762,9 +691,9 @@ Run `git add backend/scout/pipeline backend/tests/unit/pipeline backend/tests/fi
 **Interfaces:**
 - Consumes: `data/raw/listings_all.json`, `dedupe`, `detail_score`, `DatasetManifest`, `GapReport`
 - Produces:
-  - `curate(records) -> tuple[list[ListingRecord], str]` — available only; dedupe; per locality keep the 10 with the highest `detail_score`, ties by `scraped_on` desc then `id`; returns the curation rule as a sentence
+  - `curate(records) -> tuple[list[ListingRecord], str]` — available only; dedupe; per locality keep the 10 with the highest `detail_score`, ties by `scraped_on` (the sheet's as-of date) desc then `id`; returns the curation rule as a sentence
   - `gap_report(records) -> GapReport` — a field is "published" if ≥ 1 record has it non-null
-  - `write_manifest(...)` — writes `data/bundle/manifest.json` with `bundle_version="1"`, `contract_version="1"` and the scrape-side fields (Task 1.2/1.3 fill the index/OSM fields)
+  - `write_manifest(...)` — writes `data/bundle/manifest.json` with `bundle_version="1"`, `contract_version="1"` and the import-side fields (Task 1.2/1.3 fill the index/OSM fields)
 
 - [ ] **Step 1: Write the failing test**
 
@@ -783,9 +712,9 @@ Expected: FAIL — module not found
 
 Module constants:
 - `CAP = 10`
-- `RULE` — an f-string built from `CAP` whose full text is: "Only pins marked available; duplicates merged (exact society/address or coordinates within 50 m, most-detailed record wins); where a locality exceeds 10, keep the 10 records with the most non-null schema fields, ties broken by newest scrape date then id." (in the source the two occurrences of `10` are written `{CAP}`).
+- `RULE` — an f-string built from `CAP` whose full text is: "Only pins marked available; duplicates merged (exact society/address or coordinates within 50 m, most-detailed record wins); where a locality exceeds 10, keep the 10 records with the most non-null schema fields, ties broken by newest as-of date then id." (in the source the two occurrences of `10` are written `{CAP}`).
 
-Function `curate(records: list[ListingRecord]) -> tuple[list[ListingRecord], str]`: filters `available = [r for r in records if r.availability_status is True]`; calls `kept, _merged = dedupe(available)`; groups `kept` into `by_loc: dict[str, list[ListingRecord]]` keyed by `r.locality`; then for each `loc` in `sorted(by_loc)` computes `ranked = sorted(by_loc[loc], key=lambda r: (-detail_score(r), -r.scraped_on.toordinal(), r.id))` — most fields first, then **newest** scrape date (the negated ordinal is what makes it newest-first, matching `RULE`'s wording), then id and extends `out` with `ranked[:CAP]`; returns `out, RULE`.
+Function `curate(records: list[ListingRecord]) -> tuple[list[ListingRecord], str]`: filters `available = [r for r in records if r.availability_status is True]`; calls `kept, _merged = dedupe(available)`; groups `kept` into `by_loc: dict[str, list[ListingRecord]]` keyed by `r.locality`; then for each `loc` in `sorted(by_loc)` computes `ranked = sorted(by_loc[loc], key=lambda r: (-detail_score(r), -r.scraped_on.toordinal(), r.id))` — most fields first, then **newest** as-of date (the negated ordinal is what makes it newest-first, matching `RULE`'s wording), then id and extends `out` with `ranked[:CAP]`; returns `out, RULE`.
 
 Under `if __name__ == "__main__":` it builds `ap = argparse.ArgumentParser()`, adds `--inp` with `default="data/raw/listings_all.json"` and `--out` with `default="data/bundle/listings.json"`, parses `a = ap.parse_args()`; loads `raw = [ListingRecord.model_validate(x) for x in json.loads(Path(a.inp).read_text(encoding="utf-8"))]`; calls `kept, rule = curate(raw)`; creates `Path(a.out).parent` with `mkdir(parents=True, exist_ok=True)`; writes `json.dumps([r.model_dump(mode="json") for r in kept], indent=2)` to `Path(a.out)` with `encoding="utf-8"`; builds `counts: dict[str, int]` of records per `r.locality`; and prints `json.dumps({"rule": rule, "counts": counts, "total": len(kept)}, indent=2)`.
 
@@ -802,16 +731,16 @@ Module constants:
 Functions:
 - `load_manifest() -> DatasetManifest | None` — returns `DatasetManifest.model_validate_json(MANIFEST.read_text(encoding="utf-8"))` if `MANIFEST.exists()`, else `None`.
 - `save_manifest(m: DatasetManifest) -> None` — writes `m.model_dump_json(indent=2)` to `MANIFEST` with `encoding="utf-8"`.
-- `from_scrape(availability_marker: str | None, raw_all: Path, merged: dict[str, list[str]]) -> DatasetManifest` — loads `kept = [ListingRecord.model_validate(x) for x in json.loads((BUNDLE / "listings.json").read_text(encoding="utf-8"))]` and `raw = [ListingRecord.model_validate(x) for x in json.loads(raw_all.read_text(encoding="utf-8"))]`; builds `counts: dict[str, int]` of kept records per `r.locality`; computes `gap = gap_report(raw, availability_marker)`; loads `existing = load_manifest()` and sets `base = existing.model_dump() if existing else {}`; then `base.update(dict(...))` with `bundle_version="1"`, `contract_version="1"`, `scraped_on=max(r.scraped_on for r in kept) if kept else date.today()`, `localities=counts`, `total_listings=len(kept)`, `availability_marker=availability_marker`, `curation_rule=RULE`, `fields_published=gap.fields_published`, `fields_missing=gap.fields_missing`, `merged_records=merged`; returns `DatasetManifest.model_validate(base)`.
+- `from_import(availability_marker: str | None, raw_all: Path, merged: dict[str, list[str]]) -> DatasetManifest` — loads `kept = [ListingRecord.model_validate(x) for x in json.loads((BUNDLE / "listings.json").read_text(encoding="utf-8"))]` and `raw = [ListingRecord.model_validate(x) for x in json.loads(raw_all.read_text(encoding="utf-8"))]`; builds `counts: dict[str, int]` of kept records per `r.locality`; computes `gap = gap_report(raw, availability_marker)`; loads `existing = load_manifest()` and sets `base = existing.model_dump() if existing else {}`; then `base.update(dict(...))` with `bundle_version="1"`, `contract_version="1"`, `scraped_on=max(r.scraped_on for r in kept) if kept else date.today()`, `localities=counts`, `total_listings=len(kept)`, `availability_marker=availability_marker`, `curation_rule=RULE`, `fields_published=gap.fields_published`, `fields_missing=gap.fields_missing`, `merged_records=merged`; returns `DatasetManifest.model_validate(base)`.
 
-Under `if __name__ == "__main__":` it builds `ap = argparse.ArgumentParser()`; adds `--marker` with `required=True` and help text `"the availability marker from SOURCE_NOTES.md, or NONE"`; adds `--raw` with `default="data/raw/listings_all.json"`; parses `a = ap.parse_args()`; computes `merged = {r["id"]: r["merged_from"] for r in json.loads((BUNDLE / "listings.json").read_text(encoding="utf-8")) if r.get("merged_from")}`; calls `m = from_scrape(None if a.marker == "NONE" else a.marker, Path(a.raw), merged)`; calls `save_manifest(m)`; and prints `m.model_dump_json(indent=2)`.
+Under `if __name__ == "__main__":` it builds `ap = argparse.ArgumentParser()`; adds `--marker` with `required=True` and help text `"the availability marker from SOURCE_NOTES.md, or NONE"`; adds `--raw` with `default="data/raw/listings_all.json"`; parses `a = ap.parse_args()`; computes `merged = {r["id"]: r["merged_from"] for r in json.loads((BUNDLE / "listings.json").read_text(encoding="utf-8")) if r.get("merged_from")}`; calls `m = from_import(None if a.marker == "NONE" else a.marker, Path(a.raw), merged)`; calls `save_manifest(m)`; and prints `m.model_dump_json(indent=2)`.
 
 - [ ] **Step 4: Run the tests**
 
 Run: `python -m pytest backend/tests/unit/pipeline -q`
 Expected: all pass
 
-- [ ] **Step 5: Produce the bundle's scrape half**
+- [ ] **Step 5: Produce the bundle's import half**
 
 Run (PowerShell) `python -m scout.pipeline.curate` and then `python -m scout.pipeline.manifest --marker "<marker from SOURCE_NOTES.md or NONE>"`.
 
@@ -825,7 +754,7 @@ The file is a Markdown document with these headings and lines, in this order:
   - `- [ ] PROCEED — marker exists and every §3.1 field is published.`
   - `- [ ] PROCEED WITH SPEC AMENDMENT — list each missing field and the spec sections amended (§3.1 filter vocabulary, §4 card rows, §7.1 Suite A coverage) — with the commit that amended them.`
   - `- [ ] STOP — no reliable availability marker. Nothing downstream may be built on this dataset.`
-- A closing line: `Cost of the scrape: <n> pages, <m> minutes, <k> requests.`
+- A closing line: `Cost of the import: <n> rows, <m> minutes.`
 
 Tick exactly one box. If it is the second, amend `Docs/Problem_Statement_Detailed.md` §3.1/§4/§7.1 **in the same commit**, and write the locality list and total back into spec §1 and §3.1 as spec §7.3 requires.
 
@@ -1447,7 +1376,7 @@ Run → FAIL.
   **Why every locality gets a collection.** Task 1.1 allows a locality with no usable guide source (`sources.json` value `[]`), and Suite C c-006…c-010 require the assistant to *say* it has no neighbourhood data there. But the boot check in Task 1.4 refuses to start unless every manifest locality has a collection. Creating the empty partition satisfies both: the backend boots, retrieval returns `[]` for that locality, and the opener says "I have limited neighbourhood data for this locality" (`eval.md` EC-GUIDE-01).
 - The `if __name__ == "__main__":` block loads `chunks` as `GuideChunk.model_validate(x)` for every entry in the UTF-8 JSON at `CHUNKS`, loads the manifest with `load_manifest()` to read its locality list, calls `counts = build_index(chunks, str(PERSIST), localities=list(m.localities))`, and prints `json.dumps(counts, indent=2)`.
 
-Add to `backend/scout/pipeline/manifest.py` a function `from_index(counts: dict[str, int]) -> DatasetManifest`: it imports `chromadb` and `onnxruntime` locally, and `EMBEDDING_MODEL` and `model_fingerprint` from `scout.pipeline.embedding`; calls `m = load_manifest()` and asserts `m is not None` with the message `"run the scrape half first"`; reads `sources` as UTF-8 JSON from `Path("data/guides/sources.json")`; and returns `m.model_copy(update=dict(...))` setting `embedding_model=EMBEDDING_MODEL`, `embedding_model_version=model_fingerprint()`, `chunk_count_per_locality=counts`, `guide_sources=sources`, `chromadb_version=chromadb.__version__`, `onnxruntime_version=onnxruntime.__version__`.
+Add to `backend/scout/pipeline/manifest.py` a function `from_index(counts: dict[str, int]) -> DatasetManifest`: it imports `chromadb` and `onnxruntime` locally, and `EMBEDDING_MODEL` and `model_fingerprint` from `scout.pipeline.embedding`; calls `m = load_manifest()` and asserts `m is not None` with the message `"run the import half first"`; reads `sources` as UTF-8 JSON from `Path("data/guides/sources.json")`; and returns `m.model_copy(update=dict(...))` setting `embedding_model=EMBEDDING_MODEL`, `embedding_model_version=model_fingerprint()`, `chunk_count_per_locality=counts`, `guide_sources=sources`, `chromadb_version=chromadb.__version__`, `onnxruntime_version=onnxruntime.__version__`.
 
 and a `--index` flag in its `__main__` that calls `save_manifest(from_index(json.loads(sys.argv counts)))`. Simplest: have `build_index.__main__` call `save_manifest(from_index(counts))` directly after printing.
 
@@ -2447,7 +2376,7 @@ The tests:
 
 Imports `AvailabilityRegister` from `scout.engines.availability`. A `FakeStore` class carries a class attribute `listing_records`, a dict with keys `"a"` and `"b"`, each value an instance of an ad-hoc class made with `type("R", (), {"availability_status": True})()` — an object whose `availability_status` is `True`.
 
-- `test_overlay_shadows_dataset_and_dies_with_the_object()` — `reg = AvailabilityRegister(FakeStore())`; asserts `reg.is_available("a")`; calls `reg.set("a", False)`; asserts `not reg.is_available("a")` and `reg.is_available("b")`; asserts `AvailabilityRegister(FakeStore()).is_available("a")` (comment: a "restart" returns the scrape's value).
+- `test_overlay_shadows_dataset_and_dies_with_the_object()` — `reg = AvailabilityRegister(FakeStore())`; asserts `reg.is_available("a")`; calls `reg.set("a", False)`; asserts `not reg.is_available("a")` and `reg.is_available("b")`; asserts `AvailabilityRegister(FakeStore()).is_available("a")` (comment: a "restart" returns the import's value).
 
 Run → FAIL.
 
@@ -2608,7 +2537,7 @@ Run `git add backend/scout/engines backend/scout/platform/artefacts.py data/bund
   - `ViewModelBuilder(store, commute)`
   - `.card(listing_id, rank, commute_point) -> CardVM` — every null → `"not stated"`; rent `"₹35,000 / month"`; deposit `"₹2,00,000"` (Indian grouping); maintenance `"₹2,500 / month"` | `"included in rent"` | `"not stated"`; `square_footage` `"1100 sq ft (carpet)"`; `transit` from `commute.transit`; `your_commute` **absent** when no commute point
   - `.shortlist(shortlist, commute_point) -> ShortlistVM` — groups by locality in first-appearance order of the ranked list; `order` = the ranked ids; `unknown_on` with a spoken line per field
-  - `.citation(fact: Provenanced, listing_id) -> CitationVM` — labels: dataset `"[bengaluru.rent — <society or id>, scraped <date>]"`, OSM via `render_commute(...).full_label`, guide `"[<title> — <locality>]"` with url
+  - `.citation(fact: Provenanced, listing_id) -> CitationVM` — labels: dataset `"[dataset — <society or id>, as of <date>]"`, OSM via `render_commute(...).full_label`, guide `"[<title> — <locality>]"` with url
   - `.slot(slot) -> SlotVM`, `.booking(booking) -> BookingVM`
 
 - [ ] **Step 1: Write the failing tests**
@@ -2681,7 +2610,7 @@ Class `ViewModelBuilder`:
   | `bhk_type` | `_txt(f("bhk_type").value)` |
   | `square_footage` | `sq` |
   | `floor` | `floor_txt` |
-  | `parking` | `_txt(f("parking").value)` |
+  | `parking` | `_txt(f("parking").value)` if `f("parking").value is not None`; else `"available, kind not stated"` when `f("parking_available").value is True`, `"none"` when it is `False`, and `NOT_STATED` when it is `None` |
   | `furnishing` | `_txt(f("furnishing").value)` |
   | `amenities` | `list(f("amenities").value or [])` |
   | `available_from` | `_txt(f("available_from").value)` |
@@ -2690,7 +2619,7 @@ Class `ViewModelBuilder`:
 
 - `shortlist(self, s: Shortlist, commute_point: CommutePoint | None) -> ShortlistVM` — `cards = [self.card(e.listing_id, e.rank, commute_point) for e in s.matched]`; `groups: dict[str, list[CardVM]] = {}`; for each card `c` in that order, `groups.setdefault(c.locality, []).append(c)` (comment: first-appearance order of the ranked list); `unknown = [UnknownGroupVM(field=fld, listing_ids=list(ids), spoken=f"{len(ids)} more where the {FIELD_LABELS.get(fld, fld)} is not stated — want to see them?") for fld, ids in s.unknown.items()]`; returns `ShortlistVM(order=s.order, groups=[LocalityGroupVM(locality=k, count=len(v), cards=v) for k, v in groups.items()], unknown_on=unknown)`.
 - `citation(self, fact: Provenanced, listing_id: str | None = None) -> CitationVM` — `ref = fact.citation_ref or "none"`, then branches on `fact.source`:
-  - `Source.DATASET`: `rec = self._store.listing_records[listing_id]`; returns `CitationVM(ref=ref, label=f"[bengaluru.rent — {rec.society_name or rec.id}, scraped {rec.scraped_on.isoformat()}]", url=rec.source_url, timing="PRECOMPUTED", as_of=rec.scraped_on.isoformat())`.
+  - `Source.DATASET`: `rec = self._store.listing_records[listing_id]`; returns `CitationVM(ref=ref, label=f"[dataset — {rec.society_name or rec.id}, as of {rec.scraped_on.isoformat()}]", url=rec.source_url, timing="PRECOMPUTED", as_of=rec.scraped_on.isoformat())`.
   - `Source.OSM` or `Source.COMPUTED`: `r = render_commute(fact, "Metro")` if `hasattr(fact.value, "metres") or fact.value is None`, else `r = None`; `label = r.full_label if r else f"[OSM — precomputed {fact.as_of.isoformat() if fact.as_of else ''}]"`; returns `CitationVM(ref=ref, label=label, method=fact.method.value if fact.method else None, timing=fact.timing.value, as_of=fact.as_of.isoformat() if fact.as_of else None)`.
   - `Source.GUIDE`: `ch = fact.value`; returns `CitationVM(ref=ref, label=f"[{ch.title} — {ch.locality}]", title=ch.title, url=ch.url, timing="PRECOMPUTED", as_of=ch.fetched_on.isoformat())`.
   - Any other source: returns `CitationVM(ref=ref, label="[no source — declared unavailable]")`.
@@ -3915,7 +3844,7 @@ Where each requirement lands, so a gap is visible before the work starts rather 
 
 | Spec | Requirement | Task(s) |
 |---|---|---|
-| §1 | ≤ 10 per locality, locality set from the scrape, curation rule, 1–3 guides per locality | 0.6, 1.1 |
+| §1 | ≤ 10 per locality, locality set from the supplied dataset, curation rule, 1–3 guides per locality | 0.6, 1.1 |
 | §2.1 | Extraction, ≤ 5 clarifying questions, readback before shortlist, English only | 2.4, 2.10 |
 | §2.2 | Cumulative refinements, untouched order preserved, contradictions ask | 2.5, 2.6, 2.10 |
 | §2.3 | Citations, commute method in speech + label, gaps declared | 0.2, 2.8, 2.11–2.13 |

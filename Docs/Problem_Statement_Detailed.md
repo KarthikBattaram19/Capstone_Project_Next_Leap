@@ -4,7 +4,7 @@
 
 *Changed in v3.10 (§5.2): a new **L0** target for first visible feedback (<300 ms); **L3** tightened from ≤2.5 s to ≤1.5 s, made reachable by a new **P8** (fact-led opener); **P3** endpointing set to 400 ms with a new **P3b** content-aware hold, so speed is never bought by cutting a tenant off mid-sentence. L1 stays <700 ms. No other target moved. Also carried in from `Architecture.md`: how the guide index is built and partitioned (§3.3); turn-type routing in application code (§5.1); the availability flag as an in-memory overlay with an operator-token-guarded toggle, and a confirm-time re-check that reads the flag rather than the source site (§3.1, §6.43); the build manifest as a machine-readable output (§7.3, §9.1); boot-time manifest checks (§6.35); and what the frontend–backend contract actually contains (§5.4, §9.4).*
 
-*Principal decisions: listing scope of **up to 10 per locality** with the locality set determined by the scrape (§1); an LLM **split into two roles across two providers** — Groq for extraction, Claude Sonnet for grounded explanation (§5.1); a latency budget **split by turn type** with explicit preconditions (§5.2); **commute-method disclosure** carried end-to-end from OSM precompute through card label to eval assertion (§3.4, §2.3, §4, §7.1); deployment on **Vercel (frontend) + Railway (backend)** (§5.4); and grouped, principle-driven error handling (§6).*
+*Principal decisions: listing scope of **up to 10 per locality** with the locality set determined by the supplied dataset (§1); an LLM **split into two roles across two providers** — Groq for extraction, Claude Sonnet for grounded explanation (§5.1); a latency budget **split by turn type** with explicit preconditions (§5.2); **commute-method disclosure** carried end-to-end from OSM precompute through card label to eval assertion (§3.4, §2.3, §4, §7.1); deployment on **Vercel (frontend) + Railway (backend)** (§5.4); and grouped, principle-driven error handling (§6).*
 
 ---
 
@@ -16,8 +16,8 @@ Tenants don't struggle to find listings. They struggle to judge whether a listin
 
 ### Scope Constraints (Quality-First)
 - One city: **Bengaluru** only
-- **Up to 10 listings per locality**, scraped once from bengaluru.rent, cleaned and curated. A single 15-listing dataset was too thin to cover Bengaluru; breadth now comes from covering more localities, not from depth within one
-- **The locality set is not pinned in advance.** It is whatever bengaluru.rent actually has available pins for. The final locality list and the resulting total listing count are an **output of the first deliverable (§9.1)**, documented after the scrape — not assumed here
+- **Up to 10 listings per locality**, imported once from the supplied spreadsheet `data/Bangalore_Properties_List.xlsx`, cleaned and curated. A single 15-listing dataset was too thin to cover Bengaluru; breadth now comes from covering more localities, not from depth within one
+- **The locality set is not pinned in advance.** It is whatever the supplied spreadsheet actually carries; as supplied that is 566 localities over 9,180 rows. The final locality list and the resulting total listing count are an **output of the first deliverable (§9.1)**, documented after curation — not assumed here
 - **"Up to" is a ceiling, not a target.** A locality with fewer than 10 available listings is kept at its real count and that count is documented; it is never padded with unavailable or duplicate pins. A locality with more than 10 is **curated down to the 10 best-populated records** (most fields present), and the selection rule is documented alongside the dataset so the shortlist is reproducible
 - **Up to 3 neighborhood guide documents per *locality*** (not per listing). Listings in the same locality share the same documents, so the guide corpus is **1–3 unique documents per locality** — at most 10 listings per document set
 
@@ -79,10 +79,10 @@ Answers *"Why did you pick this one?"*, *"Is the commute realistic?"*, *"What's 
 
 ## 3. Data Requirements
 
-### 3.1 Listings (bengaluru.rent)
-- Scraped **once at deployment** → static dataset of **up to 10 listings per locality**; the total is at most 10 × (number of localities bengaluru.rent supports), fixed and documented at scrape time
-- **Locality assignment:** every listing carries the locality it was scraped under, as a first-class field. This field drives guide scoping (§3.3) and eval stratification (§7.1)
-- **Availability filtering:** only pins marked currently available enter the working set; transparency-only pins ("Not for rent") are excluded. During scraping, the exact marker/field bengaluru.rent uses for this will be identified and documented; **if no reliable marker exists, that gap is reported before proceeding, not guessed around**
+### 3.1 Listings (supplied spreadsheet)
+- Imported **once at deployment** → static dataset of **up to 10 listings per locality**; the total is at most 10 × (number of localities the spreadsheet carries), fixed and documented at import time
+- **Locality assignment:** every listing carries the locality named in the sheet, as a first-class field. This field drives guide scoping (§3.3) and eval stratification (§7.1)
+- **Availability filtering:** the supplied spreadsheet carries **no availability marker**, so `availability_status` is null for every record and no listing can be excluded on that basis. This gap is recorded in `data/SOURCE_NOTES.md` and reported at Gate D rather than guessed around; availability thereafter lives only in the in-memory overlay of §3.14
 - **Fields (the searchable schema).** Every field below is filterable by voice and assertable in Suite A:
 
 | Field | Type / values | Notes |
@@ -91,27 +91,29 @@ Answers *"Why did you pick this one?"*, *"Is the commute realistic?"*, *"What's 
 | `bhk_type` | enum: `1RK`, `1BHK`, `2BHK`, `3BHK`, `3BHK+` | The way tenants actually speak. Held **alongside** the raw `bedrooms` integer, not instead of it |
 | `bedrooms` | integer | Raw count |
 | `bathrooms` | integer | |
+| `balconies` | integer | Tenants ask for one by name (§2.2); kept as a count, not folded into `amenities` |
 | `rent` | integer (Rs/month) | Base rent |
 | `deposit` | integer (Rs) | Bengaluru deposits commonly run 5-10 months' rent; a stated budget means a very different thing at 2 months vs 10, so this is surfaced, not hidden |
 | `maintenance_charges` | integer (Rs/month), plus whether it is included in rent or charged extra | |
 | `property_type` | enum: `apartment`, `independent_house`, `villa`, `builder_floor` | |
 | `furnishing` | enum: `unfurnished`, `semi_furnished`, `fully_furnished` | Pinned as an enum so filters are exact |
-| `square_footage` | integer (sq ft) | Whether the source states carpet or built-up area is **recorded explicitly** at scrape time; the two are not interchangeable and must not be silently merged |
+| `square_footage` | integer (sq ft) | Whether the source states carpet or built-up area is **recorded explicitly** at import time; the two are not interchangeable and must not be silently merged |
 | `floor` / `total_floors` | integer / integer | |
 | `lift` | boolean | |
-| `parking` | enum: `two_wheeler`, `four_wheeler`, `both`, `none` | Split, not a single boolean - the distinction matters to tenants, and a bare "parking: yes" answers neither question |
+| `parking` | enum: `two_wheeler`, `four_wheeler`, `both`, `none` | Split, not a single boolean — the distinction matters to tenants, and a bare "parking: yes" answers neither question. **Null whenever the source states only that parking exists**; the kind is never guessed |
+| `parking_available` | boolean | The weaker claim, for sources that say only yes or no. Set alongside a null `parking` rather than inflating a bare "yes" into `both`. A tenant asking for four-wheeler parking is told the kind is not stated |
 | `amenities` | string list | Amenities **stated by the listing**. Distinct from nearby POIs, which come from OSM (§3.4) |
 | `available_from` | date | Move-in date. Distinct from `availability_status` |
 | `availability_status` | boolean flag | Per the availability and stale-listing bullets |
 | `society_name` | string | |
 | `coordinates` | lat, lng | |
 
-- **Field confirmation is part of the first deliverable.** The schema above is what the system is built to search; **which of these fields bengaluru.rent actually publishes is confirmed at scrape time, not assumed here.** Any field the source does not carry is reported in the same gap report as the availability marker — never backfilled from model knowledge, OSM, or the guide index (§3.5 admits no exception for listing facts)
+- **Field confirmation is part of the first deliverable.** The schema above is what the system is built to search; **which of these fields the supplied spreadsheet actually carries is confirmed at import time, not assumed here.** Any field the source does not carry is reported in the same gap report as the availability marker — never backfilled from model knowledge, OSM, or the guide index (§3.5 admits no exception for listing facts)
 - **Null is a real, displayable value.** A field the source does not state is `null`, and the system says *"not stated for this listing"*. It is never inferred, and never rendered as a default — a missing `deposit` is not ₹0
 - **Null never silently satisfies a must-have.** If a tenant requires four-wheeler parking and some listings have `parking: null`, those listings are neither counted as matches nor silently dropped — they surface as a separate **"unknown on this filter"** group the tenant can choose to include. Without this rule, a wider schema makes the shortlist quietly *worse*, because every sparse field becomes an invisible filter
 - **Budget filtering runs on `rent`** unless the tenant says otherwise; `deposit` and `maintenance_charges` are always **shown** on the card, so the real cost is never a surprise at booking
 - **Deduplication:** listings merged when they share an exact address **or** coordinates within 50m; the most detailed record wins, merged records noted in dataset metadata
-- **Stale-listing handling (corrected for static-scrape reality):** availability is a dataset flag. It can flip to unavailable via (a) an **operator-only admin toggle** simulating a delisting — a small endpoint guarded by an operator token held with the other secrets (§5.4) — or (b) a **mandatory re-check of that flag at booking confirmation**, before either calendar write (§6.43). The re-check reads the flag, **never the source site**: no fetch to bengaluru.rent happens inside a tenant's turn, by the same discipline as §3.4. The flag lives in an **in-memory overlay** on the read-only dataset — there is no database (§5.3) — so a restart returns every listing to the state the scrape found; that is acceptable demo scope, because bookings live in the calendars, not here. When a shortlisted listing goes unavailable, the system **removes it without requiring user action and immediately notifies the tenant**: "One listing in your shortlist is no longer available and has been removed."
+- **Stale-listing handling (corrected for static-import reality):** availability is a dataset flag. It can flip to unavailable via (a) an **operator-only admin toggle** simulating a delisting — a small endpoint guarded by an operator token held with the other secrets (§5.4) — or (b) a **mandatory re-check of that flag at booking confirmation**, before either calendar write (§6.43). The re-check reads the flag, **never any external source**: no listing fetch of any kind happens inside a tenant's turn, by the same discipline as §3.4. The flag lives in an **in-memory overlay** on the read-only dataset — there is no database (§5.3) — so a restart returns every listing to the state the import found; that is acceptable demo scope, because bookings live in the calendars, not here. When a shortlisted listing goes unavailable, the system **removes it without requiring user action and immediately notifies the tenant**: "One listing in your shortlist is no longer available and has been removed."
 
 ### 3.2 PII
 - Owner/agent names and phone numbers stripped **before** data touches the dataset, UI, logs, **or voice transcripts**
@@ -140,13 +142,13 @@ Answers *"Why did you pick this one?"*, *"Is the commute realistic?"*, *"What's 
 | **Tenant-specific commute** — listing → the commute point the tenant states in §2.1 | **Query time** (the destination is not known until the tenant speaks, so it cannot be precomputed) | **Default: straight-line distance from the stored coordinates — pure local arithmetic, no network call, no latency cost.** MCP routing may be used instead only if it fits §5.2's budget; whichever was used is disclosed |
 
 - **Commute/travel-time method (must be disclosed in UI):** use the MCP's routing/directions capability where available; otherwise fall back to a stated straight-line-distance heuristic (e.g., "~1.1 km from the metro, roughly a 14-minute walk"). A claim like "within 15 minutes of a metro station" must be reproducible from the disclosed method — **and the disclosure must name which of the two methods produced that specific number**, since both are in use
-- **Staleness:** precomputed OSM values are exactly as static as the scraped dataset (§3.1) and carry the same caveat — they reflect OSM as of the index date shown, not live conditions
+- **Staleness:** precomputed OSM values are exactly as static as the imported dataset (§3.1) and carry the same caveat — they reflect OSM as of the index date shown, not live conditions
 - MCP integration lives in the **orchestration layer** and runs during the **build step**; ranking/shortlist logic lives in application code and reads the stored values
 
 ### 3.5 Grounding Boundary (resolving the original brief's ambiguity)
 | Claim type | Sole permitted source |
 |---|---|
-| Listing facts (every field in §3.1's schema — rent, deposit, maintenance, BHK, furnishing, area, floor, parking, availability, move-in date) | Scraped bengaluru.rent dataset. **No fallback source:** an absent field is `null`, never filled from OSM, the guide index, or model knowledge |
+| Listing facts (every field in §3.1's schema — rent, deposit, maintenance, BHK, furnishing, area, floor, parking, availability, move-in date) | The imported spreadsheet dataset. **No fallback source:** an absent field is `null`, never filled from OSM, the guide index, or model knowledge |
 | Amenities, transit points, distances | OpenStreetMap MCP — **precomputed at index time** (§3.4); attribution and permitted-source status unchanged by the precompute |
 | Neighborhood character, safety notes, "what it's like" | Closed guide index, with citation |
 | Anything else | Not asserted. Declared as unavailable |
@@ -182,13 +184,13 @@ Futuristic real-estate theme. Required components:
 ## 5. Technical Architecture
 
 ### 5.1 Voice Pipeline
-- **STT:** Deepgram — **required configuration:** keyterm/keyword boosting for **every locality name in the final scraped set** (Koramangala, Indiranagar, HSR Layout, Whitefield, Marathahalli, BTM Layout, and whatever else the scrape yields — the keyterm list is generated from the dataset's locality field, not hand-written) and normalization of Indian-English amounts ("35k" → 35000; "1.2 lakh" → 120000). *This is the single most likely real-world failure mode; it is a first-class requirement, not a polish item.*
+- **STT:** Deepgram — **required configuration:** keyterm/keyword boosting for **every locality name in the final curated set** (Koramangala, Indiranagar, HSR Layout, Whitefield, Marathahalli, BTM Layout, and whatever else the dataset yields — the keyterm list is generated from the dataset's locality field, not hand-written) and normalization of Indian-English amounts ("35k" → 35000; "1.2 lakh" → 120000). *This is the single most likely real-world failure mode; it is a first-class requirement, not a polish item.*
 - **LLM: two models from two providers, because the two jobs have opposite requirements.** Job 1 runs on **Groq** for speed; Job 2 runs on **Anthropic's Claude Sonnet** for grounding discipline. Structured (JSON) outputs everywhere, so evals assert on fields rather than prose; `temperature=0` on Job 1. *This means two vendors and two API keys — Claude models are not served by Groq. The tradeoff is deliberate: the second key buys the model that decides whether §7.2's zero-hallucination bar is met.*
 
 | Role | Model | What it does | Why this model |
 |---|---|---|---|
 | **Job 1 — Extraction & edit routing** (§2.1, §2.2) | **Groq `openai/gpt-oss-120b`** | Speech → structured constraint record (`{bhk_type, locality, rent_max, parking, …}`); applies voice edits as field-level changes | Groq's inference speed is what makes the 700 ms acknowledgment and ≤1.5 s first-audio budgets (§5.2) achievable at all. The task needs schema conformance, not reasoning — so this role is chosen on latency, and the choice is **validated against §5.2 at p99 before being locked** (see the Job 1 latency check below) |
-| **Job 2 — Grounded explanation** (§2.3) | **Claude Sonnet — model ID `claude-sonnet-5`** (Anthropic API) | Listing record + retrieved chunks → answer with citations; declares gaps instead of filling them; ignores instructions embedded in scraped text (§5.3) | This is where the zero-hallucination bar (§7.2) is won or lost. Chosen for citation discipline, willingness to state that a source does not cover something, and resistance to instructions embedded in untrusted data. It is **off the critical latency path** — TTS is already speaking — so capability is worth more than speed here |
+| **Job 2 — Grounded explanation** (§2.3) | **Claude Sonnet — model ID `claude-sonnet-5`** (Anthropic API) | Listing record + retrieved chunks → answer with citations; declares gaps instead of filling them; ignores instructions embedded in imported text (§5.3) | This is where the zero-hallucination bar (§7.2) is won or lost. Chosen for citation discipline, willingness to state that a source does not cover something, and resistance to instructions embedded in untrusted data. It is **off the critical latency path** — TTS is already speaking — so capability is worth more than speed here |
 
 - **Job 1 latency check:** `gpt-oss-120b` is a large model carrying a latency-critical role. **Measure it against §5.2's acknowledgment and first-audio targets at p99 before locking it.** If it misses, drop to a lighter Groq model for this role (e.g. the `gpt-oss-20b` tier or a small Qwen/Llama variant) — Job 1 only has to emit valid JSON, so trading capability for speed here costs nothing that §7 measures
 - **Job 2 configuration:** `temperature` is **not** set — Claude Sonnet 5 does not accept sampling parameters, and a request carrying one is rejected. Determinism for §7's CI runs comes from the pinned model ID plus structured output, not from a temperature value. Fix the response shape with structured outputs (`output_config.format`); **assistant prefill is not supported on this model**, so it cannot be used to force a format. **Thinking must be set explicitly** — omitting it runs adaptive thinking at default effort, which lands on the §5.2 L3 budget; start at `output_config: {effort: "low"}` (see §5.2 P7)
@@ -241,7 +243,7 @@ These are not tuning tips. Each one, if skipped, breaks a specific row above.
 ### 5.3 Security & Robustness
 - All API keys server-side only; never exposed to the frontend
 - HTTPS on the deployed URL
-- **Prompt-injection defense:** scraped listing text and guide chunks are untrusted *data* — delimited in prompts and never interpreted as instructions; a listing description saying "ignore previous instructions" must have no effect
+- **Prompt-injection defense:** imported listing text and guide chunks are untrusted *data* — delimited in prompts and never interpreted as instructions; a listing description saying "ignore previous instructions" must have no effect
 - No PII in logs or stored transcripts (per §3.2)
 - Session model: **stateless demo** — no login, no persistence, each session isolated
 
@@ -316,7 +318,7 @@ These are not tuning tips. Each one, if skipped, breaks a specific row above.
 |---|---|---|
 | 6.6 | STT low-confidence on a critical field (budget, locality) | Read back and confirm that field specifically before proceeding |
 | 6.23 | Deepgram unavailable, rate-limited, or the WebSocket drops mid-utterance | Reconnect once transparently. If capture was interrupted, **say what was lost and ask for it again** — never transcribe a partial utterance and act on it. This is a distinct failure from §6.11; the tenant is told which capability is down, not a generic error |
-| 6.24 | Locality spoken that is **not in the scraped set** (another Bengaluru area, or another city) | Say plainly that this locality is not covered and name what is, offering the nearest covered locality. **Never silently substitute a different locality** — that is a §3.5 grounding violation wearing a UX costume |
+| 6.24 | Locality spoken that is **not in the curated set** (another Bengaluru area, or another city) | Say plainly that this locality is not covered and name what is, offering the nearest covered locality. **Never silently substitute a different locality** — that is a §3.5 grounding violation wearing a UX costume |
 | 6.25 | Speech in another language, or English code-switched with Kannada/Hindi terms | English-only is the stated MVP scope (§2.1). Say so rather than transcribing into nonsense; if a locality name survives recognisably, confirm it explicitly before use |
 | 6.26 | Ambiguous amount — "thirty five", "3.5", "one point two" | Ambiguity between 35 / 35,000 / 3.5 lakh is resolved by asking, never by assuming a magnitude. Confirmed back in words **and** digits ("thirty-five thousand — ₹35,000") |
 
@@ -341,7 +343,7 @@ These are not tuning tips. Each one, if skipped, breaks a specific row above.
 | 6.1 | Zero results | Empty state + specific relaxation suggestions; no auto-relaxing |
 | 6.2 | Missing neighborhood data | Partial info + "Limited neighborhood data available" disclaimer |
 | 6.4 | Listing goes unavailable post-shortlist | Remove without user action + notify tenant (§3.1) |
-| 6.8 | Injection content in scraped data | Neutralized by §5.3; covered by a grounding-suite test |
+| 6.8 | Injection content in imported data | Neutralized by §5.3; covered by a grounding-suite test |
 | 6.35 | Dataset, guide index, or precomputed OSM values fail to load at startup — **or the build manifest disagrees with what loaded**: bundle version ≠ contract version, the embedding model on disk ≠ the one the manifest names, or a listing with no row for an OSM query | **Fail startup** (principle 5). A backend that serves a tenant from a half-loaded index will answer confidently from whatever it did load |
 | 6.36 | Retrieval returns chunks, but none actually support the question asked | Declare the gap (§6.2 wording). Retrieving something is not the same as having an answer, and this is exactly where a fluent model invents one |
 | 6.37 | Injection content inside a **guide chunk** (as distinct from a listing field) | Same treatment as §6.8 — both are untrusted data under §5.3. Called out separately because the defence is often applied only to listing text |
@@ -454,7 +456,7 @@ Sign-off requires **every** line below. Any failure → fix → **full** re-run,
 
 **Artefacts published before sign-off** — each of these is a decision this document deliberately deferred, and sign-off is where they come back:
 - The **locality list, per-locality counts, and total** produced by §9.1, written back into §1 and §3.1
-- The **bengaluru.rent field-availability gap report** (§3.1), including the availability marker and any schema field the source does not publish
+- The **dataset field-availability gap report** (§3.1), including the availability marker and any schema field the supplied spreadsheet does not carry
 - The **curation rule** used where a locality exceeded 10 listings (§1)
 - The **pinned model IDs** for Job 1 and Job 2, with Job 2's **Suite C scores** and its `effort` setting (§5.1)
 - The **OSM precompute record**: the fixed query set, and the index date carried by every stored value (§3.4)
@@ -473,7 +475,7 @@ Login/accounts · post-visit feedback · cross-session preference history · mob
 
 *A sequence, not a calendar — compress or expand to your own timeline.*
 
-**Ordered by what can invalidate what, not by what is satisfying to build.** Two things in this document can still prove wrong in a way that reshapes the design: **the dataset** (does bengaluru.rent actually carry the fields §3.1 assumes?) and **the latency budget** (§5.2 is derived from the architecture, not measured). Both are settled first, in parallel, behind explicit gates. Everything after them is construction.
+**Ordered by what can invalidate what, not by what is satisfying to build.** Two things in this document can still prove wrong in a way that reshapes the design: **the dataset** (does the supplied spreadsheet actually carry the fields §3.1 assumes?) and **the latency budget** (§5.2 is derived from the architecture, not measured). Both are settled first, in parallel, behind explicit gates. Everything after them is construction.
 
 ---
 
@@ -481,8 +483,8 @@ Login/accounts · post-visit feedback · cross-session preference history · mob
 
 These two tracks share no dependencies and should run at the same time. Each ends in a **gate**: a written answer, and a decision to proceed or to change the specification.
 
-**9.1 — Data track: scrape, curate, publish**
-- Scrape bengaluru.rent; curate to **up to 10 listings per locality**
+**9.1 — Data track: import, curate, publish**
+- Import the supplied spreadsheet; curate to **up to 10 listings per locality**
 - **Publish the locality list, per-locality counts, and total.** This number is unknown until now by design (§1) — it is an output, not an assumption
 - Identify and document the **availability marker**; document the **curation rule** used wherever a locality exceeded 10
 - Produce the **field-availability gap report**: which of §3.1's schema fields the source actually publishes, and which it does not
@@ -571,4 +573,4 @@ If a step in the left column produces a surprise, the right column is what has t
 
 **v3.10 is the locked problem statement.**
 
-*Open item carried into execution (not a gap, a deliberate deferral): the locality list and total listing count are produced by §9.1 and must be written back into §1 and §3.1 once the scrape completes.*
+*Open item carried into execution (not a gap, a deliberate deferral): the locality list and total listing count are produced by §9.1 and must be written back into §1 and §3.1 once curation completes.*

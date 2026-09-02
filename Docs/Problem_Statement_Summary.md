@@ -13,8 +13,8 @@ Tenants don't struggle to *find* listings. They struggle to judge whether a list
 | Constraint | Decision |
 |---|---|
 | City | **Bengaluru only** |
-| Listings | **Up to 10 per locality**, scraped once from bengaluru.rent |
-| Locality set | **Not pinned in advance** — whatever the source has available pins for. The list, per-locality counts and total are an **output of §9.1**, documented after the scrape |
+| Listings | **Up to 10 per locality**, imported once from the supplied spreadsheet `data/Bangalore_Properties_List.xlsx` |
+| Locality set | **Not pinned in advance** — whatever the supplied spreadsheet carries. The list, per-locality counts and total are an **output of §9.1**, documented after curation |
 | "Up to" | A **ceiling, not a target.** Under-supplied localities keep their real count (never padded); over-supplied ones are curated to the 10 best-populated records by a documented rule |
 | guide corpus | **1–3 documents per *locality*** (not per listing), shared by that locality's ≤10 listings |
 
@@ -46,10 +46,10 @@ The words *straight line* / *by route* are **mandatory in speech**. A bare "abou
 ## 3. Data
 
 ### 3.1 Listings — the searchable schema
-Scraped once → static dataset. Every field is voice-filterable and asserted in Suite A: `locality`, `bhk_type` (1RK/1BHK/2BHK/3BHK/3BHK+, held alongside raw `bedrooms`), `bathrooms`, `rent`, `deposit`, `maintenance_charges`, `property_type`, `furnishing`, `square_footage` (carpet vs built-up recorded explicitly), `floor`/`total_floors`, `lift`, `parking` (two/four-wheeler/both/none), `amenities`, `available_from`, `availability_status`, `society_name`, `coordinates`.
+Imported once → static dataset. Every field is voice-filterable and asserted in Suite A: `locality`, `bhk_type` (1RK/1BHK/2BHK/3BHK/3BHK+, held alongside raw `bedrooms`), `bathrooms`, `balconies`, `rent`, `deposit`, `maintenance_charges`, `property_type`, `furnishing`, `square_footage` (carpet vs built-up recorded explicitly), `floor`/`total_floors`, `lift`, `parking` (two/four-wheeler/both/none) with `parking_available` for sources that say only yes or no, `amenities`, `available_from`, `availability_status`, `society_name`, `coordinates`.
 
 Three rules that govern the whole schema:
-- **Fields are confirmed at scrape time, not assumed.** Anything the source doesn't publish goes in the gap report alongside the availability marker.
+- **Fields are confirmed at import time, not assumed.** Anything the sheet doesn't carry goes in the gap report alongside the availability marker. As supplied, 14 of 23 fields are present and there is **no availability marker** (`data/SOURCE_NOTES.md`).
 - **`null` is a real, displayable value** — *"not stated for this listing"*. Never inferred, never a default (a missing deposit is not ₹0).
 - **`null` never silently satisfies a must-have.** Unknowns surface as their own *"unknown on this filter"* group the tenant can opt into — otherwise every sparse field becomes an invisible filter and a wider schema makes results quietly worse.
 
@@ -74,7 +74,7 @@ All amenity/transit/POI claims come from the OpenStreetMap MCP, resolved **once 
 ### 3.5 Grounding boundary
 | Claim type | Sole permitted source |
 |---|---|
-| Listing facts (every schema field) | Scraped dataset. **No fallback** — absent means `null` |
+| Listing facts (every schema field) | Imported dataset. **No fallback** — absent means `null` |
 | Amenities, transit, distances | OSM MCP (precomputed) |
 | Neighborhood character, safety | Closed guide index, with citation |
 | Anything else | Not asserted — declared unavailable |
@@ -96,7 +96,7 @@ All amenity/transit/POI claims come from the OpenStreetMap MCP, resolved **once 
 ## 5. Architecture
 
 ### 5.1 Voice pipeline
-- **STT — Deepgram.** Keyterm boosting for **every locality in the scraped set**, generated from the dataset rather than hand-written, plus Indian-English amount normalisation ("35k" → 35000, "1.2 lakh" → 120000). This is the single most likely real-world failure mode.
+- **STT — Deepgram.** Keyterm boosting for **every locality in the curated set**, generated from the dataset rather than hand-written, plus Indian-English amount normalisation ("35k" → 35000, "1.2 lakh" → 120000). This is the single most likely real-world failure mode.
 - **LLM — two models, two providers**, because the jobs have opposite requirements:
 
 | Role | Model | Why |
@@ -130,7 +130,7 @@ Budgeted in two classes because they run on different providers. **Type A** = Gr
 **Measurement:** p99 over all suite runs + 20 timed interactions; hard failure at 2× any target; **per-component instrumentation** (STT-interim, STT-final, retrieval, LLM first/last token, TTS first byte, each API call) so a miss is diagnosable without a re-run. These are engineering targets, not measurements — a measured spike must confirm or openly renegotiate the table before the UI is built on it.
 
 ### 5.3 Security
-Keys server-side only · HTTPS · **scraped text and guide chunks are untrusted data**, delimited and never executed as instructions · no PII in logs or transcripts · **stateless demo**, no login, sessions isolated.
+Keys server-side only · HTTPS · **imported text and guide chunks are untrusted data**, delimited and never executed as instructions · no PII in logs or transcripts · **stateless demo**, no login, sessions isolated.
 
 ### 5.4 Deployment — Vercel (frontend) + Railway (backend)
 
@@ -161,7 +161,7 @@ Secrets (all Railway env vars, none in Vercel, none in the repo, all checked at 
 | Group | Notable cases |
 |---|---|
 | **6.A Audio & browser** | Mic permission denied · **TTS autoplay blocked** (fall back to full text + one-tap enable) · **barge-in** stops playback immediately · backgrounded tab is not end-of-speech · refresh loses the conversation but **a confirmed booking survives via its code** |
-| **6.B STT** | Deepgram down as a *distinct* failure from the LLM · **locality spoken that was never scraped** — say so, never silently substitute · ambiguous amounts confirmed in words **and** digits |
+| **6.B STT** | Deepgram down as a *distinct* failure from the LLM · **locality spoken that is not in the curated set** — say so, never silently substitute · ambiguous amounts confirmed in words **and** digits |
 | **6.C Understanding** | Question budget exhausted → proceed on what was confirmed, label the rest unknown · "the second one" re-anchored to **what the tenant last heard** · schema-invalid extraction never partially parsed |
 | **6.D Grounding** | Index fails to load, or the build manifest disagrees with what loaded (bundle version, embedding model, OSM coverage) → **fail startup** · retrieval returning chunks that don't answer the question → declare the gap · injection inside a **Guide chunk**, not just listing text |
 | **6.E Booking** | **Free/busy re-checked at confirm**, never trusted from offer time · **listing availability re-checked at confirm too** — a different question, answered before either calendar write · concurrent sessions racing a slot · **all slot arithmetic in `Asia/Kolkata`** — the backend is deliberately outside India · the code is the only credential: rate-limited, unknown and cancelled codes answer identically |
@@ -200,7 +200,7 @@ Login/accounts · post-visit feedback · cross-session history · mobile app · 
 
 **Phase 0 — De-risk in parallel. Nothing downstream is safe until both gates clear.**
 
-- **9.1 Data track** — scrape and curate up to 10 per locality; **publish the locality list, counts and total**; document the availability marker and the **field-availability gap report**; emit all of it as a **machine-readable build manifest**, not a hand-written report.
+- **9.1 Data track** — import and curate up to 10 per locality; **publish the locality list, counts and total**; document the availability marker and the **field-availability gap report**; emit all of it as a **machine-readable build manifest**, not a hand-written report.
   **Gate D:** no reliable availability marker, or a schema materially thinner than §3.1 assumes → **stop and amend the specification** before building on it. A missing field changes §3.1, §4 and Suite A — it is not something to route around later.
 - **9.2 Infrastructure track** — deploy a **walking skeleton** to Railway and Vercel (health check, mic WebSocket, one stub turn touching every provider) and run the **latency spike on it**: both turn types, real provider round trips, P1–P8 in force (the Type B leg exercises the fact-led opener), candidate regions compared.
   **Gate L:** confirm §5.2 against measurement or **renegotiate it in writing**. This must run on real infrastructure — a local measurement says nothing about the cross-provider, cross-region reality that defines L3 and L5.
@@ -231,4 +231,4 @@ Login/accounts · post-visit feedback · cross-session history · mobile app · 
 
 ---
 
-*Open item, deliberately deferred: the locality list and total listing count are produced by §9.1 and must be written back into §1 and §3.1 of the full document once the scrape completes.*
+*Open item, deliberately deferred: the locality list and total listing count are produced by §9.1 and must be written back into §1 and §3.1 of the full document once curation completes.*
