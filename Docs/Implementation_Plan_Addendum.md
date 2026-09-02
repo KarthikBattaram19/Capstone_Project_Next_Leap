@@ -268,7 +268,7 @@ If 3.12 is absent, install it from python.org before continuing. Do **not** proc
 
 `backend/pyproject.toml` contains four tables:
 
-- `[project]` — `name = "scout"`, `version = "0.1.0"`, `description = "Voice-based AI property scout — Bengaluru (backend)"`, `requires-python = ">=3.12,<3.13"`, and `dependencies` listing, in this order: `fastapi`, `uvicorn[standard]`, `pydantic>=2`, `pydantic-settings`, `websockets`, `httpx`, `anthropic`, `groq`, `deepgram-sdk`, `smallestai`, `chromadb`, `onnxruntime`, `google-api-python-client`, `google-auth`, `google-auth-oauthlib`, `reportlab`, `beautifulsoup4`, `lxml`, `openpyxl`, `mcp`, `python-dateutil`.
+- `[project]` — `name = "scout"`, `version = "0.1.0"`, `description = "Voice-based AI property scout — Bengaluru (backend)"`, `requires-python = ">=3.12,<3.13"`, and `dependencies` listing, in this order: `fastapi`, `uvicorn[standard]`, `pydantic>=2`, `pydantic-settings`, `websockets`, `httpx`, `anthropic`, `groq`, `deepgram-sdk`, `smallestai`, `chromadb`, `onnxruntime`, `google-api-python-client`, `google-auth`, `google-auth-oauthlib`, `reportlab`, `beautifulsoup4`, `lxml`, `openpyxl`, `mcp`, `python-dateutil`, `tzdata` (Windows ships no time-zone database, and `Asia/Kolkata` must resolve on every machine).
 - `[project.optional-dependencies]` — `dev = ["pytest", "pytest-asyncio", "ruff", "respx", "freezegun"]`.
 - `[tool.pytest.ini_options]` — `asyncio_mode = "auto"`, `testpaths = ["tests"]`.
 - `[tool.ruff]` — `line-length = 100`, `target-version = "py312"`.
@@ -668,7 +668,7 @@ Run: FAIL.
 - `class SheetSchemaError(ValueError)` — raised when a required column is absent.
 - `SHEET = "Bangalore_Properties_List"` and `REQUIRED = ("locality", "bhk_type", "Rent", "Deposit", "Latitude", "Longitude")`.
 - `import_sheet(path, as_of)` opens the workbook read-only, reads the header row into a `{name: index}` map, raises `SheetSchemaError` naming any member of `REQUIRED` that is absent, and then builds one `ListingRecord` per non-empty row using the column map above. Every text value passes through `strip_pii` before it reaches the record.
-- Under `if __name__ == "__main__":` it builds `ap = argparse.ArgumentParser()`, adds `--sheet` with `default="data/Bangalore_Properties_List.xlsx"` and `--out` with `default="data/raw/listings_all.json"`, parses `args = ap.parse_args()`, and writes the imported records to `args.out` as JSON.
+- Under `if __name__ == "__main__":` it builds `ap = argparse.ArgumentParser()`, adds `--sheet` with `default="data/Bangalore_Properties_List.xlsx"`, `--out` with `default="data/raw/listings_all.json"` and `--as-of` (ISO date; default today in `Asia/Kolkata`), parses `args = ap.parse_args()`, and writes the imported records to `args.out` as JSON.
 
 - [ ] **Step 3: Run**
 

@@ -107,7 +107,7 @@ respx==0.23.1
 rich==15.0.0
 rpds-py==2026.6.3
 ruff==0.16.5
--e git+https://github.com/KarthikBattaram19/Capstone_Project_Next_Leap.git@75321054118149685b4ae64b56a67346f510ae89#egg=scout&subdirectory=backend
+-e git+https://github.com/KarthikBattaram19/Capstone_Project_Next_Leap.git@c772173db6e1e0150d8d2e89fc733f89e22395ca#egg=scout&subdirectory=backend
 shellingham==1.5.4
 six==1.17.0
 smallestai==5.12.0
@@ -124,6 +124,7 @@ truststore==0.10.4
 typer==0.27.2
 typing-inspection==0.4.4
 typing_extensions==4.16.0
+tzdata==2026.3
 uritemplate==4.2.0
 urllib3==2.7.0
 uvicorn==0.52.4
