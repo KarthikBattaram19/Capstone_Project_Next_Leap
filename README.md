@@ -4,8 +4,8 @@ A voice-first rental assistant that collects a tenant's spoken preferences, shor
 
 The problem it addresses isn't finding listings — it's judging whether one fits your life. Is the commute realistic? What's the area actually like? Is the extra room worth the extra rent? Every answer this system gives is traceable to a source, and where it has no source it says so.
 
-> **Status: specification, architecture and implementation plan complete; implementation not started.**
-> This repository currently contains documents only. Commands, paths and environment variable names below describe the intended build; they are **proposals until the scaffold exists**. Nothing here has been run.
+> **Status: scaffold exists; implementation in progress — see `Implementation_Plan.md`.**
+> This repository contains the documents and the scaffold (backend package, Next.js frontend, CI skeleton, environment example); the scaffold's unit test and frontend build have been run. Commands, paths and environment variable names below describe the intended build beyond the scaffold.
 
 ---
 
@@ -95,17 +95,61 @@ Both are pinned by **exact model ID, never a `latest` alias** — the CI guarant
 
 ```
 .
+├── .github/workflows/ci.yml            # unit, contract-drift, frontend build, evals ×3
+├── .env.example                        # every secret name, empty
 ├── Docs/
 │   ├── Problem_Statement_Detailed.md      # the specification
 │   ├── Problem_Statement_Summary.md       # condensed working summary
 │   ├── Architecture.md                    # how it is structured
 │   ├── Implementation_Plan.md             # the build plan — decisions, order, done-when
 │   └── Implementation_Plan_Addendum.md    # per-task technical reference for builders
-├── frontend/                 # Vercel — UI, view-models, mic client. No keys.
-├── backend/                  # Railway — pipeline, both LLM jobs, calendar, PDF
-├── data/                     # scraped listings, guide index, precomputed OSM values
-├── scripts/                  # scrape, build index, precompute OSM
-└── evals/                    # Suites A, B, C + latency instrumentation
+├── data/
+│   ├── raw/                            # ignored: raw HTML, guide pages, MCP responses
+│   ├── SOURCE_NOTES.md                 # what bengaluru.rent actually publishes
+│   ├── GATE_D.md · GATE_L.md           # the two written gate decisions
+│   ├── guides/sources.json             # 1–3 guide URLs per locality
+│   └── bundle/                         # committed, versioned, read-only at runtime
+│       ├── manifest.json               # DatasetManifest — the sign-off record
+│       ├── listings.json               # curated ListingRecord[]
+│       ├── osm_facts.json              # OsmFactRecord[] — every listing × every query
+│       ├── chunks.json                 # GuideChunk[] (the citable text; Chroma holds vectors)
+│       └── chroma/                     # persisted ChromaDB, one collection per locality
+├── contract/v1.schema.json             # exported JSON Schema of the wire contract
+├── scripts/
+│   ├── google_auth.py                  # one-time OAuth: prints the refresh token
+│   └── latency_spike.py                # Gate L driver against the deployed skeleton
+├── backend/                            # Railway — pipeline, both LLM jobs, calendar, PDF
+│   ├── pyproject.toml · Dockerfile · railway.json
+│   ├── scout/
+│   │   ├── main.py                     # create_app(); boot check runs before the port opens
+│   │   ├── config.py                   # Settings (pydantic-settings) — all secrets, model ids
+│   │   ├── domain/                     # provenance, listing, osm, guides, manifest, constraints, shortlist, booking
+│   │   ├── contract/                   # the versioned wire contract: outcome, view-models, messages, http, export
+│   │   ├── platform/                   # artefacts (bundle loader), boot checks, telemetry
+│   │   ├── providers/                  # thin wrappers: deepgram, groq, anthropic, smallest, google calendar, gmail
+│   │   ├── engines/                    # amounts, reducer, shortlist, commute, availability, slots
+│   │   ├── conversation/               # session, hold, router, persona, state, orchestrator
+│   │   ├── grounding/                  # retrieval, resolvers, opener, assembler
+│   │   ├── booking/                    # service, reconcile, pdf
+│   │   ├── presentation/viewmodel.py   # the only thing the browser receives
+│   │   ├── api/                        # ws (mic gateway), http (bookings, health, contract, admin)
+│   │   └── pipeline/                   # offline build: recon, scrape, curate, gap_report,
+│   │                                   #   chunking, build_index, precompute_osm, manifest
+│   └── tests/unit/ · tests/integration/
+├── evals/
+│   ├── fixtures/                       # frozen slice: listings, chunks, OSM facts
+│   ├── harness/driver.py               # text in → TurnOutcome out, no audio
+│   ├── assertions/                     # view-model, provenance, order matchers
+│   ├── cases/a/ · cases/b/ · cases/c/  # 20 JSON cases each
+│   ├── suites/test_suite_a.py · test_suite_b.py · test_suite_c.py
+│   └── latency/score.py                # p99 per stage per turn type; 2× rule
+└── frontend/                           # Vercel — Next.js draws view-models, holds no keys
+    ├── src/app/                        # routes (page.tsx only; NO api/ directory)
+    ├── src/lib/audio/                  # capture worklet, player, unlock, barge-in
+    ├── src/lib/transport/              # WebSocket + HTTP clients, contract check
+    ├── src/lib/viewmodels/contract.ts  # generated from contract/v1.schema.json
+    ├── src/lib/state/session.ts        # mirrors the backend session
+    └── src/components/                 # cards, snapshot, sources, mic, booking, failures
 ```
 
 ---

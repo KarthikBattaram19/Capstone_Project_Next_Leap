@@ -49,13 +49,12 @@ env/
 # date) IS committed, because sign-off requires it. Track the record, not the
 # payload.
 # ---------------------------------------------------------------------------
+# Raw scrape output and MCP responses are not source; the curated bundle IS committed
 data/raw/
-data/listings.json
-data/index/
-data/embeddings/
-data/osm_cache/
+!data/bundle/
 *.faiss
 *.sqlite
+!data/bundle/chroma/**
 *.db
 
 # ---------------------------------------------------------------------------
