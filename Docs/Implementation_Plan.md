@@ -122,10 +122,11 @@ Nothing after this phase is safe until both gates clear. Tasks 0.1–0.3 are sha
 - Detail: addendum → Task 0.5.
 
 ### Task 0.6 — Curate to ≤ 10 per locality, gap report, manifest → **Gate D**
-- **Delivers:** the curation step (available listings only; per locality keep the 10 most detailed; ties broken by as-of date then id; the rule is written down as a sentence), a report of which fields are actually published, the first half of the manifest, and the committed listings file.
+- **Delivers:** the curation step (records marked unavailable are dropped and a null marker is kept, as spec §3.1 requires; per locality keep the 10 most detailed; ties broken by as-of date then id; the rule is written down as a sentence), a report of which fields are actually published, the first half of the manifest, and the committed listings file.
 - **Why now:** this is the moment to decide whether the dataset can carry the product.
 - **Done when:** `data/GATE_D.md` has exactly one box ticked; if the spec had to be amended, it is amended in the same commit, and the locality list and total are written back into spec §1 and §3.1.
 - **Decision:** **Gate D** — see §5.
+- **Status: done.** Gate D decided 2026-09-02: **proceed with spec amendment**. 3,216 listings over 566 localities; no availability marker; eight fields never published and `area_basis` unknown throughout (`data/GATE_D.md`).
 - Detail: addendum → Task 0.6.
 
 ### Infrastructure track — Tasks 0.7 to 0.10 → Gate L
