@@ -1,81 +1,119 @@
-# bengaluru.rent — source notes (recon on 2026-09-02)
+# Listing source — source notes (rewritten 2026-09-02)
 
-**Verdict: disallowed.** `robots.txt` allows every crawler, but the site's Terms of Use (last updated 4 June 2026) forbid scraping, harvesting or bulk extraction "without written permission" and forbid automated tools (bots, crawlers) outright. The terms govern; robots.txt is a technical convention, not a licence. Per the plan (§5, Task 0.4) this is a **stop**: no scrape (Task 0.5) may run until either written permission from the operator (hi@bengaluru.rent) is in hand or the spec names a different source. Task 0.4 halted at Step 1; the reconnaissance fetcher (`recon.py`) was not written and the four-page fetch was not run.
+**The source is `data/Bangalore_Properties_List.xlsx`, a spreadsheet supplied by the project owner.**
+No site is scraped. bengaluru.rent is **out of scope** for this project; the
+reconnaissance verdict that put it out of scope is kept at the bottom of this
+file as the historical record.
 
-What *was* fetched, once each, with a self-identifying User-Agent, in the course of reading the terms: `/robots.txt`, `/sitemap.xml`, `/terms`, `/koramangala`, `/`, and `/?pin=<uuid>`. Nothing was saved into the repository. The field observations below come from reading the landing page's own client-side code, not from extracting data.
+## What the supplied dataset is
 
-## robots.txt / terms
+| | |
+|---|---|
+| File | `data/Bangalore_Properties_List.xlsx` (single sheet, `Bangalore_Properties_List`) |
+| Rows | 9,180 |
+| Localities | 566 |
+| Rows with coordinates | 9,180 (all) |
+| Listings per locality | min 1, median 5, max 411 |
+| Localities above the 10-per-locality ceiling | 203 of 566 |
+| Rent range | ₹10,000 – ₹1,50,000 |
+| Deposit range | ₹50,000 – ₹5,00,000 |
 
-`robots.txt` (HTTP 200), verbatim relevant lines:
+There is **no availability marker** and **no PII**. The sheet carries no owner
+names, no phone numbers and no email addresses, so the PII-stripping step that
+the scrape design required (`scout.pipeline.pii`) has nothing to remove from
+this source. The `society_name` column holds builder names, not people.
 
-```
-# bengaluru.rent — explicitly allow AI crawlers + standard search engines
-User-agent: *
-Allow: /
-User-agent: ClaudeBot
-Allow: /
-Sitemap: https://bengaluru.rent/sitemap.xml
-```
+## Provenance of each column — read this before quoting any number
 
-`/terms` ("Terms of Use", last updated 4 June 2026), section **Acceptable use**, verbatim:
+The sheet is **not a market observation**. It was assembled in three different
+ways, and the difference matters for every claim the system makes:
+
+| Column group | How it was produced | Safe to quote as fact? |
+|---|---|---|
+| `Latitude`, `Longitude` | Real coordinates, copied positionally from sale listings in `data/Buy-sell list.csv` (originally Makaan.com data via Hugging Face) | Yes, as a map position |
+| `locality` | Derived from those coordinates by OpenStreetMap reverse geocoding (Nominatim), taking the `suburb`, else the block or village name | Yes |
+| `Rent`, `Deposit`, `parking_available`, `Society Type`, and the other descriptive columns | **Randomly generated** at the project owner's instruction, within stated bands, with 1BHK < 2BHK < 3BHK < 3BHK+ enforced for rent and deposit | **No.** These are plausible placeholders, not observed prices |
+
+**Consequence for the sign-off record (spec §7.3).** Any evaluation that treats
+a rent or deposit in this dataset as a real market figure is measuring the
+random generator, not Bengaluru. The system's grounding discipline is unchanged
+and still testable — a fact must still come from the dataset and carry its
+provenance — but the *demo* must not be presented as real pricing.
+
+## Field map (schema field → sheet column → published?)
+
+14 of the 23 schema fields are present. The sheet states only that parking
+exists, so it fills `parking_available` and leaves `parking` null; the
+two-/four-wheeler kind is never guessed.
+
+| schema field | sheet column | published |
+|---|---|---|
+| locality | `locality` | yes |
+| bhk_type | `bhk_type` (`1BHK` / `2BHK` / `3BHK` / `3BHK+`) | yes |
+| bedrooms | `bedrooms` | yes |
+| bathrooms | `bathrooms` | yes |
+| balconies | `balconies` | yes |
+| rent | `Rent` (rupees per month) | yes |
+| deposit | `Deposit` (rupees) | yes |
+| maintenance_charges | (none) | no |
+| maintenance_included | (none) | no |
+| property_type | `property_type` (`apartment` / `independent_house` / `villa` / `builder_floor`) | yes |
+| furnishing | `furnishing` (`unfurnished` / `semi_furnished` / `fully_furnished`) | yes |
+| square_footage | `square_feet` | yes |
+| area_basis | (none) | no — every record is `AreaBasis.UNKNOWN` |
+| floor | (none) | no |
+| total_floors | `total_floors` | yes — a number on the 2,290 `apartment` rows; the literal text `Not Applicable` on all 6,890 `independent_house` and `villa` rows, which the importer must read as null |
+| lift | (none) | no |
+| parking | (none) | no — the kind is not stated, so this stays null |
+| parking_available | `parking_available` (`Yes` / `No`) | yes |
+| amenities | (none) | no |
+| available_from | (none) | no |
+| availability_status | (none) | no — see below |
+| society_name | `society_name` (builder name) | yes |
+| coordinates | `Latitude`, `Longitude` | yes |
+
+One sheet column has no schema home and is **not imported**: `Society Type`
+(`Gated Society` / `Non-gated Society`).
+
+## Availability marker
+
+**NONE.** The sheet has no availability column, so `availability_status` is
+`null` for every record and the gap report must say so. The stale-listing
+design (spec §3.14) is unaffected in mechanism: availability remains an
+in-memory overlay flag that an operator can flip and that is re-checked before
+the calendar writes. It simply starts from "not stated" rather than from a
+value the source published.
+
+## Square footage basis
+
+Not stated. `area_basis` is `UNKNOWN` for every record.
+
+## PII observed (to strip)
+
+None. The sheet contains no owner names, phone numbers or email addresses.
+The PII guard is kept in the importer as a defence-in-depth assertion, not
+because this source needs it.
+
+---
+
+## Historical record — why bengaluru.rent is out of scope
+
+Superseded on 2026-09-02 by the decision to use the supplied spreadsheet.
+Retained because it documents why no scrape exists.
+
+**Verdict: disallowed.** `robots.txt` allowed every crawler, but the site's
+Terms of Use (last updated 4 June 2026) forbade scraping, harvesting or bulk
+extraction "without written permission" and forbade automated tools (bots,
+crawlers) outright. The terms govern; robots.txt is a technical convention, not
+a licence. Under the plan's Task 0.4 gate this was a **stop**, and Task 0.4
+halted at Step 1: the reconnaissance fetcher was never written and the
+four-page fetch was never run. Nothing from the site was saved into this
+repository, and no listing data in this project comes from it.
+
+`/terms`, section **Acceptable use**, verbatim:
 
 > You agree NOT to:
 > - Scrape, harvest, or bulk-extract data from bengaluru.rent without written permission
 > - Resell or commercially repurpose the data without written permission
 > - Attempt to bypass rate limits, IP bans, or other technical protections
 > - Use automated tools (bots, crawlers) to interact with the site
-
-Section **Moderation**, verbatim: "We reserve the right to remove pins, listings, comments, or accounts that: … Appear to be spam, fraud, or scraping attempts". Section **Intellectual property**, verbatim: "The aggregated rent data, statistical aggregates, and area medians are derived from user contributions; you may not redistribute these in bulk without permission."
-
-Section **No warranty**, verbatim (bears on the availability marker): "We do not guarantee: … That listed flats are actually available for rent".
-
-Verdict: **disallowed** (robots.txt: allowed; terms: disallowed without written permission).
-
-## Locality discovery
-
-- Locality list URL: `https://bengaluru.rent/sitemap.xml` — 21 locality pages: indiranagar, koramangala, hsr-layout, domlur, frazer-town, cv-raman-nagar, whitefield, marathahalli, bellandur, btm-layout, jayanagar, jp-nagar, hebbal, electronic-city, sarjapur-road, banashankari, malleshwaram, kr-puram, kammanahalli, basavanagudi, vijayanagar.
-- Locality index URL pattern: `https://bengaluru.rent/<locality-slug>` — a static SEO summary page (about 11 KB) carrying only median-rent statistics per BHK and FAQ JSON-LD. It contains **no listing HTML** and links to at most one pin (`/?pin=<uuid>`).
-- Listing URL pattern: `https://bengaluru.rent/?pin=<uuid>` — the same 650 KB single-page map application as `/`; the pin is looked up client-side from a Supabase table (`pins_public`, selected by `id`). There is no server-rendered listing page.
-- Pagination: none. The map application loads all pins client-side from Supabase REST (`pins_public`, ordered by `created_at` descending).
-
-## Availability marker
-
-- Marker: NONE FOUND in HTML. In the application's data model each pin has `pin_kind` (`'tolet_spot'` = a flat offered to let; anything else = a rent-transparency pin) and `listing_type` (`'whole_flat'` | `'room'`). Whether a to-let pin is still available is not published; the terms explicitly disclaim it ("We do not guarantee … That listed flats are actually available for rent").
-- "Not for rent" / transparency-only pins look like: the map popup text "Not for rent" (six occurrences in the client code) on pins whose `pin_kind` is not `'tolet_spot'` — these are renters reporting what they pay, not flats on offer. The Koramangala page's own FAQ states the scale: 311 rent pins across 1/2/3 BHK versus "1 flats in Koramangala are listed directly by owners".
-
-## Field map (schema field → selector → example value → published?)
-
-Not examined against listing pages — the fetch was stopped at Step 1 by the terms verdict. The `selector` column therefore records the client-side data field the map application renders, read from the landing page's JavaScript, not a CSS selector on a listing page. "published?" is provisional.
-
-| field | selector | example | published |
-|---|---|---|---|
-| locality | (none — pins carry `lat`/`lng` only; locality is implied by map position) | — | no |
-| bhk_type | `bhk` | — | yes |
-| bedrooms | (none) | — | no |
-| bathrooms | (none) | — | no |
-| rent | `rent_amount` (also `rent_per_room` for rooms) | — | yes |
-| deposit | `deposit_months` (months of rent, not rupees) | — | partial |
-| maintenance_charges | (none) | — | no |
-| maintenance_included | `maintenance_included` | — | yes |
-| property_type | (none; `listing_type` is whole_flat / room, not apartment / house) | — | no |
-| furnishing | `furnished` | — | yes |
-| square_footage | `sqft` | — | yes |
-| area_basis | (none) | — | no |
-| floor | (none) | — | no |
-| total_floors | (none) | — | no |
-| lift | (none) | — | no |
-| parking | `parking_count` (a count, not two-/four-wheeler) | — | partial |
-| amenities | `gated`, `pet_friendly` only | — | partial |
-| available_from | (none) | — | no |
-| availability_status | (none; see Availability marker) | — | no |
-| society_name | `society` | — | yes |
-| coordinates | `lat`, `lng` | — | yes |
-
-## Square footage basis
-
-not stated
-
-## PII observed (to strip)
-
-- owner name: selector — not examined (stopped at Step 1). Owner contact is held server-side and released only through match emails (`set_pin_owner_contact`, `set_pin_owner_email`, `contact_creator` RPCs); it does not appear in `pins_public`.
-- phone: selector — not examined (stopped at Step 1) (also appears inside description text? unknown — pins have no free-text description field in the client model)
