@@ -99,3 +99,30 @@ def test_the_manifest_write_is_guarded_too(monkeypatch, tmp_path):
     with pytest.raises(PiiLeakError):
         mod.save_manifest(m)
     assert not target.exists()
+
+
+def test_a_merge_winner_dropped_by_the_cap_takes_its_merged_ids_with_it():
+    # Dedupe runs before the cap, so a record can absorb a duplicate and then be cut by
+    # the 10-per-locality ceiling. Its merged_from goes with it, and the manifest — which
+    # reconstructs merged_records from the bundle file — therefore reports merges among
+    # BUNDLED records only, not everything dedupe did. On the 2026-09-05 sheet that is
+    # 42 winners in the manifest against 112 dedupe actually performed. This is the
+    # intended reading (the manifest describes the bundle), pinned so it is not
+    # "fixed" into a claim about the whole import by accident.
+    from scout.pipeline.dedupe import dedupe
+
+    # Eleven thick records, so the cap of 10 bites; the thinnest of them absorbs a twin.
+    thick = [rec(i, "Koramangala", rent=1, deposit=2, lift=True) for i in range(10)]
+    # Same society, same locality, same rent, no coordinates -> dedupe's exact-address arm.
+    winner = rec(50, "Koramangala", rent=3, society_name="Prestige Acropolis", balconies=1)
+    twin = rec(51, "Koramangala", rent=3, society_name="Prestige Acropolis")
+    every = thick + [winner, twin]
+
+    deduped, merged = dedupe(every)
+    assert merged == {"kor-050": ["kor-051"]}  # dedupe did merge them
+    assert len(deduped) == 11
+
+    kept, _rule = curate(every)
+    assert len(kept) == 10
+    assert "kor-050" not in {k.id for k in kept}  # the cap dropped the winner
+    assert all(not k.merged_from for k in kept)  # so the bundle records no merge at all

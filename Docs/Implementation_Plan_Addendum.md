@@ -666,7 +666,7 @@ carries a phone number, the build fails loudly rather than publishing it.
 source, so the reference is the row, not a web page. `scraped_on` carries the
 date the sheet was taken as of.
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
 `backend/tests/unit/pipeline/test_pii.py` imports `strip_pii` from `scout.pipeline.pii` and defines three tests:
 - `test_strips_indian_mobile_numbers_in_all_common_forms()` - with input `s = "Call Ramesh on 9876543210 or +91 98765-43210 or 098765 43210 today"` and `out = strip_pii(s)`, asserts that `"98765"` is not in `out` and `"43210"` is not in `out`, and asserts that `"[phone removed]"` is in `out`.
@@ -690,7 +690,7 @@ date the sheet was taken as of.
 
 Run: FAIL.
 
-- [ ] **Step 2: Implement**
+- [x] **Step 2: Implement**
 
 `backend/scout/pipeline/pii.py` and `backend/scout/pipeline/dedupe.py` are unchanged from their original specification: `strip_pii` with the phone and email patterns, and `dedupe` with `haversine_m`, the 50 m radius, the "most fields present wins" rule, and the guard that two records with the same coordinates but different rents are two flats in one tower, not one flat.
 
@@ -701,12 +701,12 @@ Run: FAIL.
 - `import_sheet(path, as_of)` opens the workbook read-only, reads the header row into a `{name: index}` map, raises `SheetSchemaError` naming any member of `REQUIRED` that is absent, and then builds one `ListingRecord` per non-empty row using the column map above. Every text value passes through `strip_pii` before it reaches the record.
 - Under `if __name__ == "__main__":` it builds `ap = argparse.ArgumentParser()`, adds `--sheet` with `default="data/Bangalore_Properties_List.xlsx"`, `--out` with `default="data/raw/listings_all.json"` and `--as-of` (ISO date; default today in `Asia/Kolkata`), parses `args = ap.parse_args()`, and writes the imported records to `args.out` as JSON.
 
-- [ ] **Step 3: Run**
+- [x] **Step 3: Run**
 
 Run: `python -m pytest backend/tests/unit/pipeline -q` to pass.
 Run: `python -m scout.pipeline.import_sheet` writes `data/raw/listings_all.json`.
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 Run `git add backend/scout/pipeline backend/tests/unit/pipeline backend/tests/fixtures/listing_sample.xlsx` then `git commit -m "data: importer for the supplied spreadsheet, with dedupe and a PII guard"`.
 
@@ -726,19 +726,19 @@ Run `git add backend/scout/pipeline backend/tests/unit/pipeline backend/tests/fi
   - `gap_report(records) -> GapReport` — a field is "published" if ≥ 1 record has it non-null
   - `write_manifest(...)` — writes `data/bundle/manifest.json` with `bundle_version="1"`, `contract_version="1"` and the import-side fields (Task 1.2/1.3 fill the index/OSM fields)
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 `backend/tests/unit/pipeline/test_curate.py` imports `date` from `datetime`, `ListingRecord` from `scout.domain.listing`, `curate` from `scout.pipeline.curate`, and `gap_report` from `scout.pipeline.gap_report`. It defines a helper `rec(i, locality, available=True, **fields)` that returns `ListingRecord(id=f"{locality[:3].lower()}-{i:03d}", source_url="u", scraped_on=date(2026, 9, 1), locality=locality, availability_status=available, **fields)`. Its tests:
 - `test_keeps_ten_best_populated_and_never_pads()` — builds `thick = [rec(i, "Koramangala", rent=1, deposit=2, lift=True) for i in range(12)]`, `thin = [rec(i, "HSR Layout", rent=1) for i in range(3)]`, and `unavailable = [rec(99, "HSR Layout", available=False, rent=1, deposit=2)]`; calls `kept, rule = curate(thick + thin + unavailable)`; groups `kept` into `by_loc` by `k.locality`; asserts `len(by_loc["Koramangala"]) == 10`; asserts `len(by_loc["HSR Layout"]) == 3` (commented "real count, not padded"); asserts `all(k.availability_status for k in kept)`; asserts `"10" in rule and "fields" in rule`.
 - `test_null_availability_is_kept_not_treated_as_unavailable()` — builds two records with `available=None` and one with `available=False` in `"Whitefield"`; asserts only the two null-availability ids are kept, that their `availability_status` stays `None`, and that `"not stated" in rule`.
 - `test_gap_report_names_unpublished_fields()` — calls `g = gap_report([rec(1, "X", rent=1), rec(2, "X", rent=2)])` and asserts `"rent" in g.fields_published and "deposit" in g.fields_missing`.
 
-- [ ] **Step 2: Run to verify it fails**
+- [x] **Step 2: Run to verify it fails**
 
 Run: `python -m pytest backend/tests/unit/pipeline/test_curate.py -q`
 Expected: FAIL — module not found
 
-- [ ] **Step 3: Implement curate, gap report, manifest**
+- [x] **Step 3: Implement curate, gap report, manifest**
 
 `backend/scout/pipeline/curate.py` contains the following. Its module docstring reads "Up to 10 per locality — a ceiling, not a target (spec §1)." It begins with `from __future__ import annotations`; imports `argparse`, `json`, `Path` from `pathlib`, `ListingRecord` from `scout.domain.listing`, and `dedupe` and `detail_score` from `scout.pipeline.dedupe`.
 
@@ -767,16 +767,16 @@ Functions:
 
 Under `if __name__ == "__main__":` it builds `ap = argparse.ArgumentParser()`; adds `--marker` with `required=True` and help text `"the availability marker from SOURCE_NOTES.md, or NONE"`; adds `--raw` with `default="data/raw/listings_all.json"`; parses `a = ap.parse_args()`; computes `merged = {r["id"]: r["merged_from"] for r in json.loads((BUNDLE / "listings.json").read_text(encoding="utf-8")) if r.get("merged_from")}`; calls `m = from_import(None if a.marker == "NONE" else a.marker, Path(a.raw), merged)`; calls `save_manifest(m)`; and prints `m.model_dump_json(indent=2)`.
 
-- [ ] **Step 4: Run the tests**
+- [x] **Step 4: Run the tests**
 
 Run: `python -m pytest backend/tests/unit/pipeline -q`
 Expected: all pass
 
-- [ ] **Step 5: Produce the bundle's import half**
+- [x] **Step 5: Produce the bundle's import half**
 
 Run (PowerShell) `python -m scout.pipeline.curate` and then `python -m scout.pipeline.manifest --marker "<marker from SOURCE_NOTES.md or NONE>"`.
 
-- [ ] **Step 6: Write the gate decision — `data/GATE_D.md`**
+- [x] **Step 6: Write the gate decision — `data/GATE_D.md`**
 
 The file is a Markdown document with these headings and lines, in this order:
 
@@ -790,7 +790,7 @@ The file is a Markdown document with these headings and lines, in this order:
 
 Tick exactly one box. If it is the second, amend `Docs/Problem_Statement_Detailed.md` §3.1/§4/§7.1 **in the same commit**, and write the locality list and total back into spec §1 and §3.1 as spec §7.3 requires.
 
-- [ ] **Step 7: Commit the bundle half and the gate**
+- [x] **Step 7: Commit the bundle half and the gate**
 
 Run `git add backend/scout/pipeline backend/tests/unit/pipeline data/bundle/listings.json data/bundle/manifest.json data/GATE_D.md` then `git commit -m "data: curated listings (≤10/locality), gap report, manifest; Gate D decision"`.
 

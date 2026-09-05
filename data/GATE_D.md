@@ -52,8 +52,10 @@ marked unavailable and are dropped at curation, which also empties 102
 localities entirely. Every record carries coordinates, rent, deposit, BHK,
 bedrooms, bathrooms, balconies, property type, furnishing, floor area, a yes/no
 parking flag, a builder name, a gated/non-gated flag and an availability flag;
-total floors is stated for apartments only. Dedupe merged 43 records into 42
-winners. Per `data/SOURCE_NOTES.md`, coordinates and locality names are real but
+total floors is stated for apartments only. Dedupe merged 126 records into 112
+winners, of which 42 survive the 10-per-locality cap; the manifest's
+`merged_records` lists those 42, because it describes the bundle rather than
+the import. Per `data/SOURCE_NOTES.md`, coordinates and locality names are real but
 rent, deposit, availability and every other descriptive column are randomly
 generated placeholders — the grounding discipline is testable on them; the
 prices are not market facts and the demo must not present them as such.

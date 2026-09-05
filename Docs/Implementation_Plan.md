@@ -112,13 +112,14 @@ Nothing after this phase is safe until both gates clear. Tasks 0.1–0.3 are sha
 - **Delivers:** evidence, not code. A notes file recording which schema field maps to which sheet column, which fields the sheet does not carry, whether an availability marker exists, whether floor area is carpet or built-up, and how each column was produced.
 - **Why now:** the importer (0.5) and the gap report (0.6) both read this inventory; nothing downstream can assume a field the sheet lacks.
 - **Done when:** the notes file is complete in its fixed skeleton (so Task 0.6 can read it mechanically) and committed.
-- **Status: done.** `data/SOURCE_NOTES.md` records 14 of 23 schema fields present, no availability marker, no PII, and `area_basis` unknown. It also records that rent, deposit and the other descriptive columns are **randomly generated placeholders**, not observed market data.
+- **Status: done** (rewritten 2026-09-05 for the re-supplied sheet). `data/SOURCE_NOTES.md` records 16 of 24 schema fields present, an availability marker (`availability_status`, 4,532 `Yes` / 4,648 `No`), three PII columns that are never imported (`Name`, `Phone Number`, `Voter ID`), and `area_basis` unknown. It also records that rent, deposit and the other descriptive columns are **randomly generated placeholders**, not observed market data.
 - Detail: addendum → Task 0.4.
 
 ### Task 0.5 — Importer: read the spreadsheet, dedupe, write records
-- **Delivers:** the importer that reads `data/Bangalore_Properties_List.xlsx` into `ListingRecord[]`, maps each column to its schema field, merges duplicates (within 50 m and otherwise identical; the more detailed record wins), and writes all parsed records (no cap yet). Fields the sheet does not carry stay null. The PII guard is kept as a defence-in-depth assertion even though this source has no contact details.
+- **Delivers:** the importer that reads `data/Bangalore_Properties_List.xlsx` into `ListingRecord[]`, maps each column to its schema field, merges duplicates (within 50 m and otherwise identical; the more detailed record wins), and writes all parsed records (no cap yet). Fields the sheet does not carry stay null. The three PII columns the sheet gained on 2026-09-05 are never read: the importer works from a column allow-list, and the PII guard sits behind it as defence in depth.
 - **Why now:** the dataset is the first thing that can invalidate the project.
 - **Done when:** unit tests pass on a small fixture sheet, one full import has run, and a search of the output finds no 10-digit numbers and no `@`.
+- **Status: done.** 9,180 records over 566 localities imported to `data/raw/listings_all.json`; no name, phone number or voter ID from the sheet reaches the output.
 - Detail: addendum → Task 0.5.
 
 ### Task 0.6 — Curate to ≤ 10 per locality, gap report, manifest → **Gate D**
@@ -126,7 +127,7 @@ Nothing after this phase is safe until both gates clear. Tasks 0.1–0.3 are sha
 - **Why now:** this is the moment to decide whether the dataset can carry the product.
 - **Done when:** `data/GATE_D.md` has exactly one box ticked; if the spec had to be amended, it is amended in the same commit, and the locality list and total are written back into spec §1 and §3.1.
 - **Decision:** **Gate D** — see §5.
-- **Status: done.** Gate D decided 2026-09-02: **proceed with spec amendment**. 3,216 listings over 566 localities; no availability marker; eight fields never published and `area_basis` unknown throughout (`data/GATE_D.md`).
+- **Status: done.** Gate D re-decided 2026-09-05 (first decided 2026-09-02): **proceed with spec amendment**. 2,370 listings over 464 localities — 128 at the 10 ceiling, 336 below it; availability marker `availability_status` present, so the 4,648 rows marked unavailable are dropped and 102 localities fall out entirely; seven fields never published and `area_basis` unknown throughout (`data/GATE_D.md`).
 - Detail: addendum → Task 0.6.
 
 ### Infrastructure track — Tasks 0.7 to 0.10 → Gate L
