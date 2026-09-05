@@ -587,8 +587,10 @@ which only 762 also share a rent. Dedupe's "same pin, different rent, two
 flats" guard therefore decides the fate of most of the sheet.
 
 Dropping unavailable rows (spec §3.1) leaves **4,532 rows over 464
-localities**: 102 of the 566 localities keep no row at all, and 130 localities
-still exceed the 10-per-locality ceiling. Task 0.6 owns the final counts.
+localities**: 102 of the 566 localities keep no row at all, and 119 localities
+still exceed the 10-per-locality ceiling (130 hold ten or more; "exceed" is
+more than 10, the same measure as the 203 counted before the drop). Task 0.6
+owns the final counts.
 
 - [x] **Step 2: Record the shape and the caveats**
 

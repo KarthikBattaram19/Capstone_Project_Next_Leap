@@ -21,7 +21,7 @@ supersedes the 2026-09-02 inventory.
 | Localities | 566 |
 | Rows with coordinates | 9,180 (all) |
 | Listings per locality | min 1, median 5, max 411 |
-| Localities above the 10-per-locality ceiling | 203 of 566 |
+| Localities holding **more than** 10 rows (i.e. that curation will cap) | 203 of 566 |
 | Rent range | ₹10,000 – ₹1,50,000 |
 | Deposit range | ₹50,000 – ₹5,00,000 |
 | Availability marker | `availability_status` — `Yes` on 4,532 rows, `No` on 4,648, never blank |
@@ -34,8 +34,8 @@ ways, and the difference matters for every claim the system makes:
 
 | Column group | How it was produced | Safe to quote as fact? |
 |---|---|---|
-| `Latitude`, `Longitude` | Real coordinates, copied positionally from sale listings in `data/Buy-sell list.csv` (originally Makaan.com data via Hugging Face) | Yes, as a map position |
-| `locality` | Derived from those coordinates by OpenStreetMap reverse geocoding (Nominatim), taking the `suburb`, else the block or village name | Yes |
+| `Latitude`, `Longitude` | Real coordinates drawn from sale listings in `data/raw/Buy-sell list.csv` (Makaan.com data via Hugging Face; the CSV's own `source` column reads `huggingface:InsiyaMaryam/Makaan-data`). **Verified 2026-09-05:** 9,157 of the 9,180 rows' pairs appear in that CSV, and **every one of them sits on a CSV row marked `is_synthetic=False`** — none was taken from the CSV's 4,058 synthetic rows. The remaining **23 rows (8 distinct pairs) appear nowhere in the CSV**; their origin is unrecorded. The copy is *not* row-for-row positional — only 28.1% of rows line up by position, so the sheet's row order carries no meaning | Yes as a map position for the 9,157; the 23 are unverified |
+| `locality` | Derived from those coordinates by OpenStreetMap reverse geocoding (Nominatim), taking the `suburb`, else the block or village name. **Corroborated 2026-09-05:** the sheet's names are not the CSV's own `locality` values — they differ on 7,645 rows and are consistently coarser (`JP Nagar` where the CSV says `1st Phase JP Nagar`), which is what a reverse-geocoded suburb name looks like | Yes |
 | `Rent`, `Deposit`, `parking_available`, `Society Type`, and the other descriptive columns | **Randomly generated** at the project owner's instruction, within stated bands, with 1BHK < 2BHK < 3BHK < 3BHK+ enforced for rent and deposit | **No.** These are plausible placeholders, not observed prices |
 | `availability_status`, `Name`, `Phone Number`, `Voter ID` | **Randomly generated on 2026-09-05** at the project owner's instruction. `availability_status` is an independent coin flip per row; the three PII columns are invented identities, unique per row, matching no real person | **No.** `availability_status` is a marker whose *mechanism* is real and whose *values* are synthetic; the PII columns never reach the bundle at all |
 
@@ -115,9 +115,11 @@ Two consequences:
 1. **Curation now drops rows, and drops whole localities.** Spec §3.1
    requires records marked unavailable to be dropped. That leaves **4,532
    rows across 464 localities**: **102 of the 566 localities have no
-   available row at all** and disappear from the bundle, and only 130
-   localities still hold 10 or more. Task 0.6 owns the final counts; this is
-   the figure Gate D has to weigh.
+   available row at all** and disappear from the bundle, and only 119
+   localities still hold more than 10 — the same "more than 10" measure as the
+   203 above, so the two are comparable (on the "ten or more" measure the pair
+   is 218 and 130). Task 0.6 owns the final counts; this is the figure Gate D
+   has to weigh.
 2. **The values are synthetic.** The marker's mechanism is exactly what the
    spec wants; the values behind it are a coin flip made on 2026-09-05. The
    stale-listing design (spec §3.14) is unchanged: availability remains an
