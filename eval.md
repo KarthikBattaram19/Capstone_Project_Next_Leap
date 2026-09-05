@@ -18,8 +18,8 @@
 |---|---|---|---|---|
 | EC-SCR-01 | The listing source cannot be used on legal or licence grounds | **Stop.** Gate D records it; nothing downstream is built. Not routed around. This fired once: bengaluru.rent was ruled out and replaced by the supplied spreadsheet. | plan §5, add. 0.4 | CLOSED |
 | EC-SCR-02 | robots.txt is *unclear* (no explicit rule, or a rule that only covers some paths) | `SOURCE_NOTES.md` allows `allowed \| disallowed \| unclear` — but Gate D's three boxes have no branch for "unclear" | add. 0.4 step 4 vs 0.6 step 6 | ⚠ |
-| EC-SCR-03 | No availability marker exists on the page | Gate D **STOP** box. | add. 0.6 | SPEC |
-| EC-SCR-04 | A marker exists but the selector is empty (`SEL["available_marker"] = ("", None)`) | `soup.select_one("")` — every listing gets `availability_status` falsy, `curate()` keeps nothing, and the bundle is empty with no error raised | add. 0.5 step 5, 0.6 | ⚠ |
+| EC-SCR-03 | No availability marker exists in the source | Gate D **STOP** box. **Did not fire in the end:** the 2026-09-05 sheet publishes `availability_status`, so Gate D was re-decided with the marker present (`data/GATE_D.md`). The branch stays specified for any future source | add. 0.6 | CLOSED |
+| EC-SCR-04 | The marker column disappears from the sheet, or is misread | **Now impossible to miss.** `availability_status` (and `Society Type`) are in the importer's `REQUIRED` tuple, so their absence raises `SheetSchemaError` instead of writing nulls. Without that, every record would read *not stated*, `curate` would keep all 9,180 rows, and Gate D would be silently undone with no error. Pinned by `test_a_missing_2026_09_05_column_is_an_error_not_a_silent_null` | add. 0.5 | FIXED |
 | EC-SCR-05 | The site publishes fewer §3.1 fields than the schema | Fields stay `null`; gap report names them; Gate D "PROCEED WITH SPEC AMENDMENT" amends spec §3.1/§4/§7.1 in the same commit | add. 0.6 | SPEC |
 | EC-SCR-06 | Floor area published without saying carpet or built-up | `area_basis = UNKNOWN`; the card shows `"1100 sq ft"` with no basis suffix | add. 2.8 | SPEC |
 | EC-SCR-07 | A listing page has no coordinates (no map embed, no `data-lat`) | `coordinates = None` → dedupe falls back to society name → every OSM row is null → `to_point` returns a gap | add. 0.5, 1.3, 2.7 | SPEC |
@@ -64,7 +64,7 @@
 | EC-CUR-01 | A locality with 3 available listings | Keep 3. **Never pad.** | SPEC |
 | EC-CUR-02 | A locality with 12 | Keep the 10 with most non-null fields | SPEC |
 | EC-CUR-03 | A locality where every listing is unavailable | The locality drops out of `manifest.localities`, and `build_index` keys its collections off that same list — so the guide index and the manifest cannot disagree (§16.1 · add. 1.2) | FIXED |
-| EC-CUR-04 | `availability_status is None` (marker present but unreadable on one page) | `curate` keeps only `is True`, so `None` is dropped — correct, but the listing vanishes with no gap-report entry | ⚠ minor |
+| EC-CUR-04 | `availability_status is None` (a source that publishes no marker) | **Kept, not dropped.** `curate` filters `availability_status is not False`, so only an explicit *unavailable* removes a record and a null renders as *not stated* (spec §3.1). Pinned by `test_null_availability_is_kept_not_treated_as_unavailable`. This row previously recorded the opposite behaviour | FIXED |
 | EC-CUR-05 | Zero listings survive curation overall | `manifest.scraped_on = date.today()`, `localities={}`, `total_listings=0` — the manifest validates and the bundle is committed empty | ⚠ |
 
 ---

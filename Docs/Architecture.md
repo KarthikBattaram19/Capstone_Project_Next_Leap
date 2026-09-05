@@ -1184,7 +1184,7 @@ flowchart TB
 | **Which** English embedding model (the *strategy* is settled — dense, [AD-10]) | Must run in-process, be pinned to an exact version, and be the same model at build time and question time (§9.1) |
 | The PDF generator | Must run server-side and hold no state — the PDF is deleted after sending |
 | The tracing library | Must produce the span names §13.3 lists |
-| The spreadsheet reader | Must strip personal data before anything is written to disk (§3); the supplied sheet carries none |
+| The spreadsheet reader | Must keep personal data off disk entirely (§3). **The supplied sheet carries three PII columns since 2026-09-05** — `Name`, `Phone Number`, `Voter ID` — so the reader works from a column allow-list (asking for a column outside it raises), strips any residual email or nine-/ten-digit run from the text it does read, and the committed bundle is checked once more before it is written |
 
 **Two things to notice about this stack.** First, **two model providers, deliberately** — if one is down, the demo loses one capability rather than all of them (§12.2), and Anthropic's model is not served by Groq, so it is two keys either way. Second, **the only things called during a conversation are the five providers in the amber box** — everything purple happens days earlier.
 

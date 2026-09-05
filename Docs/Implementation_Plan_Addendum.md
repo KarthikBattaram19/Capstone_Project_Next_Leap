@@ -34,7 +34,7 @@ Copied from the spec and architecture. Every task's requirements implicitly incl
 - Both pinned by **exact model ID, never a `latest` alias**, held in config. Job 1 and Job 2 **must remain different models**. Falling back from Job 2 to Job 1 for explanations is **forbidden**
 
 **Data (spec §1, §3):**
-- Bengaluru only · **up to 10 listings per locality** (a ceiling, not a target; never padded) · over-supplied localities curated to the 10 best-populated records by a documented rule · dedupe on exact address **or** coordinates within **50 m** · owner names and phone numbers stripped **before** anything is written to disk · owner contact is always the labelled placeholder **`999999999`**
+- Bengaluru only · **up to 10 listings per locality** (a ceiling, not a target; never padded) · over-supplied localities curated to the 10 best-populated records by a documented rule · dedupe on exact address **or** coordinates within **50 m** · owner names, phone numbers and government identifiers kept off disk entirely — an importer column allow-list first, text stripping second, a check on the committed bundle third · owner contact is always the labelled placeholder **`999999999`**
 - `null` is a real value: renders **"not stated"**, never blank, never zero, never inferred; **never satisfies a must-have** (unknowns form their own group)
 - Budget filters on `rent`; `deposit` and `maintenance_charges` always shown
 - 1–3 guide documents per locality; **one ChromaDB collection per locality** (partition, not filter); semantic chunking; **the same pinned embedding model** at build and query time; the guide index is **closed** — nothing fetched at query time

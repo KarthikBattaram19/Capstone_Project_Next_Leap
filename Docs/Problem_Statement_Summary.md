@@ -46,7 +46,7 @@ The words *straight line* / *by route* are **mandatory in speech**. A bare "abou
 ## 3. Data
 
 ### 3.1 Listings — the searchable schema
-Imported once → static dataset. Every field is voice-filterable and asserted in Suite A: `locality`, `bhk_type` (1RK/1BHK/2BHK/3BHK/3BHK+, held alongside raw `bedrooms`), `bathrooms`, `balconies`, `rent`, `deposit`, `maintenance_charges`, `property_type`, `furnishing`, `square_footage` (carpet vs built-up recorded explicitly), `floor`/`total_floors`, `lift`, `parking` (two/four-wheeler/both/none) with `parking_available` for sources that say only yes or no, `amenities`, `available_from`, `availability_status`, `society_name`, `coordinates`.
+Imported once → static dataset. Every field is voice-filterable and asserted in Suite A: `locality`, `bhk_type` (1RK/1BHK/2BHK/3BHK/3BHK+, held alongside raw `bedrooms`), `bathrooms`, `balconies`, `rent`, `deposit`, `maintenance_charges`, `property_type`, `furnishing`, `square_footage` (carpet vs built-up recorded explicitly), `floor`/`total_floors`, `lift`, `parking` (two/four-wheeler/both/none) with `parking_available` for sources that say only yes or no, `amenities`, `available_from`, `availability_status`, `society_name`, `society_type` (`gated`/`non_gated`, mapped from the sheet's prose at import), `coordinates`.
 
 Three rules that govern the whole schema:
 - **Fields are confirmed at import time, not assumed.** Anything the sheet doesn't carry goes in the gap report alongside the availability marker. As supplied on 2026-09-05, 16 of 24 fields are present and the availability marker is the sheet's **`availability_status`** column (`data/SOURCE_NOTES.md`); the 2026-09-02 sheet had 14 of 23 and no marker.
@@ -56,7 +56,7 @@ Three rules that govern the whole schema:
 Also: budget filters on `rent` (deposit and maintenance always *shown*); dedup on exact address or coordinates within 50 m; availability is a dataset flag held in an **in-memory overlay** (no database; a restart resets it), flipped by an operator-token-guarded admin toggle or **re-checked at booking confirmation** — reading the flag, never the source site — and an unavailable listing is removed automatically with the tenant told.
 
 ### 3.2 PII
-Owner/agent names and numbers stripped **before** data reaches the dataset, UI, logs or transcripts. The labelled placeholder is the only contact value anywhere.
+Owner/agent names, numbers **and government identifiers** are removed **before** data reaches the dataset, UI, logs or transcripts. The labelled placeholder is the only contact value anywhere. Since 2026-09-05 the sheet actually carries three such columns (`Name`, `Phone Number`, `Voter ID`), kept out in three layers: the importer reads only an **allow-list** of columns (asking for another raises), residual text is stripped of emails and any bare nine-/ten-digit run, and the committed bundle is checked once more before it is written — counts only in the error, never the value.
 
 ### 3.3 Neighborhood guidance (RAG)
 **Pre-built closed index**, no live fetching. Wikipedia and comparable open city guides, chunked with per-chunk attribution. **Retrieval is listing-scoped** — a query about listing X reads only its locality's documents. This is the structural defence against cross-locality contamination, and it gets larger, not smaller, as localities multiply. Gaps show *"Limited neighborhood data available"* — never filled from model knowledge.
