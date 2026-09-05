@@ -98,9 +98,10 @@ Nothing after this phase is safe until both gates clear. Tasks 0.1–0.3 are sha
 | 0.5 Importer | done | 9,180 records imported; 29 tests (10 PII, 5 dedupe, 14 import) |
 | 0.6 Curate → **Gate D** | done, **gate decided** | 2,370 listings over 464 localities; 7 curation tests; `data/GATE_D.md` |
 | 0.7 Settings, boot checks, telemetry, HTTP | done | 74 tests (6 new); `python -m scout.main` exits 2 on a missing secret |
-| 0.8–0.10 Infrastructure → **Gate L** | **not started** | no WebSocket gateway, no provider wrappers, no deployment, no `data/GATE_L.md` |
+| 0.8 Walking skeleton | code done, **live pings not run** | 77 tests (3 handshake); all four SDK signatures verified against the installed versions; the 3 provider pings skip without keys |
+| 0.9–0.10 Infrastructure → **Gate L** | **not started** | no Dockerfile, no Railway/Vercel deployment, no mic page, no `data/GATE_L.md` |
 
-**The next task is 0.8.** Tasks 0.1–0.7 are finished and Gate D is decided. Gate L is still undecided, so no work beyond Phase 0 may begin — and 0.8 needs real provider keys in `backend/.env` for its three live ping tests.
+**The next task is 0.9**, but 0.8 is not fully signed off: its "done when" includes *three live provider ping tests*, and those are **skipped** because no keys are present in `backend/.env`. Put real keys there and run `python -m pytest backend/tests/integration -q` — expect `3 passed`. Any signature mismatch surfaces there, and the addendum says to fix it in 0.8 rather than later. Gate L is still undecided, so no work beyond Phase 0 may begin.
 
 ### Task 0.1 — Repository scaffold, toolchain, CI skeleton
 - **Delivers:** a Python backend project (pinned to Python 3.12, every dependency pinned to an exact version), a Next.js frontend project, an example environment file listing every secret's name, a CI workflow that runs the tests, and the ignore rules that commit the bundle but never raw guide fetches.
@@ -161,6 +162,7 @@ Nothing after this phase is safe until both gates clear. Tasks 0.1–0.3 are sha
 - **Delivers:** the real WebSocket gateway (first message must carry the contract version or the socket is closed), the real wrappers for Deepgram, Groq, Anthropic and Smallest.ai, and a placeholder turn that exercises each of them end to end — including the "opener before Job 2 replies" trick on the Type B leg. Each provider SDK's actual call signature is checked and written into a comment before use.
 - **Why now:** Gate L is measured on this skeleton. The gateway and wrappers written here are kept; only the stub turn is replaced later (Task 2.10).
 - **Done when:** the handshake tests pass; with real keys, the three provider ping tests pass.
+- **Status: code done; the live half is unverified.** 77 tests pass, including three handshake tests: a wrong contract version and a non-hello first frame both close with code `4400` / `contract_version_mismatch`, and the correct hello is answered and the socket stays open. All four provider SDK signatures were inspected against the installed versions before any call was written, and each wrapper records what it saw. **The three live pings are skipped — no provider keys are set** — so nothing here has spoken to a real provider yet.
 - Detail: addendum → Task 0.8.
 
 ### Task 0.9 — Deploy the skeleton: Railway (backend) then Vercel (frontend), with a bare mic page

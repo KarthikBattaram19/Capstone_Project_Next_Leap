@@ -1009,7 +1009,7 @@ This is the deployable skeleton Gate L measures on. The gateway code written her
   - `SmallestTts(settings).stream(text) -> AsyncIterator[bytes]` (raw PCM16, RIFF header stripped if present; `sample_rate` from settings)
   - WebSocket `/ws`: first text frame must be `{"type":"hello","contract_version":"1"}`, else the socket closes with code `4400` and reason `contract_version_mismatch`; binary frames are PCM16 mono 16 kHz; server sends `transcript`, `ack`, `audio_out` (JSON `start`/`end`/`stop` + binary chunks) and `outcome`
 
-- [ ] **Step 1: Verify each SDK's real surface before writing against it**
+- [x] **Step 1: Verify each SDK's real surface before writing against it**
 
 Run these four PowerShell one-liners, one per provider SDK, each of which prints the installed signature of the call the wrapper will make:
 
@@ -1020,7 +1020,16 @@ Run these four PowerShell one-liners, one per provider SDK, each of which prints
 
 Write what each prints into a comment at the top of the corresponding provider module. If a parameter named below does not exist in the installed SDK, use the installed name — the plan's names are from vendor docs dated 2026-08-30.
 
-- [ ] **Step 2: Write the hello-handshake test**
+**What the check actually found on 2026-09-05** (deepgram-sdk 7.8.0, groq 1.7.0, anthropic 1.3.0, smallestai 5.12.0) — every parameter this task names exists, and two points settle open questions:
+
+| SDK | Result |
+|---|---|
+| Deepgram | `listen.v1.connect(...)` is keyword-only with `model` required; `encoding`, `sample_rate`, `channels`, `language`, `interim_results`, `smart_format`, `numerals`, `vad_events`, `endpointing`, `utterance_end_ms`, `keyterm` all present. It returns an async context manager. `AsyncV1SocketClient` exposes exactly `on`, `recv`, `send_close_stream`, `send_finalize`, `send_keep_alive`, `send_media`, `start_listening` — all four used here exist |
+| Groq | `chat.completions.create` takes `messages`, `model`, `temperature`, `response_format`. Its `model` Literal **includes `openai/gpt-oss-120b`**, so the pinned Job 1 id is accepted by the installed client |
+| Anthropic | `messages.stream` takes `output_config`, `thinking`, `system`, `max_tokens`, `messages`, `model`. **`temperature`, `top_p` and `top_k` do not exist on this method at all** — the spec's "no sampling parameters" rule is enforced by the SDK, not only by us. `APIError(message, request, *, body)`: `request` is positional and typed non-optional, but `None` is accepted at runtime |
+| Smallest.ai | `waves.synthesize_tts` **does** take `model=` and `sample_rate=` — this is the question Step 3's comment asks. Both are passed from `Settings`, not left to the provider default |
+
+- [x] **Step 2: Write the hello-handshake test**
 
 `backend/tests/unit/api/test_ws_hello.py` imports `TestClient` from `fastapi.testclient`, `Settings` from `scout.config`, and `create_app` from `scout.main`. It defines:
 
@@ -1030,7 +1039,7 @@ Write what each prints into a comment at the top of the corresponding provider m
 
 Run: `python -m pytest backend/tests/unit/api/test_ws_hello.py -q` → FAIL (no `/ws` route).
 
-- [ ] **Step 3: Provider wrappers**
+- [x] **Step 3: Provider wrappers**
 
 `backend/scout/providers/deepgram_stt.py` carries the module docstring "One Deepgram WebSocket per browser session, kept open for the whole session (P2, arch §7.2)." It uses `from __future__ import annotations`, imports `asyncio`, `Awaitable` and `Callable` from `collections.abc`, `AsyncDeepgramClient` from `deepgram`, `EventType` from `deepgram.core.events`, `Settings` from `scout.config`, and `telemetry` from `scout.platform`. It defines the type alias `Handler = Callable[[str], Awaitable[None]]` and `class DeepgramStream`:
 
@@ -1056,7 +1065,7 @@ Run: `python -m pytest backend/tests/unit/api/test_ws_hello.py -q` → FAIL (no 
 - `__init__(self, settings: Settings) -> None`: creates `self._client = AsyncSmallestAI(api_key=settings.smallest_api_key)`; sets `self._voice = settings.smallest_voice_id` and the public attribute `self.sample_rate = settings.smallest_sample_rate`.
 - `async stream(self, text: str) -> AsyncIterator[bytes]`: sets `first = True`. Comment: "Verify in Step 1 whether the installed SDK takes model=/sample_rate= here and pass them if so." It iterates `async for chunk in self._client.waves.synthesize_tts(text=text, voice_id=self._voice)`: on the first chunk it calls `telemetry.mark(telemetry.TTS_FIRST_BYTE)`, clears `first`, and if `chunk[:4] == b"RIFF"` replaces `chunk` with `chunk[44:]` (comment: "strip a WAV header; the browser plays raw PCM16"). Every non-empty `chunk` is yielded.
 
-- [ ] **Step 4: The gateway and the stub turn**
+- [x] **Step 4: The gateway and the stub turn**
 
 `backend/scout/api/ws.py` carries the module docstring "The mic WebSocket — one of the two doors into the backend (arch §6.4, §11.1)." It uses `from __future__ import annotations`, imports `asyncio`, `json`, `APIRouter`, `WebSocket`, `WebSocketDisconnect` from `fastapi`, and `CONTRACT_VERSION` from `scout.contract`. It creates `router = APIRouter()` and the constant `CLOSE_CONTRACT_MISMATCH = 4400`.
 
@@ -1104,12 +1113,19 @@ Two JSON schemas are defined as module constants:
 
 In `backend/scout/main.py` `create_app`, add two imports — `from scout.api.ws import router as ws_router` and `from scout.conversation.stub_turn import StubSession` — and, inside `create_app`, the two lines `app.include_router(ws_router)` and `app.state.session_factory = StubSession`.
 
-- [ ] **Step 5: Run the handshake tests**
+- [x] **Step 5: Run the handshake tests**
 
 Run: `python -m pytest backend/tests/unit/api -q`
 Expected: pass
 
-- [ ] **Step 6: Integration ping (skipped without keys)**
+**Two corrections found here, both in this section's own test code.**
+
+1. **The close code cannot be read from the exception's string.** Under starlette 1.6.0, `str(WebSocketDisconnect())` is `""`, so `assert "4400" in str(e.value)` can never pass however correct the gateway is. Read the attributes instead — `e.value.code` and `e.value.reason` — which is a stricter assertion anyway: it pins the exact code (`4400`) and reason (`contract_version_mismatch`) rather than a substring.
+2. **Both specified tests are negative.** They pass just as well against a socket that rejects *everything*, so a third case is needed: send the correct hello and assert the server answers `{"type": "hello", "contract_version": "1"}` and keeps the socket open. Without it, a gateway that closed on every frame would be reported green.
+
+Also expect `ruff check` to flag this section's code as written: the blind `except Exception` in the handshake (BLE001 — keep it, a bad first frame of any kind must close cleanly rather than leak a traceback, so justify it with a `noqa` and a comment) and `re.I` (FURB167 — spell it `re.IGNORECASE`).
+
+- [x] **Step 6: Integration ping (skipped without keys)**
 
 `backend/tests/integration/test_providers_ping.py` imports `os`, `pytest`, and `Settings` from `scout.config`, and sets the module-level `pytestmark = pytest.mark.skipif(not os.getenv("GROQ_API_KEY"), reason="provider keys not set")`. It defines three async tests:
 
@@ -1119,7 +1135,7 @@ Expected: pass
 
 Run with a populated `backend/.env`: `python -m pytest backend/tests/integration -q` → 3 passed. Fix any signature mismatch found in Step 1 here, not later.
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 Run `git add backend/scout backend/tests` then `git commit -m "infra: walking skeleton — WebSocket gateway, provider wrappers, stub turn touching every provider"`.
 

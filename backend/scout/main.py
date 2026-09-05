@@ -9,7 +9,9 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from scout.api.http import router as http_router
+from scout.api.ws import router as ws_router
 from scout.config import Settings
+from scout.conversation.stub_turn import StubSession
 from scout.platform import telemetry
 from scout.platform.boot import BootError, check_secrets, run_boot_checks
 
@@ -25,6 +27,8 @@ def create_app(settings: Settings) -> FastAPI:
         allow_headers=["content-type", "x-operator-token"],
     )
     app.include_router(http_router)
+    app.include_router(ws_router)
+    app.state.session_factory = StubSession
     telemetry.configure(settings.latency_log_path)
     return app
 
