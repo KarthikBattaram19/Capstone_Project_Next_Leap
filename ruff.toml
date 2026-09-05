@@ -1,0 +1,5 @@
+# Applies to code outside backend/ (evals/, scripts/). backend/ keeps its own settings
+# in backend/pyproject.toml; ruff uses the closest config to each file, so the two do
+# not conflict. Kept identical so a file does not change meaning when it moves.
+line-length = 100
+target-version = "py312"

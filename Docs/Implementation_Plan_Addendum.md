@@ -1262,7 +1262,7 @@ Run `git add backend/Dockerfile backend/railway.json backend/.dockerignore front
   - `score(lines) -> ScoreReport` — p99 per stage per turn type, the 2× rule, `pass: bool`
   - `TARGETS_MS = {"L0":300,"L1":700,"L2":1500,"L3":1500,"L4":3000,"L5":6000,"L6":5000,"L7":5000,"L8":30000}`
 
-- [ ] **Step 1: Write the scorer test**
+- [x] **Step 1: Write the scorer test**
 
 `evals/latency/test_score.py` imports `TARGETS_MS` and `score` from `evals.latency.score` and defines:
 
@@ -1272,7 +1272,14 @@ Run `git add backend/Dockerfile backend/railway.json backend/.dockerignore front
 
 Run: `python -m pytest evals/latency -q` → FAIL.
 
-- [ ] **Step 2: Implement the scorer**
+**The first test as written above contradicts the scorer in Step 2, and the scorer is the one that is right.** With 99 samples at 1200 ms and one at 3200 ms, nearest-rank p99 of 100 samples is the 99th — `xs[98]` — which is **1200**, so `rep.p99["A"]["L2"] >= 3000` can never hold. That is p99 behaving as the plan defines it ("the time within which 99 of every 100 requests finish", plan §2); the lone outlier is p100, and catching it is the **2× rule's** job, which the same test's other two assertions already check. Assert `== 1200` instead, and add a second case where the whole bulk is slow (100 × 1800 ms) so the p99 rule itself is covered with no 2× violation — otherwise a uniformly slow system would pass untested.
+
+Two more things this section omits:
+
+- **`evals/` needs its own pytest config.** The suites run from the repo root, where `backend/pyproject.toml`'s `[tool.pytest.ini_options]` does not apply, so an async test is not collected. `evals/pytest.ini` with `asyncio_mode = auto` fixes it and leaves the backend's config untouched (pytest picks the closest config to the arguments).
+- **Nothing lints `evals/` or `scripts/`.** CI runs `ruff check backend` only, and neither directory has a config, so both would silently drift to ruff's default line length. A root `ruff.toml` mirroring `line-length = 100` / `target-version = "py312"` keeps a file's meaning stable if it moves between the two.
+
+- [x] **Step 2: Implement the scorer**
 
 `evals/latency/score.py` carries the module docstring "p99 per stage, per turn type; hard failure if any single request exceeds 2× its target (spec §5.2)." It uses `from __future__ import annotations` and imports `json`, `math`, `sys`, and `dataclass`, `field` from `dataclasses`. It defines:
 
@@ -1284,7 +1291,9 @@ Run: `python -m pytest evals/latency -q` → FAIL.
 
 Run: `python -m pytest evals/latency -q` → pass.
 
-- [ ] **Step 3: The spike driver**
+- [x] **Step 3: The spike driver**
+
+**Test the driver's arithmetic — it is what Gate L's numbers are.** `evals/latency/test_spike_driver.py` runs a local `websockets.serve` fake that replays the real gateway's sequence (hello → interim → ack → `audio_out` start → chunk → outcome) and asserts a Type A row carries `L2`/`L4` and a Type B row `L3`/`L5` and never the other pair — using the wrong pair would score the explanation budget against the shortlist target and silently pass or fail the gate. Two details make the fake faithful: the WAV must be **non-silent**, because the driver pads with silence after the utterance and the fake keys its endpointing off exactly that boundary, as Deepgram does; and the fake must not close the socket until the padding starts, or the driver's next `send` raises mid-stream.
 
 `scripts/latency_spike.py` — a Python WebSocket client that replays a WAV as 20 ms PCM16 frames at real time, then measures every stage from the moment the last frame was sent. It carries the module docstring "Gate L driver. Replays recorded utterances against the deployed /ws and times each stage." It uses `from __future__ import annotations`, imports `argparse`, `asyncio`, `json`, `time`, `wave`, `Path` from `pathlib`, and `websockets`, and defines the constant `FRAME_MS = 20`. Its contents:
 
