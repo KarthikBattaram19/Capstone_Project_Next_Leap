@@ -125,3 +125,30 @@ def test_an_unrecognised_society_type_is_an_error(tmp_path):
     wb.save(p)
     with pytest.raises(ValueError, match="Society Type must be one of"):
         import_sheet(p, date(2026, 9, 2))
+
+
+def _sheet_without(tmp_path, column):
+    """Copy the fixture with one column removed."""
+    from openpyxl import Workbook, load_workbook
+
+    src = load_workbook(SAMPLE, read_only=True)["Bangalore_Properties_List"]
+    rows = list(src.iter_rows(values_only=True))
+    drop = [str(h).strip() for h in rows[0]].index(column)
+    wb = Workbook()
+    ws = wb.active
+    ws.title = "Bangalore_Properties_List"
+    for row in rows:
+        ws.append([c for i, c in enumerate(row) if i != drop])
+    p = tmp_path / "missing.xlsx"
+    wb.save(p)
+    return p
+
+
+@pytest.mark.parametrize("column", ["availability_status", "Society Type"])
+def test_a_missing_2026_09_05_column_is_an_error_not_a_silent_null(tmp_path, column):
+    # Gate D was re-decided on the strength of `availability_status`, and `society_type`
+    # was added to the schema because the sheet carries `Society Type`. If either column
+    # ever disappears the importer must fail loudly: a silent null availability would
+    # quietly stop curation dropping unavailable rows (spec §3.1) and nothing would say so.
+    with pytest.raises(SheetSchemaError, match=column):
+        import_sheet(_sheet_without(tmp_path, column), date(2026, 9, 2))

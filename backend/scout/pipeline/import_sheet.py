@@ -30,7 +30,20 @@ class SheetSchemaError(ValueError):
 
 
 SHEET = "Bangalore_Properties_List"
-REQUIRED = ("locality", "bhk_type", "Rent", "Deposit", "Latitude", "Longitude")
+# Every column the record cannot be built honestly without. `availability_status` and
+# `Society Type` joined the sheet on 2026-09-05: Gate D was re-decided on the strength of
+# the availability marker, so if either column ever vanishes the import must fail rather
+# than write a null that reads as "not stated" and quietly stops curation dropping rows.
+REQUIRED = (
+    "locality",
+    "bhk_type",
+    "Rent",
+    "Deposit",
+    "Latitude",
+    "Longitude",
+    "Society Type",
+    "availability_status",
+)
 SOURCE_PATH = "data/Bangalore_Properties_List.xlsx"
 
 # Columns the owner added on 2026-09-05 that hold personal data. They are named here so
