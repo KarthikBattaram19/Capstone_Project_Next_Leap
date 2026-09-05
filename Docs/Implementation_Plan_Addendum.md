@@ -836,7 +836,9 @@ Run `git add backend/scout/pipeline backend/tests/unit/pipeline data/bundle/list
 
 1. **`Settings` has more fields than `.env.example` has names, and that is correct.** `.env.example` lists what an operator must *supply*; `Settings` also carries defaults nobody sets by hand (`port`, `latency_log_path`, the model ids, every speech-timing value). Do **not** "fix" the mismatch by adding empty `PORT=` / `LATENCY_LOG_PATH=` lines, and do not drop the fields. The boot check's `REQUIRED` map — the nine names below — is the list that must match `.env.example`'s secrets exactly.
 2. **Tests must not read a developer's real `.env`.** `SettingsConfigDict(env_file=".env")` resolves relative to the working directory, so a `backend/.env` can leak into a test run started from `backend/`. Explicit keyword arguments win over the file, which is why the `settings(**over)` helper passes every field; where a test needs a genuinely empty environment (the `/health` test) it passes `_env_file=None`. Follow both patterns.
-3. **A boot check that passes silently is worthless.** `run_boot_checks` runs *every* check and reports *all* failures, so the operator missing two secrets is told both at once rather than one per restart. Add the same red-green discipline used in 0.5: write the failing test, watch it fail **for the reason you intended** (a wrong fixture failing early is not a red test), then implement.
+3. **Write the tests below in a lint-clean shape.** As first written here they tripped `ruff check`, which CI runs: use a dict literal `base = {...}` rather than `base = dict(...)` (C408), and combine `with t.trace(...) as tr, t.span(...):` into one statement wherever nothing sits between them (SIM117). The first telemetry test keeps its nested form, because `mark()` sits between the two spans. Behaviour is identical either way.
+4. **Clear `__pycache__` before trusting a mutation test.** Breaking a line by swapping one character for another of the same length (`"a"` → `"w"`) leaves the source's size unchanged; restoring it can leave Python running the cached bytecode of the broken version, so a green run means nothing. `find backend -name __pycache__ -type d -exec rm -rf {} +` first.
+5. **A boot check that passes silently is worthless.** `run_boot_checks` runs *every* check and reports *all* failures, so the operator missing two secrets is told both at once rather than one per restart. Add the same red-green discipline used in 0.5: write the failing test, watch it fail **for the reason you intended** (a wrong fixture failing early is not a red test), then implement.
 
 **Files:**
 - Create: `backend/scout/config.py`, `backend/scout/platform/__init__.py`, `backend/scout/platform/boot.py`, `backend/scout/platform/telemetry.py`, `backend/scout/contract/__init__.py`, `backend/scout/api/__init__.py`, `backend/scout/api/http.py`, `backend/scout/main.py`
@@ -852,7 +854,7 @@ Run `git add backend/scout/pipeline backend/tests/unit/pipeline data/bundle/list
   - `GET /health → {"status":"ok","contract_version":"1"}`, `GET /contract → {"contract_version":"1"}`
   - `create_app(settings) -> FastAPI` in `scout/main.py`; `python -m scout.main` runs the boot checks **then** binds the port
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
 `backend/tests/unit/platform/test_boot.py` imports `pytest`, `Settings` from `scout.config`, and `BootError`, `check_secrets`, `run_boot_checks` from `scout.platform.boot`. It defines:
 
@@ -865,15 +867,17 @@ Run `git add backend/scout/pipeline backend/tests/unit/pipeline data/bundle/list
 
 - `test_trace_records_named_spans_and_turn_type()`: inside `with t.trace(turn_type="A") as tr:` it opens `with t.span("stt.final"): pass`, calls `t.mark("stt.interim")`, then opens `with t.span("external.groq"): pass`. It collects `names = [s.name for s in tr.spans]` and asserts `names == ["stt.final", "external.groq"]`, asserts `tr.marks[0].name == "stt.interim"` and `tr.turn_type == "A"`, and asserts `all(s.duration_ms >= 0 for s in tr.spans)`.
 - `test_export_line_has_no_transcript_text()`: inside `with t.trace(turn_type="B") as tr:` it opens `with t.span("retrieval"): pass`; then `line = tr.to_json()` and asserts `"retrieval" in line and "transcript" not in line`.
+- `test_the_jsonl_export_writes_one_line_per_turn(tmp_path)`: **added during implementation.** Configures a log path two directories deep, runs two traces, and asserts the file holds exactly two lines in order `["A", "B"]` with the right span name — i.e. that the parent directory is created and that lines are *appended*, not overwritten. Task 0.10 scores Gate L from this file, so it is the one telemetry output another task reads; leaving it untested would have surfaced as a Gate L surprise.
+- `test_no_log_path_writes_nothing_and_a_span_outside_a_turn_is_harmless(tmp_path)`: **added during implementation.** With no log path configured, a `span()` outside any trace runs its body and records nothing, and no file is written. Timing code must not raise merely because it ran outside a turn.
 
 `backend/tests/unit/api/test_health.py` imports `TestClient` from `fastapi.testclient`, `Settings` from `scout.config`, and `create_app` from `scout.main`. It defines `test_health_and_contract()`: builds `app = create_app(Settings(_env_file=None, cors_allowed_origins="http://localhost:3000"))`, wraps it in `c = TestClient(app)`, asserts `c.get("/health").json() == {"status": "ok", "contract_version": "1"}`, and asserts `c.get("/contract").json()["contract_version"] == "1"`.
 
-- [ ] **Step 2: Run to verify they fail**
+- [x] **Step 2: Run to verify they fail**
 
 Run: `python -m pytest backend/tests/unit/platform backend/tests/unit/api -q`
 Expected: FAIL — modules not found
 
-- [ ] **Step 3: Implement settings**
+- [x] **Step 3: Implement settings**
 
 `backend/scout/config.py` carries the module docstring "All configuration. Every secret is a backend environment variable (spec §5.4)." It uses `from __future__ import annotations`, imports `field_validator` from `pydantic`, and `BaseSettings`, `SettingsConfigDict` from `pydantic_settings`.
 
@@ -914,7 +918,7 @@ It also defines:
 - A property `origins(self) -> list[str]` returning `[o.strip() for o in self.cors_allowed_origins.split(",") if o.strip()]`.
 - A `@field_validator("deepgram_endpointing_ms")` classmethod `_endpointing_floor(cls, v: int) -> int` that raises `ValueError("P3: endpointing must not be shorter than 400 ms")` when `v < 400`, otherwise returns `v`.
 
-- [ ] **Step 4: Implement the boot-check framework**
+- [x] **Step 4: Implement the boot-check framework**
 
 `backend/scout/platform/boot.py` carries the module docstring "Fail at start-up, never mid-sentence (arch §12.3). Every check runs; every failure is listed." It uses `from __future__ import annotations`, imports `Callable` from `collections.abc` and `Settings` from `scout.config`. It defines:
 
@@ -937,7 +941,7 @@ It also defines:
 - `check_secrets(s: Settings) -> None`: computes `missing = [env for env, attr in REQUIRED.items() if not getattr(s, attr)]`; if `missing` is non-empty it raises `BootError("missing required environment variables: " + ", ".join(missing))`. Then, if `not s.origins` or any origin `o == "*"`, it raises `BootError("CORS_ALLOWED_ORIGINS must be an explicit allowlist, never '*' or empty")`.
 - `run_boot_checks(s: Settings, checks: list[BootCheck]) -> None`: starts with `failures: list[str] = []`; loops over every `check` in `checks`, calling `check(s)` inside a `try` and, on `BootError as e`, appending `str(e)` to `failures` (so every check runs). After the loop, if `failures` is non-empty it raises `BootError("boot check failed:\n  - " + "\n  - ".join(failures))`.
 
-- [ ] **Step 5: Implement telemetry**
+- [x] **Step 5: Implement telemetry**
 
 `backend/scout/platform/telemetry.py` carries the module docstring "One trace per turn, one span per component (arch §13.3). No PII, no transcript text." It uses `from __future__ import annotations` and imports `contextvars`, `json`, `time`, `uuid`, `contextmanager` from `contextlib`, `dataclass` and `field` from `dataclasses`, and `Path` from `pathlib`.
 
@@ -961,7 +965,7 @@ Functions:
 - `span(name: str)`, a `@contextmanager`: reads `tr = _current.get()`; if `tr is None` it yields (nothing) and returns. Otherwise it builds `s = Span(name=name, start_ms=tr.now_ms())`, appends `s` to `tr.spans`, yields `s` inside a `try`, and in the `finally` sets `s.end_ms = tr.now_ms()`.
 - `mark(name: str) -> None`: reads `tr = _current.get()`; if `tr is not None` it appends `Mark(name=name, at_ms=tr.now_ms())` to `tr.marks`.
 
-- [ ] **Step 6: Implement the HTTP routes and the app factory**
+- [x] **Step 6: Implement the HTTP routes and the app factory**
 
 `backend/scout/contract/__init__.py` contains the single constant `CONTRACT_VERSION = "1"`.
 
@@ -977,12 +981,12 @@ Functions:
 - `main() -> None`: builds `settings = Settings()`; calls `run_boot_checks(settings, BOOT_CHECKS)` inside a `try`; on `BootError as e` it prints `e` to `sys.stderr` and calls `sys.exit(2)` — comment: "Railway's health check sees a dead process, not a renter". Only then does it call `uvicorn.run(create_app(settings), host="0.0.0.0", port=settings.port, ws_ping_interval=20)`.
 - The `if __name__ == "__main__": main()` guard.
 
-- [ ] **Step 7: Run the tests**
+- [x] **Step 7: Run the tests**
 
 Run: `python -m pytest backend/tests/unit -q`
 Expected: all pass
 
-- [ ] **Step 8: Commit**
+- [x] **Step 8: Commit**
 
 Run `git add backend/scout backend/tests/unit` then `git commit -m "infra: settings, boot-check framework, per-turn telemetry, /health and /contract"`.
 

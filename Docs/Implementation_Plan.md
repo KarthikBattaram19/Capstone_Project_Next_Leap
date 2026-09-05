@@ -97,9 +97,10 @@ Nothing after this phase is safe until both gates clear. Tasks 0.1–0.3 are sha
 | 0.4 Source inventory | done | `data/SOURCE_NOTES.md`, rewritten for the 2026-09-05 sheet |
 | 0.5 Importer | done | 9,180 records imported; 29 tests (10 PII, 5 dedupe, 14 import) |
 | 0.6 Curate → **Gate D** | done, **gate decided** | 2,370 listings over 464 localities; 7 curation tests; `data/GATE_D.md` |
-| 0.7–0.10 Infrastructure → **Gate L** | **not started** | no `scout/config.py`, `scout/platform/`, `scout/api/`, `scout/main.py`, and no tests for them |
+| 0.7 Settings, boot checks, telemetry, HTTP | done | 74 tests (6 new); `python -m scout.main` exits 2 on a missing secret |
+| 0.8–0.10 Infrastructure → **Gate L** | **not started** | no WebSocket gateway, no provider wrappers, no deployment, no `data/GATE_L.md` |
 
-**The next task is 0.7.** The data track is finished and Gate D is decided; nothing in 0.1–0.6 is outstanding. Gate L is untouched, so no work beyond Phase 0 may begin.
+**The next task is 0.8.** Tasks 0.1–0.7 are finished and Gate D is decided. Gate L is still undecided, so no work beyond Phase 0 may begin — and 0.8 needs real provider keys in `backend/.env` for its three live ping tests.
 
 ### Task 0.1 — Repository scaffold, toolchain, CI skeleton
 - **Delivers:** a Python backend project (pinned to Python 3.12, every dependency pinned to an exact version), a Next.js frontend project, an example environment file listing every secret's name, a CI workflow that runs the tests, and the ignore rules that commit the bundle but never raw guide fetches.
@@ -153,6 +154,7 @@ Nothing after this phase is safe until both gates clear. Tasks 0.1–0.3 are sha
 - **Delivers:** typed settings read from the environment (every secret, the model IDs, the 400 ms / 400 ms / 1 s speech-timing values); the boot-check framework that runs every check, collects *all* failures, and stops the process before it opens its port; per-turn tracing with the span names the spec's measurement rules require (and a file export for the latency spike); the two tiny HTTP endpoints; the app factory.
 - **Why now:** the skeleton deployed in 0.9 must already fail loudly on a missing secret, and Gate L needs the timing spans.
 - **Done when:** unit tests pass; a missing secret makes the process exit non-zero.
+- **Status: done.** 74 tests (6 new: 3 boot, 3 telemetry — two of the telemetry ones were added beyond the addendum's list, covering the JSONL export Gate L reads). `python -m scout.main` with no secrets prints all nine missing names **at once** and exits 2, before any port is bound. `Settings` carries 27 fields; CORS refuses `*` and refuses empty.
 - Detail: addendum → Task 0.7.
 
 ### Task 0.8 — Walking skeleton: the mic WebSocket and one stub turn touching every provider
