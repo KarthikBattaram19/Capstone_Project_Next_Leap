@@ -8,6 +8,7 @@ from pathlib import Path
 
 from scout.domain.listing import ListingRecord
 from scout.pipeline.dedupe import dedupe, detail_score
+from scout.pipeline.pii import assert_no_pii
 
 CAP = 10
 # Spec §3.1 (availability filtering): a null availability_status can never exclude a
@@ -38,6 +39,20 @@ def curate(records: list[ListingRecord]) -> tuple[list[ListingRecord], str]:
     return out, RULE
 
 
+def write_bundle(records: list[ListingRecord], out: Path) -> None:
+    """Serialise, check for personal data, then write. In that order.
+
+    `data/bundle/listings.json` is the one pipeline output that is committed, so it is
+    the last place a leak could become public. The importer already refuses to read the
+    sheet's three PII columns and strips text on the way in; this is defence in depth
+    against a hand-edited raw file, and it fails the build rather than publishing.
+    """
+    payload = json.dumps([r.model_dump(mode="json") for r in records], indent=2)
+    assert_no_pii(payload, where=str(out))
+    out.parent.mkdir(parents=True, exist_ok=True)
+    out.write_text(payload, encoding="utf-8")
+
+
 if __name__ == "__main__":
     ap = argparse.ArgumentParser()
     ap.add_argument("--inp", default="data/raw/listings_all.json")
@@ -48,10 +63,7 @@ if __name__ == "__main__":
         for x in json.loads(Path(a.inp).read_text(encoding="utf-8"))
     ]
     kept, rule = curate(raw)
-    Path(a.out).parent.mkdir(parents=True, exist_ok=True)
-    Path(a.out).write_text(
-        json.dumps([r.model_dump(mode="json") for r in kept], indent=2), encoding="utf-8"
-    )
+    write_bundle(kept, Path(a.out))
     counts: dict[str, int] = {}
     for r in kept:
         counts[r.locality] = counts.get(r.locality, 0) + 1

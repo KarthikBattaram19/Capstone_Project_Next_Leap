@@ -12,6 +12,7 @@ from scout.domain.listing import ListingRecord
 from scout.domain.manifest import DatasetManifest
 from scout.pipeline.curate import RULE
 from scout.pipeline.gap_report import gap_report
+from scout.pipeline.pii import assert_no_pii
 
 BUNDLE = Path("data/bundle")
 MANIFEST = BUNDLE / "manifest.json"
@@ -29,7 +30,11 @@ def load_manifest() -> DatasetManifest | None:
 
 
 def save_manifest(m: DatasetManifest) -> None:
-    MANIFEST.write_text(m.model_dump_json(indent=2), encoding="utf-8")
+    # Committed output, so it gets the same last check as listings.json: locality names
+    # and merged-record ids are the fields a leak could ride in on.
+    payload = m.model_dump_json(indent=2)
+    assert_no_pii(payload, where=str(MANIFEST))
+    MANIFEST.write_text(payload, encoding="utf-8")
 
 
 def from_import(
