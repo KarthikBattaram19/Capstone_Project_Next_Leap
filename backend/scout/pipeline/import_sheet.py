@@ -52,26 +52,28 @@ PII_COLUMNS = frozenset({"Name", "Phone Number", "Voter ID"})
 
 # The only columns the importer may read. The three PII columns above are absent on
 # purpose. This is the first line of defence; strip_pii is the second.
-IMPORTED_COLUMNS = frozenset({
-    "Sl.",
-    "locality",
-    "property_type",
-    "bhk_type",
-    "bedrooms",
-    "bathrooms",
-    "balconies",
-    "square_feet",
-    "Rent",
-    "Deposit",
-    "furnishing",
-    "parking_available",
-    "society_name",
-    "Society Type",
-    "total_floors",
-    "Latitude",
-    "Longitude",
-    "availability_status",
-})
+IMPORTED_COLUMNS = frozenset(
+    {
+        "Sl.",
+        "locality",
+        "property_type",
+        "bhk_type",
+        "bedrooms",
+        "bathrooms",
+        "balconies",
+        "square_feet",
+        "Rent",
+        "Deposit",
+        "furnishing",
+        "parking_available",
+        "society_name",
+        "Society Type",
+        "total_floors",
+        "Latitude",
+        "Longitude",
+        "availability_status",
+    }
+)
 
 # Text a source uses to say "this field does not apply"; it is null, never a number.
 _NOT_APPLICABLE = {"", "not applicable", "n/a", "na", "-"}

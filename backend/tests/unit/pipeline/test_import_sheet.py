@@ -53,9 +53,7 @@ def test_output_carries_no_pii():
 def test_missing_required_column_is_an_error(tmp_path):
     from openpyxl import Workbook, load_workbook
 
-    src = load_workbook(SAMPLE, read_only=True)[
-        "Bangalore_Properties_List"
-    ]
+    src = load_workbook(SAMPLE, read_only=True)["Bangalore_Properties_List"]
     rows = list(src.iter_rows(values_only=True))
     header = list(rows[0])
     drop = header.index("locality")

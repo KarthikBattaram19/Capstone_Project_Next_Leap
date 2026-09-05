@@ -42,9 +42,7 @@ def _same_flat(a: ListingRecord, b: ListingRecord) -> bool:
     # tower from collapsing into one listing (eval.md EC-DUP-03/04).
     if a.coordinates and b.coordinates:
         return (
-            haversine_m(
-                a.coordinates.lat, a.coordinates.lng, b.coordinates.lat, b.coordinates.lng
-            )
+            haversine_m(a.coordinates.lat, a.coordinates.lng, b.coordinates.lat, b.coordinates.lng)
             <= MERGE_RADIUS_M
         )
     # Exact-address arm when either coordinate is missing.

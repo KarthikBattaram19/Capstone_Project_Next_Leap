@@ -59,8 +59,7 @@ if __name__ == "__main__":
     ap.add_argument("--out", default="data/bundle/listings.json")
     a = ap.parse_args()
     raw = [
-        ListingRecord.model_validate(x)
-        for x in json.loads(Path(a.inp).read_text(encoding="utf-8"))
+        ListingRecord.model_validate(x) for x in json.loads(Path(a.inp).read_text(encoding="utf-8"))
     ]
     kept, rule = curate(raw)
     write_bundle(kept, Path(a.out))

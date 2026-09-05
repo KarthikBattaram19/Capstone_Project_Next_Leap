@@ -44,9 +44,7 @@ def from_import(
         ListingRecord.model_validate(x)
         for x in json.loads((BUNDLE / "listings.json").read_text(encoding="utf-8"))
     ]
-    raw = [
-        ListingRecord.model_validate(x) for x in json.loads(raw_all.read_text(encoding="utf-8"))
-    ]
+    raw = [ListingRecord.model_validate(x) for x in json.loads(raw_all.read_text(encoding="utf-8"))]
     counts: dict[str, int] = {}
     for r in kept:
         counts[r.locality] = counts.get(r.locality, 0) + 1
