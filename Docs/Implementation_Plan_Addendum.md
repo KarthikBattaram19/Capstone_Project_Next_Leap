@@ -742,7 +742,7 @@ Expected: FAIL — module not found
 
 Module constants:
 - `CAP = 10`
-- `RULE` — an f-string built from `CAP` whose full text is: "Records marked unavailable are dropped; a null availability (this source publishes no marker) is kept and shown as not stated; duplicates merged (exact society/address or coordinates within 50 m, most-detailed record wins); where a locality exceeds 10, keep the 10 records with the most non-null schema fields, ties broken by newest as-of date then id." (in the source the two occurrences of `10` are written `{CAP}`).
+- `RULE` — an f-string built from `CAP` whose full text is: "Records marked unavailable are dropped; a null availability (a source that publishes no marker) is kept and shown as not stated; duplicates merged (exact society/address or coordinates within 50 m, most-detailed record wins); where a locality exceeds 10, keep the 10 records with the most non-null schema fields, ties broken by newest as-of date then id." (in the source the two occurrences of `10` are written `{CAP}`).
 
 Function `curate(records: list[ListingRecord]) -> tuple[list[ListingRecord], str]`: filters `available = [r for r in records if r.availability_status is not False]` (spec §3.1: a null marker can never exclude a listing); calls `kept, _merged = dedupe(available)`; groups `kept` into `by_loc: dict[str, list[ListingRecord]]` keyed by `r.locality`; then for each `loc` in `sorted(by_loc)` computes `ranked = sorted(by_loc[loc], key=lambda r: (-detail_score(r), -r.scraped_on.toordinal(), r.id))` — most fields first, then **newest** as-of date (the negated ordinal is what makes it newest-first, matching `RULE`'s wording), then id and extends `out` with `ranked[:CAP]`; returns `out, RULE`.
 

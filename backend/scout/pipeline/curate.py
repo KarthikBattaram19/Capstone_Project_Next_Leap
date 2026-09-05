@@ -10,10 +10,11 @@ from scout.domain.listing import ListingRecord
 from scout.pipeline.dedupe import dedupe, detail_score
 
 CAP = 10
-# Spec §3.1 (availability filtering): this source publishes no availability marker, so a
-# null availability_status can never exclude a listing. Only an explicit False does.
+# Spec §3.1 (availability filtering): a null availability_status can never exclude a
+# listing — only an explicit False does. The 2026-09-05 sheet does publish a marker
+# (`availability_status`), but the rule is written for any source, marker or not.
 RULE = (
-    "Records marked unavailable are dropped; a null availability (this source publishes no "
+    "Records marked unavailable are dropped; a null availability (a source that publishes no "
     "marker) is kept and shown as not stated; duplicates merged (exact society/address or "
     f"coordinates within 50 m, most-detailed record wins); where a locality exceeds {CAP}, "
     f"keep the {CAP} records with the most non-null schema fields, ties broken by newest "

@@ -1280,7 +1280,7 @@ Stated plainly, so nothing here reads as more settled than it is.
 
 | Open item | What it could change |
 |---|---|
-| **The supplied spreadsheet carries only 14 of the 23 schema fields** (see `data/SOURCE_NOTES.md`) | The data model (§5), the card layout (§11) and Suite A's coverage all move. The wrapper absorbs a missing field gracefully — it becomes a `null` with `source: DATASET` — but the **vocabulary of things a renter can filter on genuinely depends on what the sheet carries** |
+| **The supplied spreadsheet carries only 16 of the 24 schema fields** (see `data/SOURCE_NOTES.md`; it was 14 of 23 before the 2026-09-05 re-supply) | The data model (§5), the card layout (§11) and Suite A's coverage all move. The wrapper absorbs a missing field gracefully — it becomes a `null` with `source: DATASET` — but the **vocabulary of things a renter can filter on genuinely depends on what the sheet carries** |
 | **The latency budget has not been measured.** L3 leans on P8, and P3's 400 ms window leans on pause timings not yet observed on Indian-English speakers. If the spike misses the targets | The fast model, the hosting region, or the targets themselves change (§7, §8, §9). Component boundaries are drawn so that **swapping the fast model is a config change, not a rewrite** |
 | **How many people can use it at once** is bounded by provider rate limits, not by this design | The single-process model is a demo-scope decision. Exactly one thing would have to move to scale horizontally: the in-memory session map (spec §6.57) |
 | **Nothing here is measured** | Like the specification's budget, this document is derived from requirements, not from a running system. The first thing that should update it is the latency spike's real numbers |

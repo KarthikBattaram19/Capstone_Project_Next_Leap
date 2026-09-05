@@ -49,7 +49,7 @@ The words *straight line* / *by route* are **mandatory in speech**. A bare "abou
 Imported once → static dataset. Every field is voice-filterable and asserted in Suite A: `locality`, `bhk_type` (1RK/1BHK/2BHK/3BHK/3BHK+, held alongside raw `bedrooms`), `bathrooms`, `balconies`, `rent`, `deposit`, `maintenance_charges`, `property_type`, `furnishing`, `square_footage` (carpet vs built-up recorded explicitly), `floor`/`total_floors`, `lift`, `parking` (two/four-wheeler/both/none) with `parking_available` for sources that say only yes or no, `amenities`, `available_from`, `availability_status`, `society_name`, `coordinates`.
 
 Three rules that govern the whole schema:
-- **Fields are confirmed at import time, not assumed.** Anything the sheet doesn't carry goes in the gap report alongside the availability marker. As supplied, 14 of 23 fields are present and there is **no availability marker** (`data/SOURCE_NOTES.md`).
+- **Fields are confirmed at import time, not assumed.** Anything the sheet doesn't carry goes in the gap report alongside the availability marker. As supplied on 2026-09-05, 16 of 24 fields are present and the availability marker is the sheet's **`availability_status`** column (`data/SOURCE_NOTES.md`); the 2026-09-02 sheet had 14 of 23 and no marker.
 - **`null` is a real, displayable value** — *"not stated for this listing"*. Never inferred, never a default (a missing deposit is not ₹0).
 - **`null` never silently satisfies a must-have.** Unknowns surface as their own *"unknown on this filter"* group the tenant can opt into — otherwise every sparse field becomes an invisible filter and a wider schema makes results quietly worse.
 
