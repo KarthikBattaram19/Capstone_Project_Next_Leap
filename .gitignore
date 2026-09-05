@@ -62,7 +62,9 @@ data/raw/
 # ---------------------------------------------------------------------------
 evals/results/
 evals/**/*.log
-latency/
+# Spike output at the repo root only. A bare `latency/` matches at ANY depth and
+# silently hid evals/latency/ — the Gate L scorer and its tests — from git.
+/latency/
 coverage/
 .coverage
 htmlcov/
