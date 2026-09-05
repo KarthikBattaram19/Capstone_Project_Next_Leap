@@ -98,11 +98,16 @@ Nothing after this phase is safe until both gates clear. Tasks 0.1–0.3 are sha
 | 0.5 Importer | done | 9,180 records imported; 29 tests (10 PII, 5 dedupe, 14 import) |
 | 0.6 Curate → **Gate D** | done, **gate decided** | 2,370 listings over 464 localities; 7 curation tests; `data/GATE_D.md` |
 | 0.7 Settings, boot checks, telemetry, HTTP | done | 74 tests (6 new); `python -m scout.main` exits 2 on a missing secret |
-| 0.8 Walking skeleton | code done, **live pings not run** | 77 tests (3 handshake); all four SDK signatures verified against the installed versions; the 3 provider pings skip without keys |
+| 0.8 Walking skeleton | **done** | 79 tests; all four SDK signatures verified against the installed versions; the 3 live provider pings **passed** 2026-09-05 (Groq, Anthropic, Smallest.ai) |
 | 0.9 Deploy the skeleton | **code done, nothing deployed** | Dockerfile, `railway.json`, root `.dockerignore`, mic page, WS client, capture worklet, PCM player — frontend builds and type-checks; `/health` and the handshake verified against the real app locally |
 | 0.10 Latency spike → **Gate L** | tooling done, **gate OPEN and unmeasured** | driver + scorer + 5 tests; `data/GATE_L.md` exists with **no box ticked** and every cell blank |
 
-**The next action is yours, not the agent's.** Task 0.9's remaining steps need accounts: create the Railway service (Step 2) and the Vercel project, then close the CORS loop (Step 6). Nothing has been deployed and no URL exists. 0.8 is also not fully signed off: its "done when" includes *three live provider ping tests*, and those are **skipped** because no keys are present in `backend/.env`. Put real keys there and run `python -m pytest backend/tests/integration -q` — expect `3 passed`. Any signature mismatch surfaces there, and the addendum says to fix it in 0.8 rather than later. Gate L is still undecided, so no work beyond Phase 0 may begin.
+**The next action is yours, not the agent's.** Everything buildable in Phase 0 is built. What remains needs accounts:
+
+1. **Task 0.9 Steps 2 and 6** — create the Railway service (build context = repo root, App Sleeping OFF, healthcheck `/health`), then the Vercel project, then set `CORS_ALLOWED_ORIGINS` to the Vercel origin plus localhost and redeploy.
+2. **Task 0.10 Steps 4 and 5** — record the two utterances, run the spike against each region, and decide Gate L in `data/GATE_L.md`.
+
+**Gate L is open and no box may be ticked without measurements, so no Phase 1 work may begin.**
 
 ### Task 0.1 — Repository scaffold, toolchain, CI skeleton
 - **Delivers:** a Python backend project (pinned to Python 3.12, every dependency pinned to an exact version), a Next.js frontend project, an example environment file listing every secret's name, a CI workflow that runs the tests, and the ignore rules that commit the bundle but never raw guide fetches.
@@ -163,7 +168,8 @@ Nothing after this phase is safe until both gates clear. Tasks 0.1–0.3 are sha
 - **Delivers:** the real WebSocket gateway (first message must carry the contract version or the socket is closed), the real wrappers for Deepgram, Groq, Anthropic and Smallest.ai, and a placeholder turn that exercises each of them end to end — including the "opener before Job 2 replies" trick on the Type B leg. Each provider SDK's actual call signature is checked and written into a comment before use.
 - **Why now:** Gate L is measured on this skeleton. The gateway and wrappers written here are kept; only the stub turn is replaced later (Task 2.10).
 - **Done when:** the handshake tests pass; with real keys, the three provider ping tests pass.
-- **Status: code done; the live half is unverified.** 77 tests pass, including three handshake tests: a wrong contract version and a non-hello first frame both close with code `4400` / `contract_version_mismatch`, and the correct hello is answered and the socket stays open. All four provider SDK signatures were inspected against the installed versions before any call was written, and each wrapper records what it saw. **The three live pings are skipped — no provider keys are set** — so nothing here has spoken to a real provider yet.
+- **Status: done.** 79 tests pass, including three handshake tests: a wrong contract version and a non-hello first frame both close with code `4400` / `contract_version_mismatch`, and the correct hello is answered and the socket stays open. All four provider SDK signatures were inspected against the installed versions before any call was written, and each wrapper records what it saw. **The three live pings passed on 2026-09-05** — Groq returned strict JSON against the schema, Anthropic streamed a JSON explanation, Smallest.ai returned PCM bytes — in 8 s, with **no signature mismatch**, which is what Step 1's inspection was for.
+- **The skip guard was reading the wrong source.** It asked `os.getenv("GROQ_API_KEY")` — the process environment — while the keys live in `backend/.env`, which only `Settings` reads. The pings would have skipped forever while looking like they had run. The guard now consults `Settings`, names every missing key, and says which file it looked in.
 - Detail: addendum → Task 0.8.
 
 ### Task 0.9 — Deploy the skeleton: Railway (backend) then Vercel (frontend), with a bare mic page

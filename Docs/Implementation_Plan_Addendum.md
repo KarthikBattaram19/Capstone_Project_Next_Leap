@@ -1127,7 +1127,9 @@ Also expect `ruff check` to flag this section's code as written: the blind `exce
 
 - [x] **Step 6: Integration ping (skipped without keys)**
 
-`backend/tests/integration/test_providers_ping.py` imports `os`, `pytest`, and `Settings` from `scout.config`, and sets the module-level `pytestmark = pytest.mark.skipif(not os.getenv("GROQ_API_KEY"), reason="provider keys not set")`. It defines three async tests:
+`backend/tests/integration/test_providers_ping.py` imports `pytest` and `ENV_FILE`, `Settings` from `scout.config`.
+
+**Do not gate these on `os.getenv`.** The addendum originally specified `pytest.mark.skipif(not os.getenv("GROQ_API_KEY"), ...)`, which reads the *process environment* — but the conventions put the keys in `backend/.env`, which only `Settings` reads. With a correctly filled `.env` the suite reports `3 skipped` and looks like it ran. The guard must ask the same source the code under test asks: build a `Settings()`, collect the names of any empty key among `GROQ_API_KEY`, `ANTHROPIC_API_KEY`, `SMALLEST_API_KEY` and `SMALLEST_VOICE_ID`, and skip with a reason that **names the missing keys and the file that was consulted** (`ENV_FILE`). It defines three async tests:
 
 - `test_groq_returns_strict_json()`: imports `GroqJob1Client` from `scout.providers.groq_job1` and `STUB_SCHEMA` from `scout.conversation.stub_turn`; awaits `out = await GroqJob1Client(Settings()).complete_json("Echo as JSON.", "hello", "echo", STUB_SCHEMA)`; asserts `set(out) == {"echo"}`.
 - `test_anthropic_streams_json()`: imports `AnthropicJob2Client` from `scout.providers.anthropic_job2` and `STUB_J2_SCHEMA` from `scout.conversation.stub_turn`; joins every delta of `AnthropicJob2Client(Settings()).stream_json("Two sentences as JSON.", "Koramangala", STUB_J2_SCHEMA)` into `buf`; asserts `'"sentences"' in buf`.
