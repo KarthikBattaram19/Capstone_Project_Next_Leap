@@ -96,7 +96,7 @@ pytest-asyncio==1.4.0
 python-dateutil==2.9.0.post0
 python-dotenv==1.2.3
 python-multipart==0.0.32
-pywin32==312
+pywin32==312; sys_platform == "win32"
 PyYAML==6.0.3
 questionary==2.1.1
 referencing==0.37.0
@@ -131,5 +131,5 @@ watchfiles==1.2.0
 wcwidth==0.8.3
 websocket-client==1.9.2
 websockets==17.1
-win32_setctime==1.2.0
+win32_setctime==1.2.0; sys_platform == "win32"
 yarl==1.24.5
