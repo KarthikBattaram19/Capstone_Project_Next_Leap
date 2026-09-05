@@ -2,6 +2,8 @@ export class PcmPlayer {
   private ctx: AudioContext | null = null;
   private nextAt = 0;
   private sources: AudioBufferSourceNode[] = [];
+  /** Trailing byte of a chunk that ended mid-sample; belongs to the next chunk. */
+  private carry: Uint8Array | null = null;
 
   constructor(private sampleRate: number) {}
 
@@ -26,10 +28,32 @@ export class PcmPlayer {
 
   enqueue(pcm16: ArrayBuffer) {
     if (!this.ctx) return;
-    const i16 = new Int16Array(pcm16);
-    const buf = this.ctx.createBuffer(1, i16.length, this.sampleRate);
+
+    // A PCM16 sample is two bytes, but the TTS stream does not chunk on sample
+    // boundaries — real chunk sizes seen from Smallest.ai: 14481, 10849, 16384…
+    // Converting each chunk on its own would throw on an odd length and, worse,
+    // shift every later chunk by one byte, swapping the high and low half of every
+    // sample. That is audible as loud noise, not as silence. So carry the odd
+    // trailing byte over to the next chunk.
+    let bytes = new Uint8Array(pcm16);
+    if (this.carry) {
+      const merged = new Uint8Array(this.carry.length + bytes.length);
+      merged.set(this.carry, 0);
+      merged.set(bytes, this.carry.length);
+      bytes = merged;
+      this.carry = null;
+    }
+    const usable = bytes.length - (bytes.length % 2);
+    if (usable < bytes.length) this.carry = bytes.slice(usable);
+    if (usable === 0) return;
+
+    // DataView, not Int16Array: it has no byte-alignment requirement, and it lets
+    // the little-endian read be explicit rather than inherited from the platform.
+    const view = new DataView(bytes.buffer, bytes.byteOffset, usable);
+    const samples = usable / 2;
+    const buf = this.ctx.createBuffer(1, samples, this.sampleRate);
     const f32 = buf.getChannelData(0);
-    for (let i = 0; i < i16.length; i++) f32[i] = i16[i] / 0x8000;
+    for (let i = 0; i < samples; i++) f32[i] = view.getInt16(i * 2, true) / 0x8000;
     const src = this.ctx.createBufferSource();
     src.buffer = buf;
     src.connect(this.ctx.destination);
@@ -49,5 +73,8 @@ export class PcmPlayer {
     }
     this.sources = [];
     this.nextAt = 0;
+    // A half sample left over from the interrupted utterance must not be glued to
+    // the front of the next one.
+    this.carry = null;
   }
 }
