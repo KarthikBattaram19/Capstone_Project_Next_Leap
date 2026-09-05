@@ -49,7 +49,7 @@ class Settings(BaseSettings):
     utterance_end_ms: int = 1000
     audio_sample_rate: int = 16000
     smallest_voice_id: str = ""
-    smallest_model: str = "lightning_v3.1"
+    smallest_model: str = "lightning_v3.1_pro"
     smallest_sample_rate: int = 24000
 
     session_ttl_s: int = 1800
