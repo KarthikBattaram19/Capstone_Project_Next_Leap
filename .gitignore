@@ -86,3 +86,6 @@ tmp/
 .DS_Store
 Thumbs.db
 desktop.ini
+
+# Excel lock files, created while a workbook is open
+~$*

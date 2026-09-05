@@ -106,6 +106,7 @@ Answers *"Why did you pick this one?"*, *"Is the commute realistic?"*, *"What's 
 | `available_from` | date | Move-in date. Distinct from `availability_status` |
 | `availability_status` | boolean flag | Per the availability and stale-listing bullets |
 | `society_name` | string | |
+| `society_type` | enum: `gated`, `non_gated` | Whether the address is a gated community. The source states it in prose (`Gated Society` / `Non-gated Society`); it is mapped to the enum at import, never stored verbatim |
 | `coordinates` | lat, lng | |
 
 - **Field confirmation is part of the first deliverable.** The schema above is what the system is built to search; **which of these fields the supplied spreadsheet actually carries is confirmed at import time, not assumed here.** Any field the source does not carry is reported in the same gap report as the availability marker — never backfilled from model knowledge, OSM, or the guide index (§3.5 admits no exception for listing facts)

@@ -1,4 +1,4 @@
-"""Import the supplied spreadsheet once. The sheet carries no PII; the guard is defence in depth."""
+"""Import the supplied spreadsheet once. The three PII columns are never read (spec §3.2)."""
 
 from __future__ import annotations
 
@@ -20,6 +20,7 @@ from scout.domain.listing import (
     ListingRecord,
     Parking,
     PropertyType,
+    SocietyType,
 )
 from scout.pipeline.pii import strip_pii
 
@@ -32,8 +33,43 @@ SHEET = "Bangalore_Properties_List"
 REQUIRED = ("locality", "bhk_type", "Rent", "Deposit", "Latitude", "Longitude")
 SOURCE_PATH = "data/Bangalore_Properties_List.xlsx"
 
+# Columns the owner added on 2026-09-05 that hold personal data. They are named here so
+# the allow-list below is checkable, and they are never read into a record.
+PII_COLUMNS = frozenset({"Name", "Phone Number", "Voter ID"})
+
+# The only columns the importer may read. The three PII columns above are absent on
+# purpose. This is the first line of defence; strip_pii is the second.
+IMPORTED_COLUMNS = frozenset({
+    "Sl.",
+    "locality",
+    "property_type",
+    "bhk_type",
+    "bedrooms",
+    "bathrooms",
+    "balconies",
+    "square_feet",
+    "Rent",
+    "Deposit",
+    "furnishing",
+    "parking_available",
+    "society_name",
+    "Society Type",
+    "total_floors",
+    "Latitude",
+    "Longitude",
+    "availability_status",
+})
+
 # Text a source uses to say "this field does not apply"; it is null, never a number.
 _NOT_APPLICABLE = {"", "not applicable", "n/a", "na", "-"}
+
+
+def _cell(cells: tuple[Any, ...], col: dict[str, int], name: str) -> Any:
+    """Read one cell by column name. A name outside the allow-list is a programming error."""
+    if name not in IMPORTED_COLUMNS:
+        raise KeyError(f"{name!r} is not an imported column; see IMPORTED_COLUMNS")
+    i = col.get(name)
+    return cells[i] if i is not None and i < len(cells) else None
 
 
 def _slug(s: str) -> str:
@@ -86,6 +122,25 @@ def _yes_no(v: Any, *, row: int, col: str) -> bool | None:
     raise ValueError(f"row {row}: {col} must be Yes or No, got {s!r}")
 
 
+# The sheet spells society type in prose. Only these two spellings exist in the source
+# (4,590 rows each, no blanks, measured 2026-09-05); anything else is a change worth failing on.
+_SOCIETY_TYPE = {
+    "gated society": SocietyType.GATED,
+    "non-gated society": SocietyType.NON_GATED,
+}
+
+
+def _society_type(v: Any, *, row: int, col: str) -> SocietyType | None:
+    s = _text(v)
+    if s is None:
+        return None
+    try:
+        return _SOCIETY_TYPE[s.casefold()]
+    except KeyError as e:
+        allowed = ", ".join(sorted(_SOCIETY_TYPE))
+        raise ValueError(f"row {row}: {col} must be one of {allowed}, got {s!r}") from e
+
+
 def _enum(kind: type, v: Any, *, row: int, col: str) -> Any:
     s = _text(v)
     if s is None:
@@ -99,8 +154,7 @@ def _enum(kind: type, v: Any, *, row: int, col: str) -> Any:
 
 def _record(cells: tuple[Any, ...], col: dict[str, int], as_of: date, row: int) -> ListingRecord:
     def get(name: str) -> Any:
-        i = col.get(name)
-        return cells[i] if i is not None and i < len(cells) else None
+        return _cell(cells, col, name)
 
     locality = _text(get("locality"))
     if locality is None:
@@ -133,7 +187,9 @@ def _record(cells: tuple[Any, ...], col: dict[str, int], as_of: date, row: int) 
         total_floors=_int(get("total_floors"), row=row, col="total_floors"),
         parking=parking_kind,
         parking_available=_yes_no(get("parking_available"), row=row, col="parking_available"),
+        availability_status=_yes_no(get("availability_status"), row=row, col="availability_status"),
         society_name=_text(get("society_name")),
+        society_type=_society_type(get("Society Type"), row=row, col="Society Type"),
         coordinates=coordinates,
     )
 

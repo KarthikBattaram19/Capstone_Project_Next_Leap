@@ -398,7 +398,7 @@ Expected: FAIL with `ModuleNotFoundError: No module named 'scout.domain'`
 - [ ] **Step 5: Run the tests**
 
 Run: `python -m pytest backend/tests/unit/domain -q`
-Expected: `13 passed`
+Expected: `12 passed` (5 in `test_provenance.py`, 7 in `test_commute_format.py` — measured; the estimate of 13 was one high).
 
 - [ ] **Step 6: Commit**
 
@@ -414,7 +414,7 @@ Run `git add backend/scout/domain backend/tests/unit/domain` then `git commit -m
 
 **Interfaces:**
 - Produces:
-  - Enums `BhkType`, `PropertyType`, `Furnishing`, `Parking`, `AreaBasis` (`carpet|built_up|unknown`)
+  - Enums `BhkType`, `PropertyType`, `Furnishing`, `Parking`, `SocietyType` (`gated|non_gated`), `AreaBasis` (`carpet|built_up|unknown`)
   - `Coordinates(lat: float, lng: float)`
   - `ListingRecord` — the on-disk pydantic model with **exactly** spec §3.1's fields, every one `Optional` (null is real), plus `id`, `source_url`, `merged_from: list[str]`, `scraped_on: date`
   - `Listing.from_record(rec) -> Listing` — every field a `Provenanced` with `source=DATASET`, `timing=PRECOMPUTED`, `as_of=scraped_on`; `Listing.field(name) -> Provenanced`
@@ -422,7 +422,7 @@ Run `git add backend/scout/domain backend/tests/unit/domain` then `git commit -m
   - `GuideChunk(id, locality, title, url, text, position, fetched_on)`
   - `DatasetManifest` with `bundle_version`, `contract_version`, `scraped_on`, `localities: dict[str, int]`, `total_listings`, `availability_marker`, `curation_rule`, `fields_published`, `fields_missing`, `merged_records`, `osm_query_set`, `osm_index_date`, `embedding_model`, `embedding_model_version`, `chunk_count_per_locality`, `guide_sources`, `chromadb_version`, `onnxruntime_version`; `GapReport`
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
 `backend/tests/unit/domain/test_listing.py` imports `date` from `datetime`, `BhkType`, `Coordinates`, `Listing`, `ListingRecord`, `Parking` from `scout.domain.listing`, and `Source`, `Timing` from `scout.domain.provenance`. It defines a helper `make_record(**over)` that builds a base dict with `id="kor-001"`, `source_url="file://data/Bangalore_Properties_List.xlsx#row=1"`, `scraped_on=date(2026, 9, 1)`, `locality="Koramangala"`, `bhk_type=BhkType.BHK2`, `bedrooms=2`, `bathrooms=2`, `balconies=1`, `rent=35000`, `deposit=None`, `maintenance_charges=None`, `maintenance_included=None`, `property_type="apartment"`, `furnishing="semi_furnished"`, `square_footage=1100`, `area_basis="unknown"`, `floor=3`, `total_floors=5`, `lift=True`, `parking=Parking.BOTH`, `parking_available=True`, `amenities=["gym"]`, `available_from=None`, `availability_status=True`, `society_name="Prestige Acropolis"`, `coordinates=Coordinates(lat=12.93, lng=77.62)`, `merged_from=[]`; applies `base.update(over)`; and returns `ListingRecord(**base)`. Four tests follow:
 
@@ -436,12 +436,12 @@ Run `git add backend/scout/domain backend/tests/unit/domain` then `git commit -m
 - `test_query_set_is_fixed_and_named()` — `ids = [q.query for q in OSM_QUERY_SET]`; asserts `OsmQuery.NEAREST_METRO in ids and len(ids) == len(set(ids))` (the metro query is present and no query appears twice).
 - `test_manifest_round_trips_and_records_the_sign_off_items()` — builds `m = DatasetManifest(...)` with `bundle_version="1"`, `contract_version="1"`, `scraped_on=date(2026, 9, 1)`, `localities={"Koramangala": 10, "HSR Layout": 7}`, `total_listings=17`, `availability_marker="css: .status-available"`, `curation_rule="most fields present, then newest"`, `fields_published=["rent", "locality"]`, `fields_missing=["maintenance_charges"]`, `merged_records={"kor-001": ["kor-014"]}`, `osm_query_set=[q.value for q in OsmQuery]`, `osm_index_date=date(2026, 9, 2)`, `embedding_model="all-MiniLM-L6-v2"`, `embedding_model_version="onnx:sha256:abc"`, `chunk_count_per_locality={"Koramangala": 12, "HSR Layout": 9}`, `guide_sources={"Koramangala": ["https://en.wikipedia.org/wiki/Koramangala"]}`, `chromadb_version="x"`, `onnxruntime_version="y"`. Then `again = DatasetManifest.model_validate_json(m.model_dump_json())` and asserts `again == m and again.total_listings == sum(again.localities.values())`.
 
-- [ ] **Step 2: Run to verify they fail**
+- [x] **Step 2: Run to verify they fail**
 
 Run: `python -m pytest backend/tests/unit/domain -q`
 Expected: FAIL — `ModuleNotFoundError: No module named 'scout.domain.listing'`
 
-- [ ] **Step 3: Implement the records**
+- [x] **Step 3: Implement the records**
 
 `backend/scout/domain/listing.py` opens with the docstring `"""Listing: 18 details from spec §3.1, each a wrapped fact, plus id and locality."""`, then `from __future__ import annotations`; it imports `dataclass` from `dataclasses`, `date` from `datetime`, `Enum` from `enum`, `Any` from `typing`, `BaseModel`, `Field` from `pydantic`, and `Provenanced`, `Source`, `Timing` from `scout.domain.provenance`. It defines:
 
@@ -449,10 +449,11 @@ Expected: FAIL — `ModuleNotFoundError: No module named 'scout.domain.listing'`
 - `class PropertyType(str, Enum)` — `APARTMENT = "apartment"`, `INDEPENDENT_HOUSE = "independent_house"`, `VILLA = "villa"`, `BUILDER_FLOOR = "builder_floor"`.
 - `class Furnishing(str, Enum)` — `UNFURNISHED = "unfurnished"`, `SEMI_FURNISHED = "semi_furnished"`, `FULLY_FURNISHED = "fully_furnished"`.
 - `class Parking(str, Enum)` — `TWO_WHEELER = "two_wheeler"`, `FOUR_WHEELER = "four_wheeler"`, `BOTH = "both"`, `NONE = "none"`.
+- `class SocietyType(str, Enum)` — `GATED = "gated"`, `NON_GATED = "non_gated"`. The sheet's `Society Type` column states this in prose; the importer maps it (Task 0.5) rather than storing the text.
 - `class AreaBasis(str, Enum)` — `CARPET = "carpet"`, `BUILT_UP = "built_up"`, `UNKNOWN = "unknown"`.
 - `class Coordinates(BaseModel, frozen=True)` with fields `lat: float` and `lng: float`.
-- The constant `SCHEMA_FIELDS: tuple[str, ...]`, preceded by the comment "The searchable schema (spec §3.1). Every one is Optional: null is a real value.", holding exactly these 23 names in this order: `"locality"`, `"bhk_type"`, `"bedrooms"`, `"bathrooms"`, `"balconies"`, `"rent"`, `"deposit"`, `"maintenance_charges"`, `"maintenance_included"`, `"property_type"`, `"furnishing"`, `"square_footage"`, `"area_basis"`, `"floor"`, `"total_floors"`, `"lift"`, `"parking"`, `"parking_available"`, `"amenities"`, `"available_from"`, `"availability_status"`, `"society_name"`, `"coordinates"`.
-- `class ListingRecord(BaseModel)` with the docstring `"""On-disk shape. Owner names/phones never enter this model (spec §3.2)."""` and these fields:
+- The constant `SCHEMA_FIELDS: tuple[str, ...]`, preceded by the comment "The searchable schema (spec §3.1). Every one is Optional: null is a real value.", holding exactly these 24 names in this order: `"locality"`, `"bhk_type"`, `"bedrooms"`, `"bathrooms"`, `"balconies"`, `"rent"`, `"deposit"`, `"maintenance_charges"`, `"maintenance_included"`, `"property_type"`, `"furnishing"`, `"square_footage"`, `"area_basis"`, `"floor"`, `"total_floors"`, `"lift"`, `"parking"`, `"parking_available"`, `"amenities"`, `"available_from"`, `"availability_status"`, `"society_name"`, `"society_type"`, `"coordinates"`.
+- `class ListingRecord(BaseModel)` with the docstring `"""On-disk shape. Owner names/phones never enter this model (spec §3.2)."""`, `model_config = ConfigDict(extra="forbid")` so that an unknown key raises rather than being dropped quietly (a future sheet cannot smuggle a `Name` or `Phone Number` through), and these fields:
 
 | Field | Type | Default |
 |---|---|---|
@@ -482,6 +483,7 @@ Expected: FAIL — `ModuleNotFoundError: No module named 'scout.domain.listing'`
 | `available_from` | `date \| None` | `None` |
 | `availability_status` | `bool \| None` | `None` |
 | `society_name` | `str \| None` | `None` |
+| `society_type` | `SocietyType \| None` | `None` |
 | `coordinates` | `Coordinates \| None` | `None` |
 
 - `@dataclass(frozen=True) class Listing` with fields `id: str`, `locality: str`, `facts: dict[str, Provenanced[Any]]`, `coordinates: Coordinates | None`. Its classmethod `from_record(cls, rec: ListingRecord) -> "Listing"` builds `facts` as a dict comprehension over every `name in SCHEMA_FIELDS`, mapping each name to `Provenanced(value=getattr(rec, name), source=Source.DATASET, timing=Timing.PRECOMPUTED, as_of=rec.scraped_on, citation_ref=f"dataset:{rec.id}")`, and returns `cls(id=rec.id, locality=rec.locality, facts=facts, coordinates=rec.coordinates)`. Its method `field(self, name: str) -> Provenanced[Any]` returns `self.facts[name]` — with the comment "KeyError for anything outside the schema, on purpose".
@@ -535,12 +537,12 @@ Expected: FAIL — `ModuleNotFoundError: No module named 'scout.domain.listing'`
 
   It carries one validator, `_total_matches(self) -> "DatasetManifest"`, decorated `@model_validator(mode="after")`: if `self.total_listings != sum(self.localities.values())` it raises `ValueError("total_listings must equal the sum of per-locality counts")`; otherwise it returns `self`.
 
-- [ ] **Step 4: Run the tests**
+- [x] **Step 4: Run the tests**
 
 Run: `python -m pytest backend/tests/unit/domain -q`
-Expected: all pass (`17 passed`)
+Expected: all pass — `29 passed` as of 2026-09-05 (12 from Task 0.2; 9 in `test_listing.py`, 3 in `test_manifest.py`, 4 in `test_osm.py`, 1 in `test_guides.py`). The estimate of 17 predates the `balconies`, `parking_available` and `society_type` tests and the invariant tests for the OSM method guard, the manifest total guard and `GuideChunk`.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 Run `git add backend/scout/domain backend/tests/unit/domain` then `git commit -m "feat: domain records — ListingRecord/Listing, OSM query set, GuideChunk, DatasetManifest"`.
 
@@ -561,19 +563,45 @@ evidence, not code.
 **Interfaces:**
 - Produces: `data/SOURCE_NOTES.md` with (a) the sheet column per §3.1 field, (b) the fields the sheet does not carry, (c) the availability marker or the statement that none exists, (d) whether square footage is stated as carpet or built-up, (e) how each column was produced.
 
+**Re-run on 2026-09-05.** The project owner added four columns — `Name`,
+`Phone Number`, `Voter ID` and `availability_status`. The inventory below is
+the re-run result; `data/SOURCE_NOTES.md` was rewritten in full.
+
 - [x] **Step 1: Inventory the sheet**
 
 Read the workbook and record, for every field in `SCHEMA_FIELDS`, which column
-carries it or that none does. Recorded result: **14 of 23 fields present**;
-`maintenance_charges`, `maintenance_included`, `area_basis`, `floor`, `lift`,
-`amenities`, `available_from` and `availability_status` are absent. `parking`
-is present but coarser than the schema — a `Yes`/`No`, not two-/four-wheeler.
+carries it or that none does. Recorded result (2026-09-05): **15 of 23 fields
+present**; `maintenance_charges`, `maintenance_included`, `area_basis`,
+`floor`, `lift`, `amenities` and `available_from` are absent. `parking` is
+present but coarser than the schema — a `Yes`/`No`, not two-/four-wheeler.
+`availability_status` is now present (`Yes` / `No`, never blank), where the
+2026-09-02 inventory found no marker at all.
+
+The inventory also measured the sheet's shape, because Task 0.5 has to survive
+it: no cell in the sheet is blank; `total_floors` mixes `int` (2,290
+`apartment` rows) with the string `Not Applicable` (2,386 `villa` + 4,504
+`independent_house` rows); `Sl.` is unique but not contiguous (9,180 values,
+max 9,185); `Phone Number` is stored as text; and coordinates repeat — 2,750
+distinct pairs over 9,180 rows, 7,422 rows sharing a pair with another row, of
+which only 762 also share a rent. Dedupe's "same pin, different rent, two
+flats" guard therefore decides the fate of most of the sheet.
+
+Dropping unavailable rows (spec §3.1) leaves **4,532 rows over 464
+localities**: 102 of the 566 localities keep no row at all, and 130 localities
+still exceed the 10-per-locality ceiling. Task 0.6 owns the final counts.
 
 - [x] **Step 2: Record the shape and the caveats**
 
-`data/SOURCE_NOTES.md` records 9,180 rows over 566 localities, every row
-carrying coordinates; no availability marker; and **no PII** — the sheet has no
-owner names, phone numbers or email addresses.
+`data/SOURCE_NOTES.md` records 21 columns, 9,180 rows over 566 localities,
+every row carrying coordinates; an availability marker (`availability_status`,
+4,532 `Yes` / 4,648 `No`); and **three PII columns that are never imported** —
+`Name`, `Phone Number` (nine digits) and `Voter ID` (ten mixed-case letters),
+each with 9,180 distinct values.
+
+The nine-digit phone numbers are recorded as a guard defect: the 2026-09-02
+`strip_pii` matched only ten-digit Indian mobiles, so **zero** of these 9,180
+numbers would have been caught. Task 0.5 widens the guard and adds a column
+allow-list.
 
 It also records the provenance of each column, which is the load-bearing
 caveat: coordinates are real (copied from Makaan sale listings), `locality` is
@@ -628,12 +656,13 @@ carries a phone number, the build fails loudly rather than publishing it.
 | `total_floors` | `total_floors` | int; the literal text `Not Applicable` (every `independent_house` and `villa` row) or a blank becomes `None` |
 | `parking_available` | `parking_available` | `True` when `Yes`, `False` when `No`. **`parking` itself stays `None`** — the sheet does not say two- or four-wheeler, and a bare "yes" is never inflated into `both` |
 | `society_name` | `society_name` | trimmed string |
+| `Society Type` | `society_type` | `SocietyType.GATED` for `Gated Society`, `SocietyType.NON_GATED` for `Non-gated Society` (case-insensitive); any other wording raises. The prose is mapped, never stored verbatim |
 | `Latitude`, `Longitude` | `coordinates` | `Coordinates(lat=..., lng=...)` |
 
 `id` is `f"{locality-slug}-{Sl.:05d}"`. `source_url` is
 `f"file://data/Bangalore_Properties_List.xlsx#row={Sl.}"` — the sheet is the
 source, so the reference is the row, not a web page. `scraped_on` carries the
-date the sheet was taken as of. The column `Society Type` has no schema home and is **not imported**.
+date the sheet was taken as of.
 
 - [ ] **Step 1: Write the failing tests**
 

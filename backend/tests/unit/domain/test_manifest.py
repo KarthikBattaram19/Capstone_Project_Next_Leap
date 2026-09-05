@@ -32,3 +32,20 @@ def test_manifest_round_trips_and_records_the_sign_off_items():
     )
     again = DatasetManifest.model_validate_json(m.model_dump_json())
     assert again == m and again.total_listings == sum(again.localities.values())
+
+
+def test_total_that_disagrees_with_the_per_locality_counts_is_refused():
+    import pytest
+
+    with pytest.raises(ValueError, match="total_listings must equal"):
+        DatasetManifest(
+            bundle_version="1",
+            contract_version="1",
+            scraped_on=date(2026, 9, 1),
+            localities={"Koramangala": 10},
+            total_listings=11,
+            availability_marker=None,
+            curation_rule="most fields present, then newest",
+            fields_published=["rent"],
+            fields_missing=[],
+        )

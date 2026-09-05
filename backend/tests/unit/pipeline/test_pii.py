@@ -15,3 +15,16 @@ def test_strips_emails():
 def test_leaves_rent_and_pincode_alone():
     s = "Rent 35000, deposit 200000, pincode 560034"
     assert strip_pii(s) == s
+
+
+def test_strips_bare_nine_digit_numbers():
+    # The supplied sheet's Phone Number column is nine digits, not the ten an
+    # Indian mobile carries. The guard must still catch it.
+    out = strip_pii("owner 395862397 call anytime")
+    assert "395862397" not in out
+    assert "[phone removed]" in out
+
+
+def test_leaves_a_coordinate_alone():
+    s = "12.91285324, 77.57820129"
+    assert strip_pii(s) == s

@@ -7,7 +7,7 @@ from datetime import date
 from enum import Enum
 from typing import Any
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 from scout.domain.provenance import Provenanced, Source, Timing
 
@@ -38,6 +38,11 @@ class Parking(str, Enum):
     FOUR_WHEELER = "four_wheeler"
     BOTH = "both"
     NONE = "none"
+
+
+class SocietyType(str, Enum):
+    GATED = "gated"
+    NON_GATED = "non_gated"
 
 
 class AreaBasis(str, Enum):
@@ -75,12 +80,17 @@ SCHEMA_FIELDS: tuple[str, ...] = (
     "available_from",
     "availability_status",
     "society_name",
+    "society_type",
     "coordinates",
 )
 
 
 class ListingRecord(BaseModel):
     """On-disk shape. Owner names/phones never enter this model (spec §3.2)."""
+
+    # An unknown key is a mistake, not something to drop quietly: if a future sheet ever
+    # feeds a `Name` or `Phone Number` column in here, the build fails instead of ignoring it.
+    model_config = ConfigDict(extra="forbid")
 
     id: str
     source_url: str
@@ -110,6 +120,9 @@ class ListingRecord(BaseModel):
     available_from: date | None = None
     availability_status: bool | None = None
     society_name: str | None = None
+    # The sheet's "Society Type" column: gated or non-gated. Its text ("Gated Society",
+    # "Non-gated Society") is mapped to these values by the importer, not stored verbatim.
+    society_type: SocietyType | None = None
     coordinates: Coordinates | None = None
 
 

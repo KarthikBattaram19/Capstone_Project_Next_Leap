@@ -1,15 +1,22 @@
-# Listing source — source notes (rewritten 2026-09-02)
+# Listing source — source notes (rewritten 2026-09-05)
 
 **The source is `data/Bangalore_Properties_List.xlsx`, a spreadsheet supplied by the project owner.**
 No site is scraped. bengaluru.rent is **out of scope** for this project; the
 reconnaissance verdict that put it out of scope is kept at the bottom of this
 file as the historical record.
 
+**What changed on 2026-09-05.** The project owner added four columns to the
+sheet: `Name`, `Phone Number`, `Voter ID` and `availability_status`. The first
+three are **PII and are never imported**; the fourth is the availability marker
+this dataset previously lacked, and it changes the Gate D finding. This file
+supersedes the 2026-09-02 inventory.
+
 ## What the supplied dataset is
 
 | | |
 |---|---|
 | File | `data/Bangalore_Properties_List.xlsx` (single sheet, `Bangalore_Properties_List`) |
+| Columns | 21 (17 before 2026-09-05) |
 | Rows | 9,180 |
 | Localities | 566 |
 | Rows with coordinates | 9,180 (all) |
@@ -17,15 +24,12 @@ file as the historical record.
 | Localities above the 10-per-locality ceiling | 203 of 566 |
 | Rent range | ₹10,000 – ₹1,50,000 |
 | Deposit range | ₹50,000 – ₹5,00,000 |
-
-There is **no availability marker** and **no PII**. The sheet carries no owner
-names, no phone numbers and no email addresses, so the PII-stripping step that
-the scrape design required (`scout.pipeline.pii`) has nothing to remove from
-this source. The `society_name` column holds builder names, not people.
+| Availability marker | `availability_status` — `Yes` on 4,532 rows, `No` on 4,648, never blank |
+| PII columns | 3 (`Name`, `Phone Number`, `Voter ID`) — present, discarded on import |
 
 ## Provenance of each column — read this before quoting any number
 
-The sheet is **not a market observation**. It was assembled in three different
+The sheet is **not a market observation**. It was assembled in four different
 ways, and the difference matters for every claim the system makes:
 
 | Column group | How it was produced | Safe to quote as fact? |
@@ -33,23 +37,29 @@ ways, and the difference matters for every claim the system makes:
 | `Latitude`, `Longitude` | Real coordinates, copied positionally from sale listings in `data/Buy-sell list.csv` (originally Makaan.com data via Hugging Face) | Yes, as a map position |
 | `locality` | Derived from those coordinates by OpenStreetMap reverse geocoding (Nominatim), taking the `suburb`, else the block or village name | Yes |
 | `Rent`, `Deposit`, `parking_available`, `Society Type`, and the other descriptive columns | **Randomly generated** at the project owner's instruction, within stated bands, with 1BHK < 2BHK < 3BHK < 3BHK+ enforced for rent and deposit | **No.** These are plausible placeholders, not observed prices |
+| `availability_status`, `Name`, `Phone Number`, `Voter ID` | **Randomly generated on 2026-09-05** at the project owner's instruction. `availability_status` is an independent coin flip per row; the three PII columns are invented identities, unique per row, matching no real person | **No.** `availability_status` is a marker whose *mechanism* is real and whose *values* are synthetic; the PII columns never reach the bundle at all |
 
 **Consequence for the sign-off record (spec §7.3).** Any evaluation that treats
 a rent or deposit in this dataset as a real market figure is measuring the
-random generator, not Bengaluru. The system's grounding discipline is unchanged
-and still testable — a fact must still come from the dataset and carry its
-provenance — but the *demo* must not be presented as real pricing.
+random generator, not Bengaluru. The same now applies to availability: a
+listing shown as available is available because a coin came up heads, not
+because anyone checked. The system's grounding discipline is unchanged and
+still testable — a fact must still come from the dataset and carry its
+provenance — but the *demo* must not be presented as real pricing or as real
+availability.
 
 ## Field map (schema field → sheet column → published?)
 
-14 of the 23 schema fields are present. The sheet states only that parking
+**16 of the 24 schema fields are present** (14 before 2026-09-05;
+`availability_status` and `society_type` are the additions — `society_type` was
+added to the schema on 2026-09-05 because the sheet carries the column). The sheet states only that parking
 exists, so it fills `parking_available` and leaves `parking` null; the
 two-/four-wheeler kind is never guessed.
 
 | schema field | sheet column | published |
 |---|---|---|
 | locality | `locality` | yes |
-| bhk_type | `bhk_type` (`1BHK` / `2BHK` / `3BHK` / `3BHK+`) | yes |
+| bhk_type | `bhk_type` (`1BHK` 2,282 / `2BHK` 2,217 / `3BHK` 2,332 / `3BHK+` 2,349); `bedrooms` agrees with it — `3BHK+` is 4 bedrooms on 1,164 rows and 5 on 1,185 | yes |
 | bedrooms | `bedrooms` | yes |
 | bathrooms | `bathrooms` | yes |
 | balconies | `balconies` | yes |
@@ -57,7 +67,7 @@ two-/four-wheeler kind is never guessed.
 | deposit | `Deposit` (rupees) | yes |
 | maintenance_charges | (none) | no |
 | maintenance_included | (none) | no |
-| property_type | `property_type` (`apartment` / `independent_house` / `villa` / `builder_floor`) | yes |
+| property_type | `property_type` — observed values only: `independent_house` (4,504), `villa` (2,386), `apartment` (2,290); `builder_floor` never occurs | yes |
 | furnishing | `furnishing` (`unfurnished` / `semi_furnished` / `fully_furnished`) | yes |
 | square_footage | `square_feet` | yes |
 | area_basis | (none) | no — every record is `AreaBasis.UNKNOWN` |
@@ -68,21 +78,51 @@ two-/four-wheeler kind is never guessed.
 | parking_available | `parking_available` (`Yes` / `No`) | yes |
 | amenities | (none) | no |
 | available_from | (none) | no |
-| availability_status | (none) | no — see below |
+| availability_status | `availability_status` (`Yes` / `No`) | **yes — new on 2026-09-05** |
 | society_name | `society_name` (builder name) | yes |
+| society_type | `Society Type` (`Gated Society` / `Non-gated Society`) | **yes — new on 2026-09-05** |
 | coordinates | `Latitude`, `Longitude` | yes |
 
-One sheet column has no schema home and is **not imported**: `Society Type`
-(`Gated Society` / `Non-gated Society`).
+Three sheet columns have no schema home and are **not imported** — the PII
+columns below. `Society Type` was one of them until 2026-09-05, when
+`society_type` was added to the schema (spec §3.1) and the importer began
+mapping its prose onto the enum.
+
+## Shape facts the importer must handle
+
+Measured on the 2026-09-05 sheet, not assumed:
+
+| Fact | Figure | Why it matters |
+|---|---|---|
+| No blank cells anywhere | 0 blanks in all 21 columns × 9,180 rows | Nothing in this sheet is null because it was left empty; a null in the output is a field the sheet does not carry |
+| `total_floors` holds two cell types | `int` on 2,290 rows, the string `Not Applicable` on 6,890 | An `int()` on the column raises; the string maps to null. It aligns exactly with `property_type`: every `apartment` row is numeric, every `villa` (2,386) and `independent_house` (4,504) row is `Not Applicable` |
+| `Sl.` is unique but not contiguous | 9,180 values, min 1, max 9,185 — 5 numbers missing | Safe as the id and row reference; a row-count check against `max(Sl.)` would be wrong |
+| `Phone Number` is stored as **text**, not a number | 9,180 strings of exactly 9 digits | A text-column guard can see it; a numeric guard would not |
+| Coordinates repeat across rows | 2,750 distinct pairs for 9,180 rows; 992 pairs are shared by more than one row, covering 7,422 rows | A naive "within 50 m ⇒ same listing" dedupe would collapse most of the sheet. The tower guard is load-bearing: of those rows, only 762 (342 groups) also share a rent, and only 26 rows (13 groups) share coordinates, rent, society and BHK |
+| No two rows are identical | 0 rows duplicate on all columns except `Sl.` and the three PII columns | There are no exact-duplicate listings to remove |
+| `locality` needs no cleaning | 0 values with leading or trailing whitespace; 566 distinct | — |
+| `society_name` is a builder name, reused widely | 44 distinct values over 9,180 rows; 5,467 society+locality groups, the largest holding 20 rows | Society name alone never identifies a building, so it cannot be a dedupe key on its own |
 
 ## Availability marker
 
-**NONE.** The sheet has no availability column, so `availability_status` is
-`null` for every record and the gap report must say so. The stale-listing
-design (spec §3.14) is unaffected in mechanism: availability remains an
-in-memory overlay flag that an operator can flip and that is re-checked before
-the calendar writes. It simply starts from "not stated" rather than from a
-value the source published.
+**`availability_status`, values `Yes` / `No`, never blank.** 4,532 rows say
+`Yes` and 4,648 say `No`. The importer reads `Yes` as `True` and `No` as
+`False`; a blank would become `None` ("not stated"), but no blank occurs in the
+present sheet.
+
+Two consequences:
+
+1. **Curation now drops rows, and drops whole localities.** Spec §3.1
+   requires records marked unavailable to be dropped. That leaves **4,532
+   rows across 464 localities**: **102 of the 566 localities have no
+   available row at all** and disappear from the bundle, and only 130
+   localities still hold 10 or more. Task 0.6 owns the final counts; this is
+   the figure Gate D has to weigh.
+2. **The values are synthetic.** The marker's mechanism is exactly what the
+   spec wants; the values behind it are a coin flip made on 2026-09-05. The
+   stale-listing design (spec §3.14) is unchanged: availability remains an
+   in-memory overlay an operator can flip, re-checked before the calendar
+   writes. It now starts from a published value instead of "not stated".
 
 ## Square footage basis
 
@@ -90,9 +130,27 @@ Not stated. `area_basis` is `UNKNOWN` for every record.
 
 ## PII observed (to strip)
 
-None. The sheet contains no owner names, phone numbers or email addresses.
-The PII guard is kept in the importer as a defence-in-depth assertion, not
-because this source needs it.
+**Three columns, all discarded before anything is written to disk (spec §3.2).**
+
+| sheet column | shape | disposal |
+|---|---|---|
+| `Name` | full name, e.g. `Zoya Narang`; 9,180 distinct values | never read into `ListingRecord`; no schema field exists for it |
+| `Phone Number` | **exactly 9 digits**, e.g. `395862397`; 9,180 distinct values | never imported; the PII guard must also catch a bare 9-digit run, which the 2026-09-02 guard did not |
+| `Voter ID` | 10 letters, mixed case, e.g. `MPSAnXINZQ`; 9,180 distinct values | never imported; treated as a government identifier |
+
+**The 2026-09-02 PII guard would not have caught these numbers.** `strip_pii`
+matched Indian mobiles — ten digits beginning 6–9, optionally prefixed
+`+91`/`0`. All 9,180 phone numbers in this sheet are nine digits and **zero**
+of them match that pattern. Task 0.5 extends the guard to a bare run of nine or
+ten digits, and the importer's column allow-list is what actually keeps these
+three columns out: the guard is the second line of defence, not the first.
+
+The allow-list is safe for the numeric columns that remain: the widest of them
+is `Deposit` at six digits, and the coordinate fractions run to eight, so no
+legitimate value in this sheet is a nine-digit run.
+
+`society_name` holds builder names, not people, and is imported; so is
+`Society Type`, which is a property of the address, not of a person.
 
 ---
 

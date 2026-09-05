@@ -90,3 +90,20 @@ def test_every_schema_field_exists_on_the_record():
     rec = make_record()
     for name in SCHEMA_FIELDS:
         assert hasattr(rec, name), name
+
+
+def test_society_type_is_a_searchable_field():
+    from scout.domain.listing import SocietyType
+
+    listing = Listing.from_record(make_record(society_type=SocietyType.GATED))
+    assert "society_type" in SCHEMA_FIELDS
+    assert listing.field("society_type").value is SocietyType.GATED
+
+
+def test_an_unknown_column_is_refused_rather_than_dropped():
+    import pytest
+
+    # A future sheet must not be able to smuggle a name or a phone number through.
+    with pytest.raises(Exception) as e:
+        make_record(owner_phone="9876543210")
+    assert "owner_phone" in str(e.value)

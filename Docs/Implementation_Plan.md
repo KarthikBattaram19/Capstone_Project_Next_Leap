@@ -97,13 +97,13 @@ Nothing after this phase is safe until both gates clear. Tasks 0.1–0.3 are sha
 ### Task 0.2 — The fact wrapper and the one commute formatter
 - **Delivers:** the small type that wraps every fact with its source and, for distances, its method — the code refuses to create a distance without one. Plus the single function that turns a distance into (a) the spoken words, (b) the card badge, (c) the full label, so the three can never disagree. "Not stated" is defined here, once.
 - **Why now:** these two pieces are what make the grounding rules enforceable rather than aspirational; everything downstream is built on them.
-- **Done when:** 11 unit tests pass.
+- **Done when:** 12 unit tests pass.
 - Detail: addendum → Task 0.2.
 
 ### Task 0.3 — Domain records: listing, OSM fact, guide chunk, manifest
 - **Delivers:** the data shapes — the listing record with exactly the spec's fields (each may be null), the fixed set of OSM queries to run for every listing, the guide-chunk record, and the manifest that records what the bundle contains and how it was built (versions, counts, curation rule, missing fields, embedding model fingerprint).
 - **Why now:** the importer (0.5), the index (1.2) and the OSM precompute (1.3) all write these shapes.
-- **Done when:** 17 unit tests pass.
+- **Done when:** the domain suite passes — 29 tests as of 2026-09-05.
 - Detail: addendum → Task 0.3.
 
 ### Data track — Tasks 0.4 to 0.6 → Gate D
