@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import asyncio
 import re
+import sys
 
 from scout.config import Settings
 from scout.platform import telemetry
@@ -72,6 +73,20 @@ class StubSession:
         await self.sink.audio_end()
 
     async def _run(self, text: str, turn_type: str) -> None:
+        # A turn runs as a bare task that nobody awaits, so without this the event loop
+        # swallows any exception and the browser is left after `audio_out start` with
+        # no chunks, no end and no outcome — silence that looks like a hang. Spec §6
+        # requires a failure to be shown, and shown differently from "nothing found".
+        try:
+            await self._turn_body(text, turn_type)
+        except Exception as e:  # noqa: BLE001 -- the whole point is that NOTHING
+            # escapes this task unreported; narrowing it would restore the silence.
+            # Type only: a provider's message can quote the utterance back, and logs
+            # carry no transcript text (spec §3.2, §5.3).
+            print(f"turn failed ({turn_type}): {type(e).__name__}", file=sys.stderr)
+            await self.sink.outcome({"kind": "failed", "reason": type(e).__name__})
+
+    async def _turn_body(self, text: str, turn_type: str) -> None:
         with telemetry.trace(turn_type=turn_type):
             await self.sink.transcript(text, final=True)
             await self.sink.ack(text)  # L1 — before any model call
