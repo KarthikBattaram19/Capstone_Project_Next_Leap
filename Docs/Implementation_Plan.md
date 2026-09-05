@@ -20,7 +20,7 @@ A voice-first assistant for finding a rental flat in Bengaluru. The tenant speak
 | **Job 1** | The fast language model (Groq, `gpt-oss-120b`) that turns the tenant's sentence into structured edits to their preferences. Never explains anything. |
 | **Job 2** | The careful language model (Anthropic, `claude-sonnet-5`) that writes the explanation for "why this one?". Never invents facts; only cites what it is handed. |
 | **Type A / Type B turn** | Type A: anything that changes or confirms preferences, or books. Type B: "why?" questions that need Job 2. Decided by simple pattern matching in code, not by a model. |
-| **Listing dataset** | Up to 10 listings per locality taken from the supplied spreadsheet `data/Bangalore_Properties_List.xlsx`, cleaned. The sheet carries no owner contact details. |
+| **Listing dataset** | Up to 10 listings per locality taken from the supplied spreadsheet `data/Bangalore_Properties_List.xlsx`, cleaned. Since 2026-09-05 the sheet **does** carry owner names, phone numbers and voter ids; the importer never reads those three columns and nothing derived from them reaches the bundle. |
 | **Guide index** | A searchable store of neighbourhood guide chunks (Wikipedia and open city guides), one partition per locality, so answers about HSR Layout can never draw on Koramangala text. Built offline with ChromaDB. |
 | **OSM facts** | Distances to the nearest metro, bus stop, etc., computed once at build time from OpenStreetMap through an "MCP" tool server. Never looked up live during a conversation. |
 | **Artefact bundle** | The listings + guide index + OSM facts + a manifest (a record of what is in the bundle and how it was built), committed to the repository and loaded when the backend starts. |
@@ -40,7 +40,7 @@ These are the spec's non-negotiables, in plain words. The full list with exact n
 - **Speed.** First feedback under 0.3 s; acknowledgement under 0.7 s with no model involved; first spoken audio within 1.5 s; shortlist on screen under 3 s; explanation text under 6 s; booking confirmed under 5 s; PDF emailed under 30 s. Measured at p99, per turn type; any single request over twice its target is a hard failure. Cold start reported separately.
 - **Speed preconditions (P1–P8).** The server never sleeps; connections to every provider are reused; the STT waits 400 ms of silence before ending a sentence, and waits up to another 400 ms if the sentence looks unfinished ("…under" / a bare number); audio starts on the first sentence; OSM facts are precomputed; the two calendar writes run in parallel; Job 2 runs at low effort; a "why?" answer opens with a sentence built by code from facts already known, so audio starts before Job 2 has replied.
 - **Models.** Job 1 and Job 2 are different models from different providers, pinned by exact ID. Job 2 is never replaced by Job 1 for explanations. Job 1 may be swapped to a lighter Groq model if it misses the speed targets.
-- **Data.** Bengaluru only; up to 10 listings per locality (a ceiling, never padded); duplicates merged when the address matches or coordinates are within 50 m; owner contact is always the placeholder `999999999`. A missing value is shown as "not stated" — never blank, never zero, never guessed — and never satisfies a must-have (such listings go in their own "unknown" group).
+- **Data.** Bengaluru only; up to 10 listings per locality (a ceiling, never padded); duplicates merged when the address matches or coordinates are within 50 m; owner contact is always the placeholder `999999999` — the sheet's real `Name`, `Phone Number` and `Voter ID` columns are never imported, and the committed bundle is checked for personal data before it is written. A missing value is shown as "not stated" — never blank, never zero, never guessed — and never satisfies a must-have (such listings go in their own "unknown" group).
 - **Grounding.** Listing facts come only from the dataset; distances and amenities only from OSM; neighbourhood character only from the guide index, with a citation; anything else is declared unavailable. Every distance says its method in speech, on the card badge, and in the full label, and the three must agree. Imported listing text and guide chunks are treated as untrusted data, never as instructions.
 - **Conversation.** At most 5 clarifying questions per session. Preferences are read back and confirmed before the first shortlist. Contradictions become a question, never a silent change. A refinement changes only what it touches; untouched listings keep their exact order and content. "The second one" means the second one the tenant last heard.
 - **Booking.** One Google account, two calendars (Tenant, Owner). Slots: next 7 days, 10:00–18:00 IST, one hour each, first three free ones offered. The 6-character code is the only credential; unknown and cancelled codes get the same answer; lookups are rate-limited. Availability and free/busy are re-checked at the moment of confirming. Cancel/reschedule refused once the slot has started. All time arithmetic in Asia/Kolkata. Email address read back letter by letter before sending. The PDF is generated, emailed, and discarded.
@@ -67,9 +67,9 @@ The order follows the spec's §9: **do first whatever could invalidate everythin
 
 | When | Decision | What you will have in hand | If it goes the wrong way |
 |---|---|---|---|
-| Task 0.1 | Only if Python 3.12 is not installed: install it, or prove the libraries work on 3.14. | The result of `pip install chromadb onnxruntime` on 3.14. | Build breaks on missing wheels later. |
+| Task 0.1 | **Settled.** Python 3.12.10 is installed and the backend virtualenv (`backend/.venv`) runs on it; 3.14 was not needed. | `py -3.12 --version`, and the venv answering 3.12.10. | — |
 | Task 0.4 | **Settled.** The listing source is the supplied spreadsheet `data/Bangalore_Properties_List.xlsx`; bengaluru.rent is out of scope and is never fetched. No crawling decision remains. | The field inventory, recorded in `data/SOURCE_NOTES.md`. | — |
-| Task 0.6 — **Gate D** | One of: **Proceed** (availability marker exists, every schema field is published) · **Proceed with spec amendment** (list the missing fields; amend spec §3.1/§4/§7.1 in the same commit) · **Stop** (no reliable availability marker). | Locality list and counts, the availability marker (or "none found"), the fields the sheet does not carry, whether floor area is carpet or built-up, and the import's cost in rows and minutes. | Building on a dataset that cannot say whether a listing is still available. |
+| Task 0.6 — **Gate D** | **Decided 2026-09-05: proceed with spec amendment** (re-decided; first decided 2026-09-02). The marker exists; seven §3.1 fields are never published and `area_basis` is unknown throughout. | `data/GATE_D.md` — locality list and counts, the marker, the missing fields, the square-footage basis, the import's cost. | — |
 | Task 0.10 — **Gate L** | One of: **Proceed** (every speed row met at p99, no 2× violation; choose the region and say why) · **Proceed with renegotiation** (name the rows that missed; update spec §5.2 and this plan's rules in one commit) · **Change the model** (Job 1 missed; switch to a lighter Groq model and re-run). | A table of p99 timings per stage for two Railway regions (US and Singapore), cold-start numbers, the false end-of-speech rate on Indian-English speech, and which preconditions were actually in force. | A speed budget that is quietly ignored — the failure mode the spec names. |
 | Task 1.1 | Which 1–3 guide pages to use per locality (Wikipedia plus up to two open city guides; no listing portals or advertising copy). Localities with no usable source are recorded as empty — Suite C must then prove the assistant says so. | The locality list from Gate D. | Contaminated or thin neighbourhood answers. |
 | Task 1.3 | Accept the commute wording as locked, and note whether routing worked for ≥ 90 % of listings. If not, most transit claims will say "in a straight line" and the demo should expect that. | The routed / straight-line / null split printed by the precompute. | A demo that surprises you. |
@@ -87,23 +87,40 @@ The order follows the spec's §9: **do first whatever could invalidate everythin
 
 Nothing after this phase is safe until both gates clear. Tasks 0.1–0.3 are shared groundwork; 0.4–0.6 are the data track; 0.7–0.10 the infrastructure track. Run the two tracks in parallel.
 
+**Where this stands (verified 2026-09-05).**
+
+| Task | State | Evidence |
+|---|---|---|
+| 0.1 Scaffold, toolchain, CI | done | 66 backend tests pass, `ruff check` and `ruff format --check` clean, `npm run build` green, CI runs all four steps |
+| 0.2 Fact wrapper + commute formatter | done | 12 tests |
+| 0.3 Domain records | done | 29 domain tests |
+| 0.4 Source inventory | done | `data/SOURCE_NOTES.md`, rewritten for the 2026-09-05 sheet |
+| 0.5 Importer | done | 9,180 records imported; 29 tests (10 PII, 5 dedupe, 14 import) |
+| 0.6 Curate → **Gate D** | done, **gate decided** | 2,370 listings over 464 localities; 7 curation tests; `data/GATE_D.md` |
+| 0.7–0.10 Infrastructure → **Gate L** | **not started** | no `scout/config.py`, `scout/platform/`, `scout/api/`, `scout/main.py`, and no tests for them |
+
+**The next task is 0.7.** The data track is finished and Gate D is decided; nothing in 0.1–0.6 is outstanding. Gate L is untouched, so no work beyond Phase 0 may begin.
+
 ### Task 0.1 — Repository scaffold, toolchain, CI skeleton
 - **Delivers:** a Python backend project (pinned to Python 3.12, every dependency pinned to an exact version), a Next.js frontend project, an example environment file listing every secret's name, a CI workflow that runs the tests, and the ignore rules that commit the bundle but never raw guide fetches.
 - **Why now:** everything else needs somewhere to live and a green test run to start from.
 - **Done when:** backend unit tests pass, the frontend builds, CI is green on the scaffold.
-- **Decision:** see §5 (Python 3.12 vs 3.14).
+- **Decision:** see §5 (Python 3.12 vs 3.14) — settled on 3.12.
+- **Status: done.** Python 3.12.10 with every dependency pinned (`requirements.lock` committed); `frontend/` builds; CI runs `ruff check`, `ruff format --check` and the unit tests. `data/raw/` is deliberately untracked, so it holds no `.gitkeep` — the pipeline creates it.
 - Detail: addendum → Task 0.1.
 
 ### Task 0.2 — The fact wrapper and the one commute formatter
 - **Delivers:** the small type that wraps every fact with its source and, for distances, its method — the code refuses to create a distance without one. Plus the single function that turns a distance into (a) the spoken words, (b) the card badge, (c) the full label, so the three can never disagree. "Not stated" is defined here, once.
 - **Why now:** these two pieces are what make the grounding rules enforceable rather than aspirational; everything downstream is built on them.
 - **Done when:** 12 unit tests pass.
+- **Status: done.** 12 tests (5 provenance, 7 commute formatting). A `Distance` without a method, and a `Source.NONE` carrying a value, both raise.
 - Detail: addendum → Task 0.2.
 
 ### Task 0.3 — Domain records: listing, OSM fact, guide chunk, manifest
 - **Delivers:** the data shapes — the listing record with exactly the spec's fields (each may be null), the fixed set of OSM queries to run for every listing, the guide-chunk record, and the manifest that records what the bundle contains and how it was built (versions, counts, curation rule, missing fields, embedding model fingerprint).
 - **Why now:** the importer (0.5), the index (1.2) and the OSM precompute (1.3) all write these shapes.
 - **Done when:** the domain suite passes — 29 tests as of 2026-09-05.
+- **Status: done.** 29 tests. `SCHEMA_FIELDS` holds 24 names; `ListingRecord` forbids unknown keys, so a future sheet cannot smuggle a `Name` column through; the OSM query set is the fixed eight.
 - Detail: addendum → Task 0.3.
 
 ### Data track — Tasks 0.4 to 0.6 → Gate D
@@ -119,7 +136,7 @@ Nothing after this phase is safe until both gates clear. Tasks 0.1–0.3 are sha
 - **Delivers:** the importer that reads `data/Bangalore_Properties_List.xlsx` into `ListingRecord[]`, maps each column to its schema field, merges duplicates (within 50 m and otherwise identical; the more detailed record wins), and writes all parsed records (no cap yet). Fields the sheet does not carry stay null. The three PII columns the sheet gained on 2026-09-05 are never read: the importer works from a column allow-list, and the PII guard sits behind it as defence in depth.
 - **Why now:** the dataset is the first thing that can invalidate the project.
 - **Done when:** unit tests pass on a small fixture sheet, one full import has run, and a search of the output finds no 10-digit numbers and no `@`.
-- **Status: done.** 9,180 records over 566 localities imported to `data/raw/listings_all.json`; no name, phone number or voter ID from the sheet reaches the output.
+- **Status: done.** 9,180 records over 566 localities imported to `data/raw/listings_all.json`; no name, phone number or voter ID from the sheet reaches the output. A missing `availability_status` or `Society Type` column now fails the import rather than writing a null, so the marker Gate D relies on cannot vanish quietly.
 - Detail: addendum → Task 0.5.
 
 ### Task 0.6 — Curate to ≤ 10 per locality, gap report, manifest → **Gate D**
@@ -127,7 +144,7 @@ Nothing after this phase is safe until both gates clear. Tasks 0.1–0.3 are sha
 - **Why now:** this is the moment to decide whether the dataset can carry the product.
 - **Done when:** `data/GATE_D.md` has exactly one box ticked; if the spec had to be amended, it is amended in the same commit, and the locality list and total are written back into spec §1 and §3.1.
 - **Decision:** **Gate D** — see §5.
-- **Status: done.** Gate D re-decided 2026-09-05 (first decided 2026-09-02): **proceed with spec amendment**. 2,370 listings over 464 localities — 128 at the 10 ceiling, 336 below it; availability marker `availability_status` present, so the 4,648 rows marked unavailable are dropped and 102 localities fall out entirely; seven fields never published and `area_basis` unknown throughout (`data/GATE_D.md`).
+- **Status: done.** The committed bundle is checked for personal data before it is written, and both files rebuild byte-identical. Gate D re-decided 2026-09-05 (first decided 2026-09-02): **proceed with spec amendment**. 2,370 listings over 464 localities — 128 at the 10 ceiling, 336 below it; availability marker `availability_status` present, so the 4,648 rows marked unavailable are dropped and 102 localities fall out entirely; seven fields never published and `area_basis` unknown throughout (`data/GATE_D.md`).
 - Detail: addendum → Task 0.6.
 
 ### Infrastructure track — Tasks 0.7 to 0.10 → Gate L
@@ -364,11 +381,11 @@ Both gates have cleared. 1.1–1.3 (the knowledge layer) and 1.4–1.6 (store, c
 
 ## 6. Things this plan cannot settle yet
 
-- **The site's page structure and its availability marker** — found by looking (Task 0.4); Gate D may amend the spec.
+- ~~**The site's page structure and its availability marker**~~ — **settled 2026-09-05.** No site is read; the source is the supplied spreadsheet, and its `availability_status` column is the marker (`data/SOURCE_NOTES.md`, `data/GATE_D.md`). Gate D amended the spec as it allowed.
 - **The OSM tool server's exact argument names** — read from the server itself before use (Task 1.3).
 - **Provider SDK call signatures** — checked against the installed libraries before the first call (Tasks 0.8, 2.3, 2.12); the plan's shapes are from vendor docs dated 2026-08-30.
 - **Whether Job 1 (`gpt-oss-120b`) holds the speed targets** (Gate L) and **whether Job 2 (`claude-sonnet-5` at low effort) holds Suite C** (Task 2.13) — both are measured, both have a named fallback.
-- **The Python interpreter** — 3.12 assumed for library availability; the machine has 3.14.5.
+- ~~**The Python interpreter**~~ — **settled.** 3.12.10 is installed and `backend/.venv` runs on it; every dependency is pinned in `backend/pyproject.toml` and `backend/requirements.lock`.
 
 ## 7. Where each spec requirement lands
 

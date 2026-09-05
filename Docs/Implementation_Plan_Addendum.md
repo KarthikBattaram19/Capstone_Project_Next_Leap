@@ -252,19 +252,20 @@ Nothing downstream is safe until **both** gates clear. Tasks 0.1–0.3 are share
 **Files:**
 - Create: `backend/pyproject.toml`, `backend/scout/__init__.py`, `backend/tests/unit/test_smoke.py`, `backend/tests/conftest.py`
 - Create: `frontend/` via `create-next-app` (TypeScript, App Router, no `src/app/api`)
-- Create: `.env.example`, `.github/workflows/ci.yml`, `data/bundle/.gitkeep`, `data/raw/.gitkeep`
+- Create: `.env.example`, `.github/workflows/ci.yml`, `data/bundle/.gitkeep`
+- Create locally (**not tracked** — Step 6 ignores `data/raw/`, so a `.gitkeep` there could never be committed): `data/raw/`. The pipeline steps `mkdir` it themselves, so a fresh clone needs no placeholder
 - Modify: `.gitignore` (bundle is committed; raw stays ignored), `README.md` (planned-structure block)
 
 **Interfaces:**
 - Produces: the `scout` package importable after `pip install -e backend[dev]`; `python -m pytest backend/tests/unit -q` green; `npm run build` green in `frontend/`.
 
-- [ ] **Step 1: Pin the Python interpreter**
+- [x] **Step 1: Pin the Python interpreter**
 
 Python 3.14 is installed on this machine; ChromaDB and `onnxruntime` publish wheels for 3.12 reliably and for brand-new interpreters late. Use 3.12 for the backend. In PowerShell, run `py -0` (list installed interpreters) and then `py -3.12 --version` (confirms that 3.12 answers).
 
 If 3.12 is absent, install it from python.org before continuing. Do **not** proceed on 3.14 unless `pip install chromadb onnxruntime` succeeds there (check, do not assume).
 
-- [ ] **Step 2: Create the backend project**
+- [x] **Step 2: Create the backend project**
 
 `backend/pyproject.toml` contains four tables:
 
@@ -278,7 +279,7 @@ Pin every dependency to the exact version pip resolves today, so the build is re
 
 Then copy each package's resolved version from `requirements.lock` into `pyproject.toml` as `==x.y.z`. Commit both files.
 
-- [ ] **Step 3: Write the smoke test**
+- [x] **Step 3: Write the smoke test**
 
 `backend/tests/unit/test_smoke.py` does `import scout` and defines one test, `test_package_imports()`, which asserts `scout.__name__ == "scout"`.
 
@@ -286,18 +287,18 @@ Then copy each package's resolved version from `requirements.lock` into `pyproje
 
 `backend/tests/conftest.py` imports `sys` and `Path` (from `pathlib`), and — with the comment "Make `scout` importable even if the editable install is missing in CI." — runs `sys.path.insert(0, str(Path(__file__).resolve().parents[1]))`, i.e. it puts the `backend/` directory (the parent of `tests/`) at the front of `sys.path`.
 
-- [ ] **Step 4: Run it**
+- [x] **Step 4: Run it**
 
 Run: `python -m pytest backend/tests/unit -q`
 Expected: `1 passed`
 
-- [ ] **Step 5: Create the frontend**
+- [x] **Step 5: Create the frontend**
 
 In PowerShell, run `cd ..` (back to the repo root) and then `npx create-next-app@latest frontend --typescript --eslint --app --src-dir --no-tailwind --import-alias "@/*" --use-npm`.
 
 Then delete anything under `frontend/src/app/api/` if the generator created it, and add to `frontend/package.json` scripts a `"contract"` entry whose value is `json2ts -i ../contract/v1.schema.json -o src/lib/viewmodels/contract.ts --additionalProperties false` (i.e. `"contract": "json2ts -i ../contract/v1.schema.json -o src/lib/viewmodels/contract.ts --additionalProperties false"`), and `npm install --save-dev json-schema-to-typescript`. Verify: `npm run build` succeeds.
 
-- [ ] **Step 6: Environment example and gitignore**
+- [x] **Step 6: Environment example and gitignore**
 
 `.env.example` (every name the boot check will demand; values empty) lists the following names, each followed by `=` and nothing else, in this order and with these comments:
 
@@ -312,18 +313,18 @@ Amend `.gitignore`: remove the lines `data/listings.json`, `data/index/`, `data/
 
 Keep `*.sqlite` ignored but add `!data/bundle/chroma/**` beneath it so Chroma's persisted store is tracked.
 
-- [ ] **Step 7: CI skeleton**
+- [x] **Step 7: CI skeleton**
 
 `.github/workflows/ci.yml` is a workflow with `name: ci`, triggered `on: [push, pull_request]`, defining two jobs:
 
-- `backend-unit` — `runs-on: ubuntu-latest`; steps: `uses: actions/checkout@v4`; `uses: actions/setup-python@v5` with `python-version: "3.12"`; `run: pip install -e "backend[dev]"`; `run: ruff check backend`; `run: python -m pytest backend/tests/unit -q`.
+- `backend-unit` — `runs-on: ubuntu-latest`; steps: `uses: actions/checkout@v4`; `uses: actions/setup-python@v5` with `python-version: "3.12"`; `run: pip install -e "backend[dev]"`; `run: ruff check backend`; `run: ruff format --check backend`; `run: python -m pytest backend/tests/unit -q`. **Both ruff steps are required.** `ruff check` is the linter and `ruff format --check` the formatter; they catch different things, and with only the first in place the formatting drifted across six files before anyone noticed.
 - `frontend-build` — `runs-on: ubuntu-latest`; steps: `uses: actions/checkout@v4`; `uses: actions/setup-node@v4` with `node-version: "22"`; `run: cd frontend && npm ci && npm run build`.
 
 (The `evals` and `contract-drift` jobs are added in Tasks 1.5 and 1.6.)
 
-- [ ] **Step 8: Update the README's planned-structure block** to match the *File structure* section of this plan (pipeline under `backend/scout/pipeline/`, bundle committed under `data/bundle/`), and change the status line to "scaffold exists; implementation in progress — see `Implementation_Plan.md`".
+- [x] **Step 8: Update the README's planned-structure block** to match the *File structure* section of this plan (pipeline under `backend/scout/pipeline/`, bundle committed under `data/bundle/`), and change the status line to "scaffold exists; implementation in progress — see `Implementation_Plan.md`".
 
-- [ ] **Step 9: Commit**
+- [x] **Step 9: Commit**
 
 Run `git add -A` then `git commit -m "infra: scaffold backend (scout), frontend (Next.js), CI skeleton, env example"`.
 
@@ -343,7 +344,7 @@ Run `git add -A` then `git commit -m "infra: scaffold backend (scout), frontend 
   - `CommuteRendering(spoken: str, badge: str, full_label: str, value_text: str)` and `render_commute(fact: Provenanced[Distance], what: str) -> CommuteRendering`
   - `NOT_STATED = "not stated"`
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
 `backend/tests/unit/domain/test_provenance.py` imports `date` from `datetime`, `pytest`, and `Distance`, `Method`, `Provenanced`, `ProvenanceError`, `Source`, `Timing` from `scout.domain.provenance`. It defines five tests:
 
@@ -363,12 +364,12 @@ Run `git add -A` then `git commit -m "infra: scaffold backend (scout), frontend 
 - `test_sub_kilometre_distance_reads_in_metres_never_zero_point_zero()` — `r = render_commute(osm(Method.ROUTED, minutes=1, metres=40), what="Metro")`; asserts `r.value_text == "40 m"` and `"0.0" not in r.spoken and "0.0" not in r.value_text`.
 - `test_a_long_routed_distance_is_not_called_a_walk()` — `r = render_commute(osm(Method.ROUTED, minutes=38, metres=5000), what="Hospital")`; asserts `"walk" not in r.spoken`, `"by route" in r.spoken`, and `r.badge == "by route"`.
 
-- [ ] **Step 2: Run them to verify they fail**
+- [x] **Step 2: Run them to verify they fail**
 
 Run: `python -m pytest backend/tests/unit/domain -q`
 Expected: FAIL with `ModuleNotFoundError: No module named 'scout.domain'`
 
-- [ ] **Step 3: Implement the wrapper**
+- [x] **Step 3: Implement the wrapper**
 
 `backend/scout/domain/__init__.py`: empty docstring module.
 
@@ -381,7 +382,7 @@ Expected: FAIL with `ModuleNotFoundError: No module named 'scout.domain'`
 - `@dataclass(frozen=True) class Distance` with fields `metres: int` and `minutes: int | None = None`.
 - `@dataclass(frozen=True) class Provenanced(Generic[T])` with fields, in order: `value: T | None`, `source: Source`, `timing: Timing`, `method: Method | None = None`, `as_of: date | None = None`, `citation_ref: str | None = None`. Its `__post_init__(self) -> None` performs two checks: if `isinstance(self.value, Distance) and self.method is None`, raise `ProvenanceError("a distance cannot exist without its method")`; if `self.source is Source.NONE and self.value is not None`, raise `ProvenanceError("source NONE means 'I don't have that'; it carries no value")`. It exposes a property `is_gap(self) -> bool` returning `self.value is None`.
 
-- [ ] **Step 4: Implement the formatter**
+- [x] **Step 4: Implement the formatter**
 
 `backend/scout/domain/commute_format.py` opens with the docstring `"""One formatter returns all three renderings from the same object (arch §4.1)."""`, then `from __future__ import annotations`, imports `dataclass` from `dataclasses` and `Distance`, `Method`, `Provenanced`, `Source`, `Timing` from `scout.domain.provenance`, and declares the constant `NOT_STATED = "not stated"`. It defines:
 
@@ -395,12 +396,12 @@ Expected: FAIL with `ModuleNotFoundError: No module named 'scout.domain'`
   5. Return `CommuteRendering(spoken=spoken, badge=badge, full_label=label, value_text=_km(d.metres))`.
 - `_full_label(fact: Provenanced[Distance]) -> str` — if `fact.source is Source.COMPUTED`, return `"[Straight-line from coordinates — computed now]"`; if `fact.timing is Timing.LIVE`, return `"[OSM routing — live]"`; otherwise compute `stamp = fact.as_of.isoformat() if fact.as_of else "unknown date"` and return `f"[OSM straight-line — precomputed {stamp}]"` when `fact.method is Method.STRAIGHT_LINE`, else `f"[OSM routing — precomputed {stamp}]"`.
 
-- [ ] **Step 5: Run the tests**
+- [x] **Step 5: Run the tests**
 
 Run: `python -m pytest backend/tests/unit/domain -q`
 Expected: `12 passed` (5 in `test_provenance.py`, 7 in `test_commute_format.py` — measured; the estimate of 13 was one high).
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 Run `git add backend/scout/domain backend/tests/unit/domain` then `git commit -m "feat: Provenanced fact wrapper and the single commute formatter"`.
 
@@ -443,7 +444,7 @@ Expected: FAIL — `ModuleNotFoundError: No module named 'scout.domain.listing'`
 
 - [x] **Step 3: Implement the records**
 
-`backend/scout/domain/listing.py` opens with the docstring `"""Listing: 18 details from spec §3.1, each a wrapped fact, plus id and locality."""`, then `from __future__ import annotations`; it imports `dataclass` from `dataclasses`, `date` from `datetime`, `Enum` from `enum`, `Any` from `typing`, `BaseModel`, `Field` from `pydantic`, and `Provenanced`, `Source`, `Timing` from `scout.domain.provenance`. It defines:
+`backend/scout/domain/listing.py` opens with the docstring `"""Listing: 18 details from spec §3.1, each a wrapped fact, plus id and locality."""`, then `from __future__ import annotations`; it imports `dataclass` from `dataclasses`, `date` from `datetime`, `Enum` from `enum`, `Any` from `typing`, `BaseModel`, `ConfigDict`, `Field` from `pydantic`, and `Provenanced`, `Source`, `Timing` from `scout.domain.provenance`. It defines:
 
 - `class BhkType(str, Enum)` — `RK1 = "1RK"`, `BHK1 = "1BHK"`, `BHK2 = "2BHK"`, `BHK3 = "3BHK"`, `BHK3_PLUS = "3BHK+"`.
 - `class PropertyType(str, Enum)` — `APARTMENT = "apartment"`, `INDEPENDENT_HOUSE = "independent_house"`, `VILLA = "villa"`, `BUILDER_FLOOR = "builder_floor"`.
@@ -622,9 +623,12 @@ Run `git add data/SOURCE_NOTES.md` then `git commit -m "data: source inventory f
 
 ### Task 0.5: Importer — read the spreadsheet, dedupe, write records
 
-The source carries no contact details, so nothing needs stripping. The PII
-guard is kept anyway as a defence-in-depth assertion: if a future sheet ever
-carries a phone number, the build fails loudly rather than publishing it.
+**The sheet gained three PII columns on 2026-09-05** — `Name`, `Phone Number`
+(nine digits, stored as text) and `Voter ID`. They are kept out by a **column
+allow-list**: the importer can only read a column named in `IMPORTED_COLUMNS`,
+and reading anything else is a programming error, not a silent pass. `strip_pii`
+sits behind that as defence in depth, and Task 0.6's bundle write checks the
+serialised output one last time before it is committed.
 
 **Files:**
 - Create: `backend/scout/pipeline/__init__.py`, `backend/scout/pipeline/import_sheet.py`, `backend/scout/pipeline/pii.py`, `backend/scout/pipeline/dedupe.py`
@@ -634,7 +638,8 @@ carries a phone number, the build fails loudly rather than publishing it.
 **Interfaces:**
 - Consumes: `ListingRecord`, `Coordinates`, enums from Task 0.3; the column map from `data/SOURCE_NOTES.md`
 - Produces:
-  - `strip_pii(text: str) -> str` — removes Indian phone numbers (10 digits starting 6-9, with optional +91/0 and separators) and email addresses
+  - `strip_pii(text: str) -> str` — removes email addresses, Indian mobile numbers (10 digits starting 6-9, optional `+91`/`0` and separators) **and any bare run of nine or ten digits** (this sheet's phone numbers are nine digits, which the mobile pattern never matched). A digit run preceded by `.` is left alone, so coordinates survive
+  - `find_pii(text) -> dict[str, int]` and `assert_no_pii(text, *, where) -> None` raising `PiiLeakError` — the publish-time guard Task 0.6 calls. Counts and the file name only; the leaked value is never put in the message, because that would republish it into the log
   - `import_sheet(path: Path, as_of: date) -> list[ListingRecord]` — raises `SheetSchemaError` on a missing required column
   - `dedupe(records: list[ListingRecord]) -> tuple[list[ListingRecord], dict[str, list[str]]]` — exact society/locality match or coordinates within 50 m; most-detailed record wins; returns merged map
   - `haversine_m(lat1, lng1, lat2, lng2) -> float` — used by dedupe and by Task 1.3
@@ -657,6 +662,7 @@ carries a phone number, the build fails loudly rather than publishing it.
 | `square_feet` | `square_footage` | int |
 | `total_floors` | `total_floors` | int; the literal text `Not Applicable` (every `independent_house` and `villa` row) or a blank becomes `None` |
 | `parking_available` | `parking_available` | `True` when `Yes`, `False` when `No`. **`parking` itself stays `None`** — the sheet does not say two- or four-wheeler, and a bare "yes" is never inflated into `both` |
+| `availability_status` | `availability_status` | `True` when `Yes`, `False` when `No`; a blank would be `None` ("not stated"), but no blank occurs. **New on 2026-09-05** — this is the availability marker Gate D turns on |
 | `society_name` | `society_name` | trimmed string |
 | `Society Type` | `society_type` | `SocietyType.GATED` for `Gated Society`, `SocietyType.NON_GATED` for `Non-gated Society` (case-insensitive); any other wording raises. The prose is mapped, never stored verbatim |
 | `Latitude`, `Longitude` | `coordinates` | `Coordinates(lat=..., lng=...)` |
@@ -688,23 +694,40 @@ date the sheet was taken as of.
 - `test_output_carries_no_pii()` - sets `dumped = "".join(r.model_dump_json() for r in import_sheet(SAMPLE, date(2026, 9, 2)))`; asserts `"@"` is not in `dumped`; then does `import re` and asserts `not re.search(r"(?<!\d)[6-9]\d{9}(?!\d)", dumped)` (commented "no 10-digit mobiles anywhere").
 - `test_missing_required_column_is_an_error()` - asserts, with `pytest.raises(SheetSchemaError)`, that importing a workbook without a `locality` column fails.
 
+Seven further tests cover what the 2026-09-05 sheet added. **The fixture must carry the real 21-column header**, PII columns included, or none of them proves anything:
+
+- `test_availability_status_is_imported()` - asserts the five fixture rows read `[True, True, True, False, False]`.
+- `test_pii_columns_are_never_imported()` - dumps every record to JSON and asserts none of the fixture's names, voter ids or phone numbers appears.
+- `test_the_allow_list_excludes_every_pii_column()` - asserts `PII_COLUMNS == {"Name", "Phone Number", "Voter ID"}` and `IMPORTED_COLUMNS.isdisjoint(PII_COLUMNS)`.
+- `test_reading_a_column_outside_the_allow_list_is_an_error()` - asserts `_cell(("x",), {"Phone Number": 0}, "Phone Number")` raises `KeyError`.
+- `test_society_type_is_mapped_not_stored_verbatim()` - asserts the five rows read `[GATED, NON_GATED, GATED, NON_GATED, GATED]`.
+- `test_an_unrecognised_society_type_is_an_error()` - rewrites one fixture cell to `Cooperative Society` and asserts `ValueError` matching `"Society Type must be one of"`.
+- `test_a_missing_2026_09_05_column_is_an_error_not_a_silent_null()` - parametrised over `availability_status` and `Society Type`; drops each column from the fixture and asserts `SheetSchemaError` naming it. **This is the regression guard for the `REQUIRED` tuple above** - without it a dropped availability column reads as "not stated" and silently un-does Gate D.
+
 Run: FAIL.
 
 - [x] **Step 2: Implement**
 
-`backend/scout/pipeline/pii.py` and `backend/scout/pipeline/dedupe.py` are unchanged from their original specification: `strip_pii` with the phone and email patterns, and `dedupe` with `haversine_m`, the 50 m radius, the "most fields present wins" rule, and the guard that two records with the same coordinates but different rents are two flats in one tower, not one flat.
+`backend/scout/pipeline/dedupe.py` is as originally specified: `haversine_m`, the 50 m radius, the "most fields present wins" rule, and the guard that two records with the same coordinates but different rents are two flats in one tower, not one flat.
 
-`backend/scout/pipeline/import_sheet.py` has the module docstring "Import the supplied spreadsheet once. The sheet carries no PII; the guard is defence in depth." It uses `from __future__ import annotations`; imports `argparse`, `json`, `re`, `date` from `datetime`, `Path` from `pathlib`, `load_workbook` from `openpyxl`; imports `AreaBasis`, `BhkType`, `Coordinates`, `Furnishing`, `ListingRecord`, `Parking`, `PropertyType` from `scout.domain.listing`; and imports `strip_pii` from `scout.pipeline.pii`.
+`backend/scout/pipeline/pii.py` carries three patterns, not two: `_EMAIL`, `_PHONE` (the Indian mobile) and `_DIGIT_RUN` = `r"(?<![\d.])\d{9,10}(?!\d)"`. The third exists because **every one of this sheet's 9,180 phone numbers is nine digits and none matched the mobile pattern**. The lookbehind on `.` is what keeps coordinates (eight fraction digits) intact; the widest legitimate figure in this source is a six-digit deposit, so no real value here is a nine-digit run. The module also exposes `PiiLeakError`, `find_pii` and `assert_no_pii` (above) for Task 0.6.
+
+`backend/scout/pipeline/import_sheet.py` has the module docstring "Import the supplied spreadsheet once. The three PII columns are never read (spec §3.2)." It uses `from __future__ import annotations`; imports `argparse`, `json`, `re`, `date` and `datetime` from `datetime`, `Path` from `pathlib`, `Any` from `typing`, `ZoneInfo` from `zoneinfo`, `load_workbook` from `openpyxl`; imports `AreaBasis`, `BhkType`, `Coordinates`, `Furnishing`, `ListingRecord`, `Parking`, `PropertyType`, `SocietyType` from `scout.domain.listing`; and imports `strip_pii` from `scout.pipeline.pii`.
 
 - `class SheetSchemaError(ValueError)` — raised when a required column is absent.
-- `SHEET = "Bangalore_Properties_List"` and `REQUIRED = ("locality", "bhk_type", "Rent", "Deposit", "Latitude", "Longitude")`.
+- `SHEET = "Bangalore_Properties_List"`, `SOURCE_PATH = "data/Bangalore_Properties_List.xlsx"`.
+- **The allow-list, which is the actual PII control.** `PII_COLUMNS = frozenset({"Name", "Phone Number", "Voter ID"})` names them so the allow-list is checkable. `IMPORTED_COLUMNS` is a `frozenset` of the eighteen columns the importer may read — every column in the map above plus `Sl.` — and the three PII names are absent on purpose. Every cell read goes through `_cell(cells, col, name)`, which raises `KeyError` when `name` is outside `IMPORTED_COLUMNS`: reading a PII column is a programming error that fails a test, not something a reviewer has to notice.
+- `REQUIRED = ("locality", "bhk_type", "Rent", "Deposit", "Latitude", "Longitude", "Society Type", "availability_status")` — **the last two joined the tuple on 2026-09-05 and must stay in it.** Gate D was re-decided on the strength of the availability marker; if `availability_status` silently vanished, every record's availability would read `None`, curation treats `None` as "not stated" and **keeps** the row (spec §3.1), and all 9,180 rows would quietly return to the bundle with nothing to say so. `society_type` is in the schema only because the sheet carries `Society Type`.
 - `import_sheet(path, as_of)` opens the workbook read-only, reads the header row into a `{name: index}` map, raises `SheetSchemaError` naming any member of `REQUIRED` that is absent, and then builds one `ListingRecord` per non-empty row using the column map above. Every text value passes through `strip_pii` before it reaches the record.
+- Conversion helpers, each naming the row and column in its error: `_int`, `_float`, `_yes_no` (`Yes`/`No`, anything else raises), `_enum`, and `_society_type`, which maps the sheet's prose through `_SOCIETY_TYPE = {"gated society": GATED, "non-gated society": NON_GATED}` case-insensitively and **raises on any other wording** — the sheet holds exactly these two spellings, 4,590 rows each with no blanks (measured 2026-09-05), so a third spelling is a change worth failing on. The literal text `Not Applicable` (and a blank, `n/a`, `na`, `-`) becomes `None`, never a number.
 - Under `if __name__ == "__main__":` it builds `ap = argparse.ArgumentParser()`, adds `--sheet` with `default="data/Bangalore_Properties_List.xlsx"`, `--out` with `default="data/raw/listings_all.json"` and `--as-of` (ISO date; default today in `Asia/Kolkata`), parses `args = ap.parse_args()`, and writes the imported records to `args.out` as JSON.
 
 - [x] **Step 3: Run**
 
 Run: `python -m pytest backend/tests/unit/pipeline -q` to pass.
 Run: `python -m scout.pipeline.import_sheet` writes `data/raw/listings_all.json`.
+
+**Measured 2026-09-05:** 9,180 records over 566 localities; every record carries coordinates; `total_floors` is null on the 6,890 non-apartment rows; `parking` is null on all of them; `availability_status` splits 4,532 / 4,648; no id is duplicated. `data/raw/` is **not** tracked (`.gitignore`), so this file is rebuilt, never pulled: a fresh clone runs this command before Task 0.6. Checked by hand rather than in CI, because the input is the spreadsheet: none of the sheet's 9,180 names, phone numbers or voter ids appears in the output, and neither does an `@`.
 
 - [x] **Step 4: Commit**
 
@@ -724,6 +747,7 @@ Run `git add backend/scout/pipeline backend/tests/unit/pipeline backend/tests/fi
 - Produces:
   - `curate(records) -> tuple[list[ListingRecord], str]` — drops only records marked unavailable (a null marker is kept, spec §3.1); dedupe; per locality keep the 10 with the highest `detail_score`, ties by `scraped_on` (the sheet's as-of date) desc then `id`; returns the curation rule as a sentence
   - `gap_report(records) -> GapReport` — a field is "published" if ≥ 1 record has it non-null
+  - `write_bundle(records, out: Path) -> None` — **serialise, check for personal data, then write, in that order.** `data/bundle/listings.json` and `manifest.json` are the only pipeline outputs that are committed, so they are the last point at which a leak could become public. It calls `assert_no_pii(payload, where=str(out))` before `write_text`, so a failure leaves no half-written file. `save_manifest` does the same for the manifest, whose locality names and merged-record ids are what a leak would ride in on
   - `write_manifest(...)` — writes `data/bundle/manifest.json` with `bundle_version="1"`, `contract_version="1"` and the import-side fields (Task 1.2/1.3 fill the index/OSM fields)
 
 - [x] **Step 1: Write the failing test**
@@ -732,6 +756,10 @@ Run `git add backend/scout/pipeline backend/tests/unit/pipeline backend/tests/fi
 - `test_keeps_ten_best_populated_and_never_pads()` — builds `thick = [rec(i, "Koramangala", rent=1, deposit=2, lift=True) for i in range(12)]`, `thin = [rec(i, "HSR Layout", rent=1) for i in range(3)]`, and `unavailable = [rec(99, "HSR Layout", available=False, rent=1, deposit=2)]`; calls `kept, rule = curate(thick + thin + unavailable)`; groups `kept` into `by_loc` by `k.locality`; asserts `len(by_loc["Koramangala"]) == 10`; asserts `len(by_loc["HSR Layout"]) == 3` (commented "real count, not padded"); asserts `all(k.availability_status for k in kept)`; asserts `"10" in rule and "fields" in rule`.
 - `test_null_availability_is_kept_not_treated_as_unavailable()` — builds two records with `available=None` and one with `available=False` in `"Whitefield"`; asserts only the two null-availability ids are kept, that their `availability_status` stays `None`, and that `"not stated" in rule`.
 - `test_gap_report_names_unpublished_fields()` — calls `g = gap_report([rec(1, "X", rent=1), rec(2, "X", rent=2)])` and asserts `"rent" in g.fields_published and "deposit" in g.fields_missing`.
+- `test_the_bundle_write_refuses_to_publish_pii()` — calls `write_bundle` with a record whose `society_name` is `"Ramesh 9876543210"`, asserts `PiiLeakError`, and asserts the output file **does not exist** (nothing half-written).
+- `test_the_bundle_write_emits_the_records_when_clean()` — round-trips one clean record through `write_bundle` and reads the ids and rent back.
+- `test_the_manifest_write_is_guarded_too()` — monkeypatches `manifest.MANIFEST` to a temp path, calls `save_manifest` with a locality name carrying a phone number, asserts `PiiLeakError` and that no file was written.
+- `test_a_merge_winner_dropped_by_the_cap_takes_its_merged_ids_with_it()` — eleven records in one locality where the eleventh-ranked one absorbs a twin; asserts dedupe merged them, that the cap then dropped the winner, and that no bundled record carries a `merged_from`.
 
 - [x] **Step 2: Run to verify it fails**
 
@@ -745,6 +773,8 @@ Expected: FAIL — module not found
 Module constants:
 - `CAP = 10`
 - `RULE` — an f-string built from `CAP` whose full text is: "Records marked unavailable are dropped; a null availability (a source that publishes no marker) is kept and shown as not stated; duplicates merged (exact society/address or coordinates within 50 m, most-detailed record wins); where a locality exceeds 10, keep the 10 records with the most non-null schema fields, ties broken by newest as-of date then id." (in the source the two occurrences of `10` are written `{CAP}`).
+
+**One consequence to know before reading `merged_records`.** Dedupe runs *before* the cap, so a record can absorb a duplicate and then be cut by the 10-per-locality ceiling, taking its `merged_from` with it. The manifest CLI rebuilds `merged_records` from `listings.json`, so it reports merges **among bundled records only**, not everything dedupe did — on the 2026-09-05 sheet, 42 winners in the manifest against 112 that dedupe actually performed (126 records absorbed). This is the intended reading: the manifest describes the bundle. `test_a_merge_winner_dropped_by_the_cap_takes_its_merged_ids_with_it` pins it so it is not "corrected" into a whole-import claim.
 
 Function `curate(records: list[ListingRecord]) -> tuple[list[ListingRecord], str]`: filters `available = [r for r in records if r.availability_status is not False]` (spec §3.1: a null marker can never exclude a listing); calls `kept, _merged = dedupe(available)`; groups `kept` into `by_loc: dict[str, list[ListingRecord]]` keyed by `r.locality`; then for each `loc` in `sorted(by_loc)` computes `ranked = sorted(by_loc[loc], key=lambda r: (-detail_score(r), -r.scraped_on.toordinal(), r.id))` — most fields first, then **newest** as-of date (the negated ordinal is what makes it newest-first, matching `RULE`'s wording), then id and extends `out` with `ranked[:CAP]`; returns `out, RULE`.
 
@@ -776,6 +806,8 @@ Expected: all pass
 
 Run (PowerShell) `python -m scout.pipeline.curate` and then `python -m scout.pipeline.manifest --marker "<marker from SOURCE_NOTES.md or NONE>"`.
 
+Both read paths relative to the **repo root**, so run them from there (`PYTHONPATH=backend`, or with the venv's editable install). The marker string is written into the manifest verbatim and into `GATE_D.md`; the two must match, so paste the same text. As run on 2026-09-05 the marker was `availability_status column: Yes = available, No = unavailable` and the result was **2,370 listings over 464 localities** — 128 at the ceiling, 336 below, none above. Re-running is idempotent: both files come back byte-identical.
+
 - [x] **Step 6: Write the gate decision — `data/GATE_D.md`**
 
 The file is a Markdown document with these headings and lines, in this order:
@@ -799,6 +831,12 @@ Run `git add backend/scout/pipeline backend/tests/unit/pipeline data/bundle/list
 ## Infrastructure track (spec §9.2) — Tasks 0.7 to 0.10 → Gate L
 
 ### Task 0.7: Settings, boot-check framework, telemetry, `/health` and `/contract`
+
+**Three things to get right before writing any of this — each one is a trap the earlier tasks already walked into.**
+
+1. **`Settings` has more fields than `.env.example` has names, and that is correct.** `.env.example` lists what an operator must *supply*; `Settings` also carries defaults nobody sets by hand (`port`, `latency_log_path`, the model ids, every speech-timing value). Do **not** "fix" the mismatch by adding empty `PORT=` / `LATENCY_LOG_PATH=` lines, and do not drop the fields. The boot check's `REQUIRED` map — the nine names below — is the list that must match `.env.example`'s secrets exactly.
+2. **Tests must not read a developer's real `.env`.** `SettingsConfigDict(env_file=".env")` resolves relative to the working directory, so a `backend/.env` can leak into a test run started from `backend/`. Explicit keyword arguments win over the file, which is why the `settings(**over)` helper passes every field; where a test needs a genuinely empty environment (the `/health` test) it passes `_env_file=None`. Follow both patterns.
+3. **A boot check that passes silently is worthless.** `run_boot_checks` runs *every* check and reports *all* failures, so the operator missing two secrets is told both at once rather than one per restart. Add the same red-green discipline used in 0.5: write the failing test, watch it fail **for the reason you intended** (a wrong fixture failing early is not a red test), then implement.
 
 **Files:**
 - Create: `backend/scout/config.py`, `backend/scout/platform/__init__.py`, `backend/scout/platform/boot.py`, `backend/scout/platform/telemetry.py`, `backend/scout/contract/__init__.py`, `backend/scout/api/__init__.py`, `backend/scout/api/http.py`, `backend/scout/main.py`
