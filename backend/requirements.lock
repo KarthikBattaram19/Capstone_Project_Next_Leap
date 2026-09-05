@@ -107,7 +107,6 @@ respx==0.23.1
 rich==15.0.0
 rpds-py==2026.6.3
 ruff==0.16.5
--e git+https://github.com/KarthikBattaram19/Capstone_Project_Next_Leap.git@c772173db6e1e0150d8d2e89fc733f89e22395ca#egg=scout&subdirectory=backend
 shellingham==1.5.4
 six==1.17.0
 smallestai==5.12.0

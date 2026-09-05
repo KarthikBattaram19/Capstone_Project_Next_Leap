@@ -39,3 +39,6 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# The template carries no secrets and must be committed (mirrors the root rule).
+!.env.example

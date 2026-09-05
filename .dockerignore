@@ -1,0 +1,16 @@
+# Docker reads this from the BUILD CONTEXT ROOT. backend/Dockerfile copies
+# backend/... and data/bundle, so the context is the repo root and this is the file
+# that counts; backend/.dockerignore is not consulted for a root context.
+.git
+.venv
+backend/.venv
+backend/tests
+frontend/node_modules
+frontend/.next
+**/__pycache__
+**/.pytest_cache
+**/.ruff_cache
+.env
+.env.*
+!.env.example
+data/raw

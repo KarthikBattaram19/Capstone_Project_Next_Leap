@@ -99,9 +99,10 @@ Nothing after this phase is safe until both gates clear. Tasks 0.1–0.3 are sha
 | 0.6 Curate → **Gate D** | done, **gate decided** | 2,370 listings over 464 localities; 7 curation tests; `data/GATE_D.md` |
 | 0.7 Settings, boot checks, telemetry, HTTP | done | 74 tests (6 new); `python -m scout.main` exits 2 on a missing secret |
 | 0.8 Walking skeleton | code done, **live pings not run** | 77 tests (3 handshake); all four SDK signatures verified against the installed versions; the 3 provider pings skip without keys |
-| 0.9–0.10 Infrastructure → **Gate L** | **not started** | no Dockerfile, no Railway/Vercel deployment, no mic page, no `data/GATE_L.md` |
+| 0.9 Deploy the skeleton | **code done, nothing deployed** | Dockerfile, `railway.json`, root `.dockerignore`, mic page, WS client, capture worklet, PCM player — frontend builds and type-checks; `/health` and the handshake verified against the real app locally |
+| 0.10 Latency spike → **Gate L** | **not started** | no `data/GATE_L.md` |
 
-**The next task is 0.9**, but 0.8 is not fully signed off: its "done when" includes *three live provider ping tests*, and those are **skipped** because no keys are present in `backend/.env`. Put real keys there and run `python -m pytest backend/tests/integration -q` — expect `3 passed`. Any signature mismatch surfaces there, and the addendum says to fix it in 0.8 rather than later. Gate L is still undecided, so no work beyond Phase 0 may begin.
+**The next action is yours, not the agent's.** Task 0.9's remaining steps need accounts: create the Railway service (Step 2) and the Vercel project, then close the CORS loop (Step 6). Nothing has been deployed and no URL exists. 0.8 is also not fully signed off: its "done when" includes *three live provider ping tests*, and those are **skipped** because no keys are present in `backend/.env`. Put real keys there and run `python -m pytest backend/tests/integration -q` — expect `3 passed`. Any signature mismatch surfaces there, and the addendum says to fix it in 0.8 rather than later. Gate L is still undecided, so no work beyond Phase 0 may begin.
 
 ### Task 0.1 — Repository scaffold, toolchain, CI skeleton
 - **Delivers:** a Python backend project (pinned to Python 3.12, every dependency pinned to an exact version), a Next.js frontend project, an example environment file listing every secret's name, a CI workflow that runs the tests, and the ignore rules that commit the bundle but never raw guide fetches.
@@ -169,6 +170,8 @@ Nothing after this phase is safe until both gates clear. Tasks 0.1–0.3 are sha
 - **Delivers:** the Dockerfile and Railway config; a public backend URL answering `/health`; the browser-side microphone capture (16 kHz mono, 20 ms frames), audio player, and WebSocket client; a bare page with one mic button; the CORS allowlist containing exactly the production frontend origin plus localhost. Two Railway services (US and Singapore) if you want to compare regions — Gate L needs both numbers.
 - **Why now:** the speed targets can only be judged on real infrastructure, from a real browser.
 - **Done when:** in the browser you can click the mic, speak, see words appear while speaking, hear "You said …" back; and blanking a key makes the deploy fail its health check.
+- **Status: code done; nothing is deployed and the "done when" is unmet.** Steps 1, 3, 4 and 5 are built — Dockerfile, `railway.json`, the mic page, `WsClient`, the 16 kHz capture worklet and the PCM player; the frontend builds, type-checks and lints clean, and the real app was booted locally to confirm `/health`, `/contract` and the `4400` handshake. **Steps 2 and 6 need your Railway and Vercel accounts**, so no URL exists and no browser has spoken to it.
+- **Two build blockers were found and fixed before deploying.** `requirements.lock` carried the project's own editable install as a `git+https` line pinned to a commit, which would have failed the image build (`python:3.12-slim` has no `git`) — now stripped and guarded by a test. And `backend/.dockerignore` is never read, because Docker takes it from the build-context root: a root `.dockerignore` was added, without which every build uploads ~1 GB of `.venv`, `node_modules` and `.git`.
 - Detail: addendum → Task 0.9.
 
 ### Task 0.10 — Latency spike on real infrastructure → **Gate L**

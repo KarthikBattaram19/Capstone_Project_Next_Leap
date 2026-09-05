@@ -1154,7 +1154,7 @@ Run `git add backend/scout backend/tests` then `git commit -m "infra: walking sk
 - `MicCapture.start(onFrame)` — AudioWorklet, 16 kHz mono PCM16, 20 ms frames (640 bytes), keeps capturing while playback runs
 - `PcmPlayer(sampleRate).enqueue(ArrayBuffer)`, `.stop()`, `.unlock()` (must be called from a user gesture)
 
-- [ ] **Step 1: Dockerfile and Railway config**
+- [x] **Step 1: Dockerfile and Railway config**
 
 `backend/Dockerfile` contains, in order:
 
@@ -1176,6 +1176,11 @@ Run `git add backend/scout backend/tests` then `git commit -m "infra: walking sk
 
 `backend/.dockerignore`: `.venv`, `tests`, `__pycache__`, `.env*`.
 
+**Two things this step gets wrong as written — both fail at build time, not here.**
+
+1. **`backend/.dockerignore` is never read.** Docker takes `.dockerignore` from the **root of the build context**, and the context is the repo root (the Dockerfile copies `data/bundle`). A root `.dockerignore` is therefore required; the backend one is harmless but inert. Without it the context upload includes `backend/.venv` (523 MB), `frontend/node_modules` (445 MB) and `.git` — about a gigabyte on every build. The root file must exclude those plus `**/__pycache__`, the caches, `data/raw`, and `.env` (keeping `!.env.example`).
+2. **`requirements.lock` cannot be installed as `pip freeze` wrote it.** The freeze records the project's own editable install as `-e git+https://github.com/…@<commit>#egg=scout&subdirectory=backend`. `pip install -r requirements.lock` on `python:3.12-slim` has no `git`, so the image build fails; and if it resolved it would install a **stale copy of scout at a pinned commit** over the one `COPY`ed in. The app is not one of its own dependencies — strip the line. `backend/tests/unit/test_requirements_lock.py` guards both this and "every dependency declared in `pyproject.toml` is pinned in the lock", so a future `pip freeze > requirements.lock` cannot quietly reintroduce it.
+
 Set the Docker build context to the **repo root** in the Railway service settings (the Dockerfile copies `data/bundle`). If `data/bundle` does not exist yet (data track still running), commit an empty `data/bundle/.gitkeep` — the skeleton does not load it.
 
 - [ ] **Step 2: Create the Railway service and set variables**
@@ -1184,7 +1189,9 @@ In the Railway dashboard: new project → deploy from the GitHub repo → set ev
 
 Verify: `curl https://<railway-url>/health` → `{"status":"ok","contract_version":"1"}`. Verify the boot check bites: temporarily blank `GROQ_API_KEY`, redeploy, confirm the deploy **fails** its healthcheck, restore the key.
 
-- [ ] **Step 3: Frontend transport**
+`Settings.port` reads `PORT`, so Railway's injected port is honoured without changing anything. Confirmed locally by booting the real app with `PORT=8137`: the boot checks passed, `/health` and `/contract` answered exactly as above, a correct hello was echoed and a wrong one closed with `4400 contract_version_mismatch`. That local run is **not** a substitute for this step — it proves the image's entrypoint behaviour, not Railway.
+
+- [x] **Step 3: Frontend transport**
 
 `frontend/src/lib/transport/ws.ts` contains the following:
 
@@ -1200,7 +1207,7 @@ Verify: `curl https://<railway-url>/health` → `{"status":"ok","contract_versio
   - `sendText(text: string)` — sends `JSON.stringify({ type: "text", text })` over `this.ws` (optional-chained).
   - `close()` — calls `this.ws?.close()`.
 
-- [ ] **Step 4: Capture worklet and player**
+- [x] **Step 4: Capture worklet and player**
 
 `frontend/public/worklets/capture-worklet.js` contains a single class `CaptureProcessor extends AudioWorkletProcessor`, preceded by the comment "Downsamples the AudioContext rate to 16 kHz mono PCM16 and posts 20 ms frames (320 samples)." Its members:
 
@@ -1225,7 +1232,7 @@ Verify: `curl https://<railway-url>/health` → `{"status":"ok","contract_versio
 - `enqueue(pcm16: ArrayBuffer)` — returns immediately if `!this.ctx`. Otherwise: `const i16 = new Int16Array(pcm16)`; `const buf = this.ctx.createBuffer(1, i16.length, this.sampleRate)`; `const f32 = buf.getChannelData(0)`; for each `i`, `f32[i] = i16[i] / 0x8000`; `const src = this.ctx.createBufferSource()`; `src.buffer = buf`; `src.connect(this.ctx.destination)`; `const at = Math.max(this.ctx.currentTime, this.nextAt)`; `src.start(at)`; `this.nextAt = at + buf.duration`; pushes `src` onto `this.sources`.
 - `stop()` — for every `s` in `this.sources`, calls `s.stop()` inside a `try` with an empty `catch`; then resets `this.sources = []` and `this.nextAt = 0`.
 
-- [ ] **Step 5: Bare page**
+- [x] **Step 5: Bare page**
 
 `frontend/src/app/page.tsx` — one button, transcript line, ack indicator, outcome dump. Wire: click → `player.unlock()` → `mic.start(frame => ws.sendAudio(frame))`; `ws.onAudioStart = a => player.setSampleRate(a.sample_rate)`; `ws.onAudioChunk = player.enqueue`; `ws.onAudioStop = player.stop`. Use `process.env.NEXT_PUBLIC_API_URL` and derive the WebSocket URL by replacing `https://` with `wss://` and appending `/ws`.
 
