@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 
-from scout.config import Settings
+from scout.config import ENV_FILE, Settings
 
 
 class BootError(RuntimeError):
@@ -32,7 +32,14 @@ REQUIRED: dict[str, str] = {
 def check_secrets(s: Settings) -> None:
     missing = [env for env, attr in REQUIRED.items() if not getattr(s, attr)]
     if missing:
-        raise BootError("missing required environment variables: " + ", ".join(missing))
+        # Name the file that was consulted. Without this, "secrets missing" reads the
+        # same whether the operator forgot a value or put the file somewhere else.
+        state = "present" if ENV_FILE.exists() else "NOT FOUND"
+        raise BootError(
+            f"missing required environment variables: {', '.join(missing)}\n"
+            f"    read from the environment and {ENV_FILE} ({state})\n"
+            f"    copy .env.example to {ENV_FILE} and fill it in"
+        )
     # A wildcard origin would let any page open a socket to this backend; an empty
     # list means the real frontend cannot. Neither is a working deployment.
     if not s.origins or any(o == "*" for o in s.origins):

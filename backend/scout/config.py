@@ -2,15 +2,25 @@
 
 from __future__ import annotations
 
+from pathlib import Path
+
 from pydantic import field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
+
+# backend/, resolved from this file rather than from the working directory. The
+# conventions put secrets in backend/.env but run commands from the repo root, so a
+# plain relative ".env" would silently miss the file in exactly the documented case:
+# the integration tests would skip and the boot check would report every secret
+# missing, with the file sitting right there.
+BACKEND_DIR = Path(__file__).resolve().parent.parent
+ENV_FILE = BACKEND_DIR / ".env"
 
 
 class Settings(BaseSettings):
     # `.env.example` lists what an operator must supply. This model also carries
     # defaults nobody sets by hand (port, the model ids, the speech timings), so it
     # legitimately has more fields than that file has names.
-    model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8", extra="ignore")
+    model_config = SettingsConfigDict(env_file=ENV_FILE, env_file_encoding="utf-8", extra="ignore")
 
     deepgram_api_key: str = ""
     groq_api_key: str = ""
