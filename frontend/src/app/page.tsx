@@ -23,9 +23,27 @@ export default function Page() {
   const mic = useRef<MicCapture | null>(null);
   const player = useRef<PcmPlayer | null>(null);
   const unmuteTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  // True from the click until the mic is live. The setup below awaits the audio
+  // unlock, the socket, the worklet and the permission prompt — a second or more —
+  // and the button still read "Start microphone" throughout, so a second click ran
+  // startMic again: two sockets, two Deepgram streams, two microphones, and both
+  // sessions' TTS streams feeding ONE player. Interleaved chunks put every sample a
+  // byte out of phase, which is full-scale noise. Seen on production 2026-09-06:
+  // every utterance answered twice, 60 ms apart.
+  const starting = useRef(false);
+  const [connecting, setConnecting] = useState(false);
 
   async function startMic() {
+    if (starting.current || live) return;
+    starting.current = true;
+    setConnecting(true);
     setError("");
+    // Whatever a previous attempt left behind goes first, so there is never more
+    // than one session per page.
+    mic.current?.stop();
+    ws.current?.close();
+    mic.current = null;
+    ws.current = null;
     try {
       // Unlock audio first: this must happen inside the click, not after an await
       // on the socket, or the browser refuses to play (spec §6.15).
@@ -40,6 +58,7 @@ export default function Page() {
       client.onAck = (text) => setAck(`heard: ${text}`);
       client.onAudioStart = (a) => {
         player.current?.setSampleRate(a.sample_rate);
+        player.current?.beginStream();
         // Mute BEFORE the first chunk plays, so the reply never reaches Deepgram.
         clearTimeout(unmuteTimer.current);
         mic.current?.mute();
@@ -79,6 +98,9 @@ export default function Page() {
       } else {
         setError(e instanceof Error ? e.message : "could not start");
       }
+    } finally {
+      starting.current = false;
+      setConnecting(false);
     }
   }
 
@@ -99,9 +121,10 @@ export default function Page() {
 
       <button
         onClick={live ? stopMic : startMic}
-        style={{ padding: "12px 20px", fontSize: 16, cursor: "pointer" }}
+        disabled={connecting}
+        style={{ padding: "12px 20px", fontSize: 16, cursor: connecting ? "wait" : "pointer" }}
       >
-        {live ? "Stop" : "Start microphone"}
+        {live ? "Stop" : connecting ? "Connecting…" : "Start microphone"}
       </button>
 
       {error && (

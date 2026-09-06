@@ -26,6 +26,12 @@ export class PcmPlayer {
     }
   }
 
+  /** A new utterance begins: a half sample left over from the last one must not be
+   *  glued to its front, or every sample that follows is read a byte out of phase. */
+  beginStream() {
+    this.carry = null;
+  }
+
   enqueue(pcm16: ArrayBuffer) {
     if (!this.ctx) return;
 
