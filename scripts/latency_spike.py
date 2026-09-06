@@ -54,16 +54,28 @@ async def one_turn(url: str, wav: Path, turn_type: str) -> dict:
 
         rd = asyncio.create_task(reader())
         t_first_sent = time.perf_counter()
+        # Pace against a deadline, not with sleep(FRAME_MS): on Windows asyncio.sleep
+        # rounds up to the 15.6 ms timer tick, so a 20 ms sleep runs ~31 ms and a
+        # 5.66 s utterance took 8.7 s to send. That would inflate every L-number the
+        # spike reports. Measured after this change: 5,660 ms of audio sent in 5,672 ms.
+        n_sent = 0
+
+        async def send_paced(data: bytes) -> None:
+            nonlocal n_sent
+            await ws.send(data)
+            n_sent += 1
+            delay = t_first_sent + n_sent * FRAME_MS / 1000 - time.perf_counter()
+            if delay > 0:
+                await asyncio.sleep(delay)
+
         for i in range(0, len(pcm), frame):
-            await ws.send(pcm[i : i + frame])
-            await asyncio.sleep(FRAME_MS / 1000)  # replay at real time
+            await send_paced(pcm[i : i + frame])
         t_last_sent = time.perf_counter()
 
         # Keep the stream alive with silence so Deepgram can endpoint.
         silence = b"\x00" * frame
         while not rd.done():
-            await ws.send(silence)
-            await asyncio.sleep(FRAME_MS / 1000)
+            await send_paced(silence)
             if time.perf_counter() - t_last_sent > 20:
                 rd.cancel()
                 break

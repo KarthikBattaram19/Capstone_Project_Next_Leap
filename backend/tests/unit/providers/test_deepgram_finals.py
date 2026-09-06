@@ -98,27 +98,36 @@ async def test_a_second_utterance_starts_clean():
     assert finals == ["first one", "second one"], finals
 
 
-async def test_a_natural_pause_does_not_end_the_utterance():
-    """The 400 ms endpointing fires inside a sentence, not only at the end of one.
+async def test_speech_final_starts_the_turn_without_waiting_for_utterance_end():
+    """The turn starts on speech_final; pause tolerance lives in the endpointing value.
 
-    Measured against Deepgram on 2026-09-06 with a real 700 ms mid-sentence pause —
-    the length of an ordinary breath before a number:
+    Measured against Deepgram on 2026-09-06, real-time paced, 3 runs each, on a fluent
+    sentence and on one with a ~1 s mid-sentence breath:
 
-        (True, True)  '2 BHK in Koramangala.'
-        (True, True)  'Under 40,000 need parking.'
+        trigger                     fluent      with a breath
+        UtteranceEnd (any ep)       ~+1.7 s     ~+1.7 s, whole
+        speech_final @  700 ms      +1.0 s      SPLITS
+        speech_final @  800 ms      +1.05 s     SPLITS
+        speech_final @ 1000 ms      +1.3 s      +1.3 s, whole
 
-    Both carry speech_final, so endpointing alone splits one request into two turns,
-    and the second has lost the locality. Deepgram's UtteranceEnd (utterance_end_ms,
-    ~1 s) is the signal that the speaker actually stopped. This is the false
-    end-of-speech risk the spec names, seen on real speech.
+    speech_final at 1000 ms keeps the breath whole and starts the turn ~0.4 s sooner
+    than waiting for UtteranceEnd, so it is the trigger. UtteranceEnd stays as the
+    P3b fallback flush for a stream where endpointing never fires.
     """
-    finals, interims, ends = [], [], []
-    st = stream(finals, interims, ends)
+    finals, interims = [], []
+    st = stream(finals, interims)
 
-    await st._on_message(message("2 BHK in Koramangala.", is_final=True, speech_final=True))
-    assert finals == [], f"a 700 ms breath must not launch a turn; got {finals}"
+    await st._on_message(message("two BHK in Koramangala", is_final=True))
+    await st._on_message(message("under forty thousand", is_final=True, speech_final=True))
 
-    await st._on_message(message("Under 40,000 need parking.", is_final=True, speech_final=True))
-    await st._on_message(message("", kind="UtteranceEnd"))
+    assert finals == ["two BHK in Koramangala under forty thousand"], finals
 
-    assert finals == ["2 BHK in Koramangala. Under 40,000 need parking."], finals
+
+def test_default_endpointing_tolerates_a_breath():
+    # A 700 ms gap (about 1 s once the surrounding silence is counted) split the
+    # sentence at 400 and 800 ms and stayed whole at 1000 ms. The default carries
+    # that measurement; Gate L's false-end-of-speech count is where it gets checked on
+    # a real Indian-English speaker.
+    from scout.config import Settings
+
+    assert Settings(_env_file=None).deepgram_endpointing_ms == 1000

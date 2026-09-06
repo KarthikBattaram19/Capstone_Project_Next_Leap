@@ -86,19 +86,22 @@ class DeepgramStream:
                 # is_final marks the end of a SEGMENT, not of the utterance: Deepgram
                 # finalises at every natural pause, so one sentence produces several.
                 # Only speech_final means the person stopped talking (that is what the
-                # 400 ms endpointing produces). Treating is_final as the end of a turn
+                # endpointing setting produces). Treating is_final as the end of a turn
                 # started a fresh turn mid-sentence — fourteen turns from two spoken
                 # utterances on the deployed service, each with its own TTS audio.
                 self._segments.append(text)
-                # NOT even speech_final ends the turn. Measured on real speech
-                # 2026-09-06: a 700 ms mid-sentence pause — an ordinary breath before
-                # a number — makes Deepgram endpoint and set speech_final, so
-                # "two BHK in Koramangala <breath> under forty thousand" arrived as
-                # two complete utterances and the second had lost the locality. Only
-                # UtteranceEnd (utterance_end_ms, ~1 s) means the speaker stopped.
-                # Show the words as they land; just do not act on them yet.
-                telemetry.mark(telemetry.STT_INTERIM)
-                await self._on_interim(" ".join(self._segments))
+                if getattr(msg, "speech_final", False):
+                    # speech_final is the trigger; pause tolerance lives in the
+                    # endpointing value (Settings, default 1000 ms), not in waiting for
+                    # UtteranceEnd. Measured 2026-09-06, real-time paced, 3 runs each:
+                    # UtteranceEnd lands ~1.7 s after speech regardless of setting;
+                    # speech_final at 1000 ms lands at ~1.3 s and still keeps a ~1 s
+                    # mid-sentence breath whole, where 700 and 800 ms both split it.
+                    await self._flush()
+                else:
+                    # Show the words as they land; just do not act on them yet.
+                    telemetry.mark(telemetry.STT_INTERIM)
+                    await self._on_interim(" ".join(self._segments))
             else:
                 telemetry.mark(telemetry.STT_INTERIM)
                 await self._on_interim(" ".join([*self._segments, text]))
