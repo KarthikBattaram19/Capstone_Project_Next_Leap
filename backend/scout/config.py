@@ -44,9 +44,7 @@ class Settings(BaseSettings):
 
     # Voice (P3, P3b)
     deepgram_model: str = "nova-3"
-    deepgram_endpointing_ms: int = (
-        1000  # 400 splits a breath; 1000 measured whole (see deepgram_stt)
-    )
+    deepgram_endpointing_ms: int = 400
     hold_extra_ms: int = 400
     utterance_end_ms: int = 1000
     audio_sample_rate: int = 16000
