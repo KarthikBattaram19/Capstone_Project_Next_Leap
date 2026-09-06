@@ -1,44 +1,123 @@
-# Gate L — Latency (NOT YET DECIDED)
+# Gate L — Latency (MEASURED — decision pending your approval of the renegotiated table)
 
-> **This gate is open.** Nothing below has been measured. The driver and scorer exist
-> (`scripts/latency_spike.py`, `evals/latency/score.py`) and are tested, but they have
-> not yet been run. The service **is** deployed and verified (2026-09-06:
-> `/health` 200 in 0.96 s; a typed-fallback Type A turn on the deployed `/ws`
-> returned `outcome: answered` with 238 KB of audio). What is missing is the two
-> recorded utterances the driver replays.
+> **Measured on 2026-09-06 against the deployed service. Every row misses its target;
+> the scorer says `passed: false`.** Nothing below is estimated. The decision box is
+> deliberately left for the user, because ticking PROCEED WITH RENEGOTIATION requires
+> amending spec §5.2 and the plan's Global Constraints in the same commit, and those
+> numbers are a product decision — a proposal is written out under *Proposed decision*.
 >
-> **Region: US only, by decision, not by measurement (2026-09-06).** The plan asked
-> for a US and a Singapore service so the region could be chosen on evidence. The
-> user chose to run one service and skip the comparison. The Singapore row below
-> therefore stays permanently blank, and if the US numbers miss their targets it is
-> **not known** whether Singapore would have passed — a Bengaluru client is roughly
-> 200–250 ms from a US region against roughly 40–60 ms from Singapore, so that gap
-> is large enough to matter. Any renegotiation of spec §5.2 decided from these
-> numbers carries this caveat.
->
-> **No box may be ticked from an unmeasured run.** Every cell below is blank on
-> purpose. Filling them in requires the four commands in *How to fill this in*.
-> Until one box is ticked, Phase 0 has not exited and no Phase 1 work may begin
-> (plan §4, spec §9.2).
+> **Region: US only, by decision, not by measurement (2026-09-06).** The Singapore row
+> stays blank. A Bengaluru client is roughly 200–250 ms from a US region against roughly
+> 40–60 ms from Singapore; every provider hop pays that, so the region choice is a real
+> part of the misses below and cannot be separated from them without the second service.
 
-Skeleton commit: `<sha>`. Client location: `<city>`. Runs: 25 per turn type. One region (US).
+Skeleton commit: `3e26c72`. Client location: Bengaluru (the user's machine; assumed from
+project context, not measured). Runs: 25 per turn type, one region (US), sequential,
+each run a fresh browser-equivalent session.
+
+**Recordings.** Type A: `data/raw/utterance_a_16k.wav` (sha256 `8f932358ac872d18…`),
+the user's own voice, 16 kHz mono PCM16, 5.12 s, peak 52 % FS, spoken fluently (longest
+internal pause 80 ms) — *"I'm looking for a 2 BHK in Koramangala under 40,000 rupees,
+and I need parking"*. It carries **500 ms of trailing silence inside the file**, which the
+driver counts as speech, so the Type A L1/L2/L4 figures below are understated by about
+0.5 s. **Type B is PROVISIONAL: synthesised speech** (Smallest.ai, resampled to 16 kHz),
+because no Type B recording existed at run time. Re-run the B rows when it does.
 
 | Region | L0 p99 | L1 p99 | L2 p99 | L3 p99 | L4 p99 | L5 p99 | 2× violations | cold start L1 |
 |---|---|---|---|---|---|---|---|---|
-| us-… | | | | | | | | |
+| us (A / B) | 3,284 / 1,957 | 1,910 / 2,448 | 3,085 / — | — / 3,903 | 11,295 / — | — / 15,101 | 50 of 50 runs (see below) | *pending — measured after this commit's redeploy* |
 | singapore *(not deployed — comparison skipped by decision)* | — | — | — | — | — | — | — | — |
 
-Per-component (from the server traces): `stt.final`, `external.groq`, `llm.first_token`, `tts.first_byte` …
+Targets (spec §5.2): L0 300 · L1 700 · L2 1,500 · L3 1,500 · L4 3,000 · L5 6,000 ms. Every
+cell above exceeds its target at p99; **every one of the 50 runs also breaks the 2× rule**
+on L0 (all 50 > 600 ms) and on L1 for every Type B run (all 25 > 1,400 ms).
 
-False end-of-speech rate on the Type A utterance: `<k>`/20.
+**Medians and p90, so the p99 outliers do not hide the shape (ms, client-measured):**
 
-Preconditions in force during the runs: P1 ✓/✗ · P2 · P3 · P4 · P5 · P6 · P7 · P8 (state each, with evidence).
+| | L0 | L1 | L2 / L3 | L4 / L5 |
+|---|---|---|---|---|
+| Type A median · p90 | 1,344 · 1,568 | 1,251 · 1,455 | 2,783 · 2,940 | 3,527 · 4,347 |
+| Type B median · p90 | 1,343 · 1,593 | 1,764 · 1,885 | 2,712 · 2,912 | 4,818 · 5,317 |
+
+**Per-component (server traces, ms after the ack, 25 turns each):**
+`external.groq` 622 median / 700 max · Smallest.ai `tts.first_byte` **865 median** after
+the text is ready (both types, 1,005 max) · Anthropic `llm.first_token` 1,285 median /
+1,615 max · `llm.last_token` 2,979 median / 3,580 max. The server finishes every Type A
+turn ≤ 1,726 ms and every Type B turn ≤ 3,580 ms after the ack.
+
+**Where the time goes, in order.**
+1. **End-of-speech detection: ~1.75 s** from the last word to the ack (Type B L1 median
+   1,764; Type A reads 1,251 only because of the file's trailing silence). The turn
+   fires on Deepgram `UtteranceEnd` (utterance_end_ms = 1000), not on the 400 ms
+   endpoint, because the 400 ms endpoint split a sentence at a natural breath on real
+   speech (2026-09-06; see plan Task 0.9). This is the single largest term and it is a
+   **deliberate deviation from P3 as worded**; `speech_final` at a 1,000 ms endpoint was
+   measured to save 0.4 s and to split a 1.1 s breath 4 of 4 times on production, and
+   was reverted.
+2. **TTS first byte: 865 ms** from a US region to Smallest.ai, on both turn types. With
+   the ack this alone consumes the whole L3 budget.
+3. **First interim from Deepgram: ~1.3 s** after the first frame (L0). Not tunable on
+   our side; it is provider behaviour plus the US round trip.
+4. **Two transit stalls** in 50 runs: Type A L4 max 11,295 and Type B L5 max 15,101 while
+   the server had finished those turns in 1,726 / 3,580 ms — the delay was on the wire to
+   the client, not in any provider. They set the p99 for L4 and L5 on their own.
+
+False end-of-speech rate on the Type A utterance: **0/20** — all 20 plays transcribed
+identically and whole, one turn each. On this speaker the endpointing did not cut.
+
+Preconditions in force during the runs:
+- **P1 ✓** — `railway.json` `sleepApplication: false`, read by Railway (build log shows
+  `backend/Dockerfile` from it); no run was a cold start.
+- **P2 partial** — one Deepgram socket and one client per provider per session, but the
+  spike opens a **new session per run**, so each run paid a fresh TLS handshake to every
+  provider that a real conversation pays once. Provider figures above are therefore
+  slightly pessimistic.
+- **P3 ✗ as worded / P3b ✓** — `endpointing=400` and `utterance_end_ms=1000` are both sent,
+  but the turn is triggered by UtteranceEnd (P3b), not the 400 ms endpoint. See item 1.
+- **P4 ✓** — TTS is called per sentence; the Type B opener goes alone.
+- **P5, P6 n/a** — no OSM, no calendar in the skeleton.
+- **P7 ✓** — Job 2 runs `thinking: adaptive` with `output_config.effort` set explicitly.
+- **P8 ✓** — the opener's first byte lands 865 ms after the ack, 420 ms before Job 2's
+  first token and ~2.1 s before its last.
 
 ## Decision
 
-- [ ] PROCEED — every row meets its target at p99 with no 2× violation. Region: US (chosen by decision, not measurement — see the note at the top).
-- [ ] PROCEED WITH RENEGOTIATION — rows that missed: ___. Spec §5.2 table updated in commit ___ and this plan's Global Constraints updated to match.
-- [ ] CHANGE THE MODEL — Job 1 missed L1/L2; switch `JOB1_MODEL` to ___ and re-run (numbers below).
+- [ ] PROCEED — every row meets its target at p99 with no 2× violation. Region: US (chosen by decision, not measurement — see the note at the top). **Not available: every row missed.**
+- [ ] PROCEED WITH RENEGOTIATION — rows that missed: **all of L0, L1, L2, L3, L4, L5.** Spec §5.2 table updated in commit ___ and this plan's Global Constraints updated to match. **← proposed; see below.**
+- [ ] CHANGE THE MODEL — Job 1 missed L1/L2; switch `JOB1_MODEL` to ___ and re-run. **Not indicated: Job 1 (Groq) took 622 ms median, 700 max — it is not where the time goes.**
+
+### Proposed decision (for the user to accept, change, or reject)
+
+**Tick PROCEED WITH RENEGOTIATION**, on this reading of the numbers: the misses are not
+caused by the models — Job 1 is fast and Job 2's first token is inside its budget — but by
+three things the spec's table did not price in: ~1.75 s of end-of-speech detection that
+tolerates a breath, ~0.9 s of TTS first byte from a US region, and ~1.3 s to Deepgram's
+first interim. A renegotiated table should price those in **and** name what Phase 2 must
+reclaim, so the budget is not quietly ignored.
+
+Proposed §5.2 values, p99 with the 2× rule unchanged, derived from component medians
+plus headroom rather than from this run's maxima:
+
+| Stage | Was | Proposed | Derivation |
+|---|---|---|---|
+| L0 first interim | 300 | **1,800** | Deepgram first interim ~1.3 s + US RTT; p90 1.6 s. |
+| L1 ack | 700 | **2,000** | UtteranceEnd ~1.75 s after the last word + RTT. This run's Type B p99 (2,448) would still fail it — one sample; re-run with the real Type B recording. |
+| L2 first audio, A | 1,500 | **3,500** | L1 + Groq 0.6 + TTS 0.9; p90 2.9 s. |
+| L3 first audio, B | 1,500 | **3,500** | L1 + TTS 0.9; p90 2.9 s. |
+| L4 shortlist rendered | 3,000 | **5,000** | p90 4.3 s; the 11.3 s sample was a transit stall. |
+| L5 explanation rendered | 6,000 | **8,000** | p90 5.3 s; the 15.1 s sample was a transit stall. |
+
+**What Phase 2 must try to reclaim, written into the plan as obligations, not hopes:**
+(a) end-of-speech: `speech_final` at a 1,000 ms endpoint saves 0.4 s if the false
+end-of-speech count on more speakers stays at 0 — the orchestrator (Task 2.10) can also
+merge a late second final into the running turn instead of cancelling it; (b) TTS first
+byte: a Singapore region would cut every provider round trip by ~200 ms — the comparison
+was skipped by decision and can be reopened; (c) session reuse inside the spike so P2 is
+actually in force when the numbers are re-taken.
+
+**If you would rather not renegotiate this far**, the only lever that changes the numbers
+materially before Phase 1 is deploying the Singapore service and re-running — roughly a
+few hundred rupees for a day and ~30 minutes.
 
 Tick exactly one. If renegotiating, edit `Docs/Problem_Statement_Detailed.md` §5.2 **and**
 the plan's Global Constraints in the same commit — a budget quietly ignored is the
@@ -46,9 +125,9 @@ failure mode the spec names.
 
 ---
 
-## How to fill this in
+## How this was filled in
 
-**Prerequisites, none of which are met yet.**
+**Prerequisites (all met on 2026-09-06).**
 
 1. ~~Provider keys in `backend/.env`~~ **met** — the three live pings passed 2026-09-05, and `SMALLEST_VOICE_ID` is set on Railway (the deployed turn speaks).
 2. ~~A deployed backend~~ **met** — one Railway service (US), verified live 2026-09-06.
