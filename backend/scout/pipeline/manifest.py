@@ -90,6 +90,20 @@ def from_index(counts: dict[str, int]) -> DatasetManifest:
     )
 
 
+def from_osm(today: date) -> DatasetManifest:
+    """The OSM half: which fixed questions were asked of OSM, and on what (IST) date."""
+    from scout.domain.osm import OSM_QUERY_SET
+
+    m = load_manifest()
+    assert m is not None, "run the import half first"
+    return m.model_copy(
+        update={
+            "osm_query_set": [q.query.value for q in OSM_QUERY_SET],
+            "osm_index_date": today,
+        }
+    )
+
+
 if __name__ == "__main__":
     ap = argparse.ArgumentParser()
     ap.add_argument(
