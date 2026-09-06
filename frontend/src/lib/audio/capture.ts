@@ -1,13 +1,31 @@
+export class MicError extends Error {
+  constructor(public kind: "denied" | "no_device") {
+    super(kind);
+  }
+}
+
 export class MicCapture {
   private ctx: AudioContext | null = null;
   private node: AudioWorkletNode | null = null;
   private stream: MediaStream | null = null;
   private muted = false;
 
+  /** Fired when the device goes away mid-session (unplugged, revoked). */
+  onDeviceLost: (() => void) | null = null;
+
   async start(onFrame: (pcm: ArrayBuffer) => void): Promise<void> {
-    this.stream = await navigator.mediaDevices.getUserMedia({
-      audio: { channelCount: 1, echoCancellation: true, noiseSuppression: true },
-    });
+    try {
+      this.stream = await navigator.mediaDevices.getUserMedia({
+        audio: { channelCount: 1, echoCancellation: true, noiseSuppression: true },
+      });
+    } catch (e) {
+      // Named so the page can show recovery text per browser (spec §6.13).
+      if (e instanceof DOMException && e.name === "NotAllowedError") throw new MicError("denied");
+      if (e instanceof DOMException && e.name === "NotFoundError") throw new MicError("no_device");
+      throw e;
+    }
+    const track = this.stream.getAudioTracks()[0];
+    if (track) track.onended = () => this.onDeviceLost?.();
     this.ctx = new AudioContext();
     await this.ctx.audioWorklet.addModule("/worklets/capture-worklet.js");
     const src = this.ctx.createMediaStreamSource(this.stream);

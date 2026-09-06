@@ -7,6 +7,11 @@ export class PcmPlayer {
 
   constructor(private sampleRate: number) {}
 
+  /** True while the browser lets this context play sound. */
+  get unlocked(): boolean {
+    return this.ctx?.state === "running";
+  }
+
   /** Must be called inside a user gesture (spec §6.15). */
   async unlock(): Promise<boolean> {
     this.ctx ??= new AudioContext({ sampleRate: this.sampleRate });
