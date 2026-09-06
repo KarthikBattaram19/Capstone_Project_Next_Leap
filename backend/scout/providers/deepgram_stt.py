@@ -90,12 +90,15 @@ class DeepgramStream:
                 # started a fresh turn mid-sentence — fourteen turns from two spoken
                 # utterances on the deployed service, each with its own TTS audio.
                 self._segments.append(text)
-                if getattr(msg, "speech_final", False):
-                    await self._flush()
-                else:
-                    # Show the words; just do not act on them yet.
-                    telemetry.mark(telemetry.STT_INTERIM)
-                    await self._on_interim(" ".join(self._segments))
+                # NOT even speech_final ends the turn. Measured on real speech
+                # 2026-09-06: a 700 ms mid-sentence pause — an ordinary breath before
+                # a number — makes Deepgram endpoint and set speech_final, so
+                # "two BHK in Koramangala <breath> under forty thousand" arrived as
+                # two complete utterances and the second had lost the locality. Only
+                # UtteranceEnd (utterance_end_ms, ~1 s) means the speaker stopped.
+                # Show the words as they land; just do not act on them yet.
+                telemetry.mark(telemetry.STT_INTERIM)
+                await self._on_interim(" ".join(self._segments))
             else:
                 telemetry.mark(telemetry.STT_INTERIM)
                 await self._on_interim(" ".join([*self._segments, text]))

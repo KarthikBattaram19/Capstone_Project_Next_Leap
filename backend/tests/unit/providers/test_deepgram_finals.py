@@ -61,8 +61,7 @@ async def test_a_segment_final_does_not_start_a_turn():
 
 
 async def test_the_whole_utterance_is_delivered_once_speech_ends():
-    # The endpointed message carries only the LAST segment, so the segments have to
-    # be joined — otherwise the turn acts on "need parking" and loses the budget,
+    # Each message carries only its own segment, so the segments have to be joined — otherwise the turn acts on "need parking" and loses the budget,
     # the locality and the bedroom count.
     finals, interims = [], []
     st = stream(finals, interims)
@@ -70,6 +69,7 @@ async def test_the_whole_utterance_is_delivered_once_speech_ends():
     await st._on_message(message("two BHK in Koramangala", is_final=True))
     await st._on_message(message("under forty thousand", is_final=True))
     await st._on_message(message("need parking", is_final=True, speech_final=True))
+    await st._on_message(message("", kind="UtteranceEnd"))
 
     assert finals == ["two BHK in Koramangala under forty thousand need parking"], finals
 
@@ -91,6 +91,34 @@ async def test_a_second_utterance_starts_clean():
     st = stream(finals, interims)
 
     await st._on_message(message("first one", is_final=True, speech_final=True))
+    await st._on_message(message("", kind="UtteranceEnd"))
     await st._on_message(message("second one", is_final=True, speech_final=True))
+    await st._on_message(message("", kind="UtteranceEnd"))
 
     assert finals == ["first one", "second one"], finals
+
+
+async def test_a_natural_pause_does_not_end_the_utterance():
+    """The 400 ms endpointing fires inside a sentence, not only at the end of one.
+
+    Measured against Deepgram on 2026-09-06 with a real 700 ms mid-sentence pause —
+    the length of an ordinary breath before a number:
+
+        (True, True)  '2 BHK in Koramangala.'
+        (True, True)  'Under 40,000 need parking.'
+
+    Both carry speech_final, so endpointing alone splits one request into two turns,
+    and the second has lost the locality. Deepgram's UtteranceEnd (utterance_end_ms,
+    ~1 s) is the signal that the speaker actually stopped. This is the false
+    end-of-speech risk the spec names, seen on real speech.
+    """
+    finals, interims, ends = [], [], []
+    st = stream(finals, interims, ends)
+
+    await st._on_message(message("2 BHK in Koramangala.", is_final=True, speech_final=True))
+    assert finals == [], f"a 700 ms breath must not launch a turn; got {finals}"
+
+    await st._on_message(message("Under 40,000 need parking.", is_final=True, speech_final=True))
+    await st._on_message(message("", kind="UtteranceEnd"))
+
+    assert finals == ["2 BHK in Koramangala. Under 40,000 need parking."], finals
