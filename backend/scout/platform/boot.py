@@ -15,12 +15,20 @@ BootCheck = Callable[[Settings], None]
 
 # Environment-variable name -> Settings attribute. The names on the left are what an
 # operator sets, so they are what a failure message must say; `.env.example` lists
-# exactly these nine.
+# every one of these ten, and a test asserts it still does.
+#
+# SMALLEST_VOICE_ID belongs here even though it is an id, not a secret. Without it
+# Smallest.ai answers 400 "Voice '' is not available on the lightning_v3.1_pro
+# model", so the process boots, passes its healthcheck and looks entirely healthy
+# while being unable to speak a single word. That is exactly how the silent-turn
+# defect reached production: a required value that fails only mid-sentence must
+# fail at start-up instead (arch 12.3).
 REQUIRED: dict[str, str] = {
     "DEEPGRAM_API_KEY": "deepgram_api_key",
     "GROQ_API_KEY": "groq_api_key",
     "ANTHROPIC_API_KEY": "anthropic_api_key",
     "SMALLEST_API_KEY": "smallest_api_key",
+    "SMALLEST_VOICE_ID": "smallest_voice_id",
     "GOOGLE_OAUTH_CREDENTIALS": "google_oauth_credentials",
     "GOOGLE_TENANT_CALENDAR_ID": "google_tenant_calendar_id",
     "GOOGLE_OWNER_CALENDAR_ID": "google_owner_calendar_id",

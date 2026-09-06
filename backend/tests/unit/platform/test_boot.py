@@ -1,7 +1,9 @@
+from pathlib import Path
+
 import pytest
 
 from scout.config import Settings
-from scout.platform.boot import BootError, check_secrets, run_boot_checks
+from scout.platform.boot import REQUIRED, BootError, check_secrets, run_boot_checks
 
 
 def settings(**over):
@@ -17,6 +19,7 @@ def settings(**over):
         "google_owner_calendar_id": "o",
         "google_sender_email": "e@x",
         "operator_token": "op",
+        "smallest_voice_id": "v",
         "bundle_dir": "../data/bundle",
         "cors_allowed_origins": "http://localhost:3000",
     }
@@ -44,3 +47,21 @@ def test_all_failures_are_reported_at_once():
 def test_cors_is_never_wildcard():
     with pytest.raises(BootError):
         run_boot_checks(settings(cors_allowed_origins="*"), [check_secrets])
+
+
+def test_missing_voice_id_fails_boot():
+    # The gap this closes: SMALLEST_VOICE_ID was not required, so a service without
+    # it booted, passed its healthcheck and looked entirely healthy while being
+    # unable to speak a single word — Smallest.ai answers 400 "Voice '' is not
+    # available". That is how the silent-turn defect hid in production.
+    with pytest.raises(BootError) as e:
+        run_boot_checks(settings(smallest_voice_id=""), [check_secrets])
+    assert "SMALLEST_VOICE_ID" in str(e.value)
+
+
+def test_every_required_name_is_in_env_example():
+    # The failure message names environment variables, so an operator's next move is
+    # to open .env.example. A required name missing from it sends them nowhere.
+    text = (Path(__file__).resolve().parents[4] / ".env.example").read_text(encoding="utf-8")
+    names = {line.split("=", 1)[0] for line in text.splitlines() if "=" in line}
+    assert set(REQUIRED) <= names, set(REQUIRED) - names

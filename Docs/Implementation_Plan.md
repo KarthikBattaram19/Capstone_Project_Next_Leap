@@ -161,7 +161,7 @@ Nothing after this phase is safe until both gates clear. Tasks 0.1–0.3 are sha
 - **Delivers:** typed settings read from the environment (every secret, the model IDs, the 400 ms / 400 ms / 1 s speech-timing values); the boot-check framework that runs every check, collects *all* failures, and stops the process before it opens its port; per-turn tracing with the span names the spec's measurement rules require (and a file export for the latency spike); the two tiny HTTP endpoints; the app factory.
 - **Why now:** the skeleton deployed in 0.9 must already fail loudly on a missing secret, and Gate L needs the timing spans.
 - **Done when:** unit tests pass; a missing secret makes the process exit non-zero.
-- **Status: done.** 74 tests (6 new: 3 boot, 3 telemetry — two of the telemetry ones were added beyond the addendum's list, covering the JSONL export Gate L reads). `python -m scout.main` with no secrets prints all nine missing names **at once** and exits 2, before any port is bound. `Settings` carries 27 fields; CORS refuses `*` and refuses empty.
+- **Status: done.** 74 tests (6 new: 3 boot, 3 telemetry — two of the telemetry ones were added beyond the addendum's list, covering the JSONL export Gate L reads). `python -m scout.main` with no secrets prints all **ten** missing names **at once** and exits 2, before any port is bound (`SMALLEST_VOICE_ID` was added to the required set on 2026-09-06: without it the process booted green and passed its healthcheck while unable to speak, which is how the silent-turn defect hid in production). `Settings` carries 27 fields; CORS refuses `*` and refuses empty.
 - Detail: addendum → Task 0.7.
 
 ### Task 0.8 — Walking skeleton: the mic WebSocket and one stub turn touching every provider
