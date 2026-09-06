@@ -47,6 +47,7 @@ class DeepgramStream:
         self._cm = None
         self._conn = None
         self._listener: asyncio.Task | None = None
+        self._segments: list[str] = []  # finalised segments of the utterance in progress
 
     async def start(self) -> None:
         self._cm = self._client.listen.v1.connect(
@@ -73,17 +74,42 @@ class DeepgramStream:
         if kind == "SpeechStarted":
             await self._on_speech_started()
         elif kind == "UtteranceEnd":
+            # P3b, the ~1 s hard stop. If endpointing never fired, whatever was heard
+            # is still a complete thought and must be delivered, not stranded.
+            await self._flush()
             await self._on_utterance_end()
         elif kind == "Results":
             text = msg.channel.alternatives[0].transcript
             if not text:
                 return
             if msg.is_final:
-                telemetry.mark(telemetry.STT_FINAL)
-                await self._on_final(text)
+                # is_final marks the end of a SEGMENT, not of the utterance: Deepgram
+                # finalises at every natural pause, so one sentence produces several.
+                # Only speech_final means the person stopped talking (that is what the
+                # 400 ms endpointing produces). Treating is_final as the end of a turn
+                # started a fresh turn mid-sentence — fourteen turns from two spoken
+                # utterances on the deployed service, each with its own TTS audio.
+                self._segments.append(text)
+                if getattr(msg, "speech_final", False):
+                    await self._flush()
+                else:
+                    # Show the words; just do not act on them yet.
+                    telemetry.mark(telemetry.STT_INTERIM)
+                    await self._on_interim(" ".join(self._segments))
             else:
                 telemetry.mark(telemetry.STT_INTERIM)
-                await self._on_interim(text)
+                await self._on_interim(" ".join([*self._segments, text]))
+
+    async def _flush(self) -> None:
+        # The endpointed message carries only the last segment, so the segments are
+        # joined: otherwise a turn acts on "need parking" and loses the locality, the
+        # bedroom count and the budget that came before the pause.
+        if not self._segments:
+            return
+        text = " ".join(self._segments)
+        self._segments = []
+        telemetry.mark(telemetry.STT_FINAL)
+        await self._on_final(text)
 
     async def send_audio(self, pcm16: bytes) -> None:
         await self._conn.send_media(pcm16)

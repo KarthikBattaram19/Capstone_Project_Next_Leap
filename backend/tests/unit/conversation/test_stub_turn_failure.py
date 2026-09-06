@@ -79,3 +79,40 @@ async def test_the_turn_task_never_swallows_an_exception():
     assert session._turn is not None
     await asyncio.wait_for(session._turn, timeout=5)
     assert ("outcome", "failed") in session.sink.events
+
+
+class SlowTts:
+    """Speaks for long enough that a second utterance can arrive mid-sentence."""
+
+    sample_rate = 24000
+
+    async def stream(self, text):
+        for _ in range(50):
+            await asyncio.sleep(0.02)
+            yield b"\x00" * 640
+
+
+async def test_a_new_utterance_cancels_the_one_still_speaking():
+    # Without this the old turn keeps streaming its audio while the new one starts
+    # streaming too, and the browser interleaves two PCM streams into one player:
+    # byte-misaligned samples, which is full-scale noise rather than two voices.
+    session = StubSession(Settings(_env_file=None), RecordingSink())
+    session.tts = SlowTts()
+
+    async def echo(system, user, schema_name, schema):
+        return {"echo": user}
+
+    session.groq.complete_json = echo
+
+    await session._final("two bhk in koramangala")
+    first = session._turn
+    await asyncio.sleep(0.15)  # it is mid-utterance now
+    await session._final("actually make that three bhk")
+    second = session._turn
+
+    assert first is not second
+    assert first.cancelled() or first.done(), "the interrupted turn must not keep speaking"
+    assert ("audio_stop", None) in session.sink.events, (
+        "the browser must be told to drop the audio it has queued"
+    )
+    await asyncio.wait_for(second, timeout=10)

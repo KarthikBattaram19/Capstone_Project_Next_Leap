@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+import contextlib
 import re
 import sys
 
@@ -63,8 +64,24 @@ class StubSession:
         await self.sink.transcript(text, final=False)
 
     async def _final(self, text: str) -> None:
+        # One turn at a time. A turn still streaming when the next utterance arrives
+        # keeps pushing TTS bytes into the same socket, and the browser feeds both
+        # streams to one player: the chunks interleave, samples land byte-misaligned,
+        # and PCM16 read out of phase is full-scale noise rather than two voices.
+        # This is barge-in (spec 6.15): the new utterance wins, and the browser is
+        # told to drop whatever it has already queued.
+        await self._cancel_turn()
         turn_type = "B" if re.search(r"\bwhy\b|what.*like|commute", text, re.IGNORECASE) else "A"
         self._turn = asyncio.create_task(self._run(text, turn_type))
+
+    async def _cancel_turn(self) -> None:
+        turn, self._turn = self._turn, None
+        if turn is None or turn.done():
+            return
+        turn.cancel()
+        with contextlib.suppress(asyncio.CancelledError):
+            await turn
+        await self.sink.audio_stop()
 
     async def _speak(self, sentence: str) -> None:
         await self.sink.audio_start()
