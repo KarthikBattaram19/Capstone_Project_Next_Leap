@@ -25,7 +25,7 @@ because no Type B recording existed at run time. Re-run the B rows when it does.
 
 | Region | L0 p99 | L1 p99 | L2 p99 | L3 p99 | L4 p99 | L5 p99 | 2× violations | cold start L1 |
 |---|---|---|---|---|---|---|---|---|
-| us (A / B) | 3,284 / 1,957 | 1,910 / 2,448 | 3,085 / — | — / 3,903 | 11,295 / — | — / 15,101 | 50 of 50 runs (see below) | *pending — measured after this commit's redeploy* |
+| us (A / B) | 3,284 / 1,957 | 1,910 / 2,448 | 3,085 / — | — / 3,903 | 11,295 / — | — / 15,101 | 50 of 50 runs (see below) | **3,150** (A, first turn on a fresh container; warm median 1,251) |
 | singapore *(not deployed — comparison skipped by decision)* | — | — | — | — | — | — | — | — |
 
 Targets (spec §5.2): L0 300 · L1 700 · L2 1,500 · L3 1,500 · L4 3,000 · L5 6,000 ms. Every
@@ -61,6 +61,12 @@ turn ≤ 1,726 ms and every Type B turn ≤ 3,580 ms after the ack.
 4. **Two transit stalls** in 50 runs: Type A L4 max 11,295 and Type B L5 max 15,101 while
    the server had finished those turns in 1,726 / 3,580 ms — the delay was on the wire to
    the client, not in any provider. They set the p99 for L4 and L5 on their own.
+
+**Cold start (spec §6.56, reported separately, never averaged in).** Measured 2026-09-06 14:54 UTC on
+a container with zero prior turns (log checked), first turn Type A: L0 1,537 · **L1 3,150** · L2 4,755 ·
+L4 6,093 ms — a **+1.9 s** penalty against the warm medians, landing almost entirely in L1 (the Deepgram
+socket and first-use TLS to each provider). The second turn on the same container (Type B, synthesised)
+was already near warm: L1 2,159 · L3 2,758 · L5 4,532. Rows in `latency/spike-cold.jsonl`.
 
 False end-of-speech rate on the Type A utterance: **0/20** — all 20 plays transcribed
 identically and whole, one turn each. On this speaker the endpointing did not cut.
