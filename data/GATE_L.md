@@ -2,20 +2,31 @@
 
 > **This gate is open.** Nothing below has been measured. The driver and scorer exist
 > (`scripts/latency_spike.py`, `evals/latency/score.py`) and are tested, but they have
-> never been run against a deployed service, because **no service is deployed** —
-> Task 0.9's Railway and Vercel steps need account access and have not been done.
+> not yet been run. The service **is** deployed and verified (2026-09-06:
+> `/health` 200 in 0.96 s; a typed-fallback Type A turn on the deployed `/ws`
+> returned `outcome: answered` with 238 KB of audio). What is missing is the two
+> recorded utterances the driver replays.
+>
+> **Region: US only, by decision, not by measurement (2026-09-06).** The plan asked
+> for a US and a Singapore service so the region could be chosen on evidence. The
+> user chose to run one service and skip the comparison. The Singapore row below
+> therefore stays permanently blank, and if the US numbers miss their targets it is
+> **not known** whether Singapore would have passed — a Bengaluru client is roughly
+> 200–250 ms from a US region against roughly 40–60 ms from Singapore, so that gap
+> is large enough to matter. Any renegotiation of spec §5.2 decided from these
+> numbers carries this caveat.
 >
 > **No box may be ticked from an unmeasured run.** Every cell below is blank on
 > purpose. Filling them in requires the four commands in *How to fill this in*.
 > Until one box is ticked, Phase 0 has not exited and no Phase 1 work may begin
 > (plan §4, spec §9.2).
 
-Skeleton commit: `<sha>`. Client location: `<city>`. Runs: 25 per turn type per region.
+Skeleton commit: `<sha>`. Client location: `<city>`. Runs: 25 per turn type. One region (US).
 
 | Region | L0 p99 | L1 p99 | L2 p99 | L3 p99 | L4 p99 | L5 p99 | 2× violations | cold start L1 |
 |---|---|---|---|---|---|---|---|---|
 | us-… | | | | | | | | |
-| singapore | | | | | | | | |
+| singapore *(not deployed — comparison skipped by decision)* | — | — | — | — | — | — | — | — |
 
 Per-component (from the server traces): `stt.final`, `external.groq`, `llm.first_token`, `tts.first_byte` …
 
@@ -25,7 +36,7 @@ Preconditions in force during the runs: P1 ✓/✗ · P2 · P3 · P4 · P5 · P6
 
 ## Decision
 
-- [ ] PROCEED — every row meets its target at p99 with no 2× violation. Region chosen: ___ (because ___).
+- [ ] PROCEED — every row meets its target at p99 with no 2× violation. Region: US (chosen by decision, not measurement — see the note at the top).
 - [ ] PROCEED WITH RENEGOTIATION — rows that missed: ___. Spec §5.2 table updated in commit ___ and this plan's Global Constraints updated to match.
 - [ ] CHANGE THE MODEL — Job 1 missed L1/L2; switch `JOB1_MODEL` to ___ and re-run (numbers below).
 
@@ -39,11 +50,12 @@ failure mode the spec names.
 
 **Prerequisites, none of which are met yet.**
 
-1. Provider keys in `backend/.env` (Task 0.8's live pings still skip without them).
-2. A deployed backend — ideally two Railway services, US and Singapore, so the region
-   choice rests on measurement rather than preference. Set `LATENCY_LOG_PATH=/tmp/latency.jsonl`
-   on each so the server-side per-component traces exist, and confirm **App Sleeping is OFF**
-   (P1) before timing anything: a sleeping service measures its own cold start every run.
+1. ~~Provider keys in `backend/.env`~~ **met** — the three live pings passed 2026-09-05, and `SMALLEST_VOICE_ID` is set on Railway (the deployed turn speaks).
+2. ~~A deployed backend~~ **met** — one Railway service (US), verified live 2026-09-06.
+   The Singapore service was deliberately not created (see the note at the top). Still
+   outstanding on it: set `LATENCY_LOG_PATH=/tmp/latency.jsonl` so the server-side
+   per-component traces exist, and confirm **App Sleeping is OFF** (P1) before timing
+   anything — a sleeping service measures its own cold start every run.
 3. Two recorded utterances, 16 kHz mono PCM16 WAV, **an Indian-English speaker if at all
    possible** — P3's 400 ms endpointing is unmeasured on that speech, which is the whole
    reason the false end-of-speech count below exists:
@@ -53,10 +65,8 @@ failure mode the spec names.
 **Then run, warm (not on the first request after a deploy):**
 
 ```
-python scripts/latency_spike.py --url wss://<us-railway>/ws  --wav-a a.wav --wav-b b.wav --runs 25 --label us
-python scripts/latency_spike.py --url wss://<sg-railway>/ws  --wav-a a.wav --wav-b b.wav --runs 25 --label sg
+python scripts/latency_spike.py --url wss://capstoneprojectnextleap-production.up.railway.app/ws --wav-a a.wav --wav-b b.wav --runs 25 --label us
 python -m evals.latency.score latency/spike-us.jsonl
-python -m evals.latency.score latency/spike-sg.jsonl
 ```
 
 The scorer prints `p99`, `counts`, `violations` and `passed`. Copy the numbers into the
