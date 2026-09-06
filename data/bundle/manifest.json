@@ -630,10 +630,1194 @@
   },
   "osm_query_set": [],
   "osm_index_date": null,
-  "embedding_model": null,
-  "embedding_model_version": null,
-  "chunk_count_per_locality": {},
-  "guide_sources": {},
-  "chromadb_version": null,
-  "onnxruntime_version": null
+  "embedding_model": "all-MiniLM-L6-v2",
+  "embedding_model_version": "onnx:sha256:4f148ba8ae9c2c7f",
+  "chunk_count_per_locality": {
+    "A Adugodi": 1,
+    "Abbigere": 1,
+    "Adakamaranahalli": 1,
+    "Agara": 1,
+    "Anekal": 3,
+    "Anjanapura": 1,
+    "Arakere": 2,
+    "Attibele": 1,
+    "Attur": 4,
+    "Austin Town": 6,
+    "BTM Layout": 3,
+    "BTM Layout 2nd Stage": 3,
+    "Bagalur": 1,
+    "Bagaluru": 1,
+    "Baiyyappanahalli": 4,
+    "Banashankari": 1,
+    "Banashankari 2nd Stage": 1,
+    "Banashankari 6th Stage": 1,
+    "Banashankari Temple Ward": 1,
+    "Banaswadi": 3,
+    "Basavanagudi": 1,
+    "Basaveshwara Nagara": 14,
+    "Beguru": 3,
+    "Belathur": 1,
+    "Bellandur": 5,
+    "Bellanduru": 5,
+    "Bendiganahalli": 1,
+    "Bhattarahalli": 1,
+    "Bidadi": 2,
+    "Bilekahalli": 2,
+    "Bommanahalli": 1,
+    "Bommasandra": 1,
+    "Bommenahalli": 1,
+    "Budigere": 1,
+    "Byappanahalli": 4,
+    "Byatarayanapura": 1,
+    "Byrathi": 1,
+    "C V Raman Nagar": 1,
+    "Carmelaram": 3,
+    "Chamarajapete": 4,
+    "Chandapura": 1,
+    "Channasandra": 3,
+    "Chikka Banavara": 1,
+    "Chikkaballapura": 6,
+    "Chikkajala": 1,
+    "Chikkalasandra": 1,
+    "Chikkapete": 1,
+    "Church Street": 3,
+    "Cox Town": 8,
+    "Dargajogihalli": 1,
+    "Dasarahalli": 2,
+    "Devanahalli": 14,
+    "Devarachikkanahalli": 1,
+    "Doddabettahalli": 1,
+    "Domlur": 6,
+    "Domluru": 6,
+    "Dommasandra": 1,
+    "Electronic City": 7,
+    "Electronics City Phase 1": 7,
+    "Electronics City Phase 2 (East)": 7,
+    "Electronics City Phase 2 (West)": 7,
+    "Frazer Town": 10,
+    "G.M Palya": 1,
+    "Ganganagar": 1,
+    "Girinagar": 2,
+    "Gottigere": 3,
+    "HSR": 6,
+    "HSR Layout": 6,
+    "Hancharahalli": 1,
+    "Hanumanthanagar": 4,
+    "Hebbagodi": 1,
+    "Hebbal": 4,
+    "Hoodi": 1,
+    "Horamavu": 7,
+    "Hoskote": 1,
+    "Hosur Road": 1,
+    "Hulimavu": 3,
+    "Huskur": 1,
+    "Indiranagar": 4,
+    "Ittamadu": 2,
+    "J.P Nagar": 6,
+    "JP Nagar": 6,
+    "Jakkasandra": 2,
+    "Jakkur": 3,
+    "Jayanagar 7th Block": 4,
+    "Jayanagar East": 4,
+    "Jigani": 3,
+    "KR Puram": 2,
+    "Kadugodi": 7,
+    "Kaggadasapura": 3,
+    "Kalkere": 1,
+    "Kalyan Nagar": 1,
+    "Kalyanagar": 1,
+    "Kamakshipalya": 1,
+    "Kammanahalli": 2,
+    "Kannamangala": 1,
+    "Kodigehalli": 10,
+    "Konadasapura": 2,
+    "Koramangala": 2,
+    "Koramangala 5th Block": 2,
+    "Kormangala East": 2,
+    "Kormangala West": 2,
+    "Kothnur": 1,
+    "Kumaraswamy Layout": 2,
+    "Kundalahalli": 1,
+    "Lavelle Road": 8,
+    "Lingarajpura": 1,
+    "Mahadevapura": 3,
+    "Malleshwaram": 5,
+    "Mandur": 2,
+    "Marathahalli": 2,
+    "Nagavara": 5,
+    "Prestige Golfshire": 1,
+    "Pulakeshi Nagar": 10,
+    "R.T Nagar": 1,
+    "RT Nagar": 1,
+    "Rajajinagar": 1,
+    "Sadashivanagar": 4,
+    "Sarjapura": 1,
+    "Shettihalli": 1,
+    "Singasandra": 1,
+    "Thanisandra": 1,
+    "Thyagarajnagar": 1,
+    "Ullalu": 1,
+    "Vijaya Bank Layout": 4,
+    "Whitefield": 11,
+    "Wilson Garden": 1,
+    "6th Block": 0,
+    "AECS Layout": 0,
+    "Abdul Kalam Nagar": 0,
+    "Adarsh Pinecourt": 0,
+    "Adarsh Savana": 0,
+    "Adarsh Tranqville": 0,
+    "Aduru": 0,
+    "Agaram": 0,
+    "Agrahara Dasarahalli": 0,
+    "Ajmera Infinity Apartments": 0,
+    "Ajmera Stone Park": 0,
+    "Amarthine": 0,
+    "Amruthahalli": 0,
+    "Anagalapura": 0,
+    "Anantnagar": 0,
+    "Andapura": 0,
+    "Andrahalli": 0,
+    "Anneshvara": 0,
+    "Anugondanahalli": 0,
+    "Aradeshanahalli": 0,
+    "Arishinakunte": 0,
+    "Arkavathy Layout": 0,
+    "Aryan Kasten Palm Groves": 0,
+    "Ashoka Nagara": 0,
+    "Ashokanagar": 0,
+    "Ashwath Nagar": 0,
+    "Assetz Earth & Essence": 0,
+    "Assetz Soul & Soil": 0,
+    "Attigupe": 0,
+    "Avadadenahalli": 0,
+    "Avalahalli": 0,
+    "Avalapalli": 0,
+    "BDA Chandragiri Apartments": 0,
+    "Babusab Palya": 0,
+    "Baguru": 0,
+    "Balagere": 0,
+    "Bandapura": 0,
+    "Bande Bommasandra": 0,
+    "Bandenallasandra": 0,
+    "Bandepalya": 0,
+    "Bangarappa Nagara": 0,
+    "Bannerughatta": 0,
+    "Bapuji Nagar": 0,
+    "Bapuji Nagara": 0,
+    "Basavanapura": 0,
+    "Begihalli": 0,
+    "Bennamangala": 0,
+    "Betta Halasuru": 0,
+    "Bettadasanpura": 0,
+    "Bhuvanahalli": 0,
+    "Bidaraguppe": 0,
+    "Bidarahalli": 0,
+    "Bidarakuppe": 0,
+    "Bidare Agrahara": 0,
+    "Billapura": 0,
+    "Binnypete": 0,
+    "Brigade El Dorado": 0,
+    "Brigade Oasis": 0,
+    "Brigade Orchards": 0,
+    "Byadarahalli": 0,
+    "Byagadadenahalli": 0,
+    "Century Artizan": 0,
+    "Century Sports Village": 0,
+    "Chagalatti": 0,
+    "Chandra Layout": 0,
+    "Chatekere Palya": 0,
+    "Chellakere": 0,
+    "Chikkagubbi": 0,
+    "Chikkanagamangala": 0,
+    "Chikkanayakanahalli": 0,
+    "Chikkasanni": 0,
+    "Chikkathoguru": 0,
+    "Chikkatirupati": 0,
+    "Chimasandra": 0,
+    "Chokkanahalli": 0,
+    "Chokkasandra": 0,
+    "Chokkenahalli": 0,
+    "Choodasandra": 0,
+    "Chunchanakuppe": 0,
+    "Concorde Cuppertino Villas": 0,
+    "Concorde Manhattans Apartments": 0,
+    "Concorde Silicon Valley": 0,
+    "DSR Highland Greens": 0,
+    "Dabaspete": 0,
+    "Darga Mohalla": 0,
+    "Dasanapura": 0,
+    "Deepanjali Nagara": 0,
+    "Devanagondi": 0,
+    "Devarabeesanahalli": 0,
+    "Devaraj Urs Ward": 0,
+    "Devasandra": 0,
+    "Devenahalli": 0,
+    "Dharmagiri Ward": 0,
+    "Dodda Cheemanahalli": 0,
+    "Dodda Dunnasandra": 0,
+    "Dodda Gubbi": 0,
+    "Dodda Hosahalli": 0,
+    "Dodda Nekkundi": 0,
+    "Doddabanahalli": 0,
+    "Doddabommasandra": 0,
+    "Doddajala": 0,
+    "Doddakammanahalli": 0,
+    "Doddakannalli": 0,
+    "Doddasanne": 0,
+    "Doddathoguru": 0,
+    "Dooravaninagar": 0,
+    "Doresanipalya": 0,
+    "Dr. Shivaram Karanth Layout": 0,
+    "EPIP Zone": 0,
+    "Eagleton Golf Village": 0,
+    "Embassy Boulevard": 0,
+    "Ferrar Nagar": 0,
+    "Fortius Under the Sun": 0,
+    "GM Infinite E-City": 0,
+    "GM Townsville": 0,
+    "Ganga Vertica Apartments": 0,
+    "Ganganamidde": 0,
+    "Gangapura": 0,
+    "Gangenahalli": 0,
+    "Gangodanahalli": 0,
+    "Garvebavi Palya": 0,
+    "Gattahalli": 0,
+    "Geddalahalli": 0,
+    "Godrej Ananda": 0,
+    "Godrej E-City": 0,
+    "Godrej Nurture": 0,
+    "Godrej Reserve": 0,
+    "Gollahalli": 0,
+    "Gopalapura": 0,
+    "Gopalpura": 0,
+    "Gowrenahalli": 0,
+    "Guddahatti": 0,
+    "Guddanahalli": 0,
+    "Gummanahalli": 0,
+    "Gunjur": 0,
+    "HBR Layout": 0,
+    "Hadosiddapura": 0,
+    "Halanayakanahalli": 0,
+    "Hamam": 0,
+    "Haragadde": 0,
+    "Haralur": 0,
+    "Hebron Avenue": 0,
+    "Heelalige": 0,
+    "Heggondahalli": 0,
+    "Hemmigepura": 0,
+    "Hemmigepura Gollahalli": 0,
+    "Hennagara": 0,
+    "Hennur": 0,
+    "Hindiganala Cross": 0,
+    "Hirandahalli": 0,
+    "Hongasandra": 0,
+    "Hosahalli": 0,
+    "Hosahudya": 0,
+    "Hosapalya": 0,
+    "House of Hiranandani": 0,
+    "Hoysala Nagara East": 0,
+    "Hulimangala": 0,
+    "Hurali Chikkanahalli": 0,
+    "Hurulagurki": 0,
+    "Huvinayakanahalli": 0,
+    "IPD Salappa Ward": 0,
+    "Iblur": 0,
+    "Iconest 3": 0,
+    "Iggaluru": 0,
+    "Indlabele": 0,
+    "Ittina Neela Apartments": 0,
+    "Jadalatimmanahalli": 0,
+    "Jade Garden": 0,
+    "Jayamahal": 0,
+    "Jeevanahalli": 0,
+    "Jnana Bharathi": 0,
+    "K Chennasandra": 0,
+    "K Dommasandra": 0,
+    "K Narayanapura": 0,
+    "K.P Agrahara": 0,
+    "Kaadubeesanahalli": 0,
+    "Kacharakanahalli": 0,
+    "Kadaagrahara": 0,
+    "Kadagrahara": 0,
+    "Kadirenahalli": 0,
+    "Kaggalahalli": 0,
+    "Kamakya Layout": 0,
+    "Kammagondanahalli": 0,
+    "Kanamanapalli": 0,
+    "Kannamangala Palya": 0,
+    "Kannuru": 0,
+    "Kasavanahalli": 0,
+    "Kasturbha Nagar": 0,
+    "Kasturi Nagar": 0,
+    "Kaval Byrasandra": 0,
+    "Kaveri Nagara": 0,
+    "Kempapura": 0,
+    "Ketohalli": 0,
+    "Keya The Green Terraces": 0,
+    "Kittaganahalli": 0,
+    "Kittaganuru": 0,
+    "Kodagalahatti": 0,
+    "Kodappanahalli": 0,
+    "Kodati": 0,
+    "Kodi Chikkanahalli": 0,
+    "Kogilu": 0,
+    "Kommasandra": 0,
+    "Kudlu": 0,
+    "Kurubarakunte": 0,
+    "Lakkasandra": 0,
+    "Lakkenahalli": 0,
+    "Lakshmisagara": 0,
+    "Madeena Nagar": 0,
+    "Madhavara": 0,
+    "Mahaveer Orchids": 0,
+    "Mahendra Aarya": 0,
+    "Mallathahalli": 0,
+    "Manchanahalli": 0,
+    "Manjunath Nagara": 0,
+    "Manjunatha Nagar": 0,
+    "Mantanakurchi": 0,
+    "Maragondanahalli": 0,
+    "Marasandra": 0,
+    "Maruthi Seva Nagara": 0,
+    "Mathikere": 0,
+    "Mattanahalli": 0,
+    "Mayasandra": 0,
+    "Medahalli": 0,
+    "Misiganahalli": 0,
+    "Mookandapalli": 0,
+    "Mulluru": 0,
+    "Muneshwara Block": 0,
+    "Munnenkolalu": 0,
+    "Muttanalluru": 0,
+    "N.R Colony": 0,
+    "N.S Palya": 0,
+    "NTY Layout": 0,
+    "Nada prabhu Kempegowda Nagara": 0,
+    "Naganathapura": 0,
+    "Nagasandra": 0,
+    "Nandi": 0,
+    "Nanjapura": 0,
+    "Navrathna Agrahara": 0,
+    "Nettigere": 0,
+    "New Tavarekere": 0,
+    "New Thippasandra": 0,
+    "Orchid Greens": 0,
+    "Ozone Urbana": 0,
+    "Panathur": 0,
+    "Parkway Homes": 0,
+    "Pattanduru Agrahara": 0,
+    "Peddhanapalya": 0,
+    "Prestige Finsbury Park": 0,
+    "Prestige Finsbury Park - Hyde": 0,
+    "Prestige Sunrise Park": 0,
+    "Prestige Tranquility Apartments": 0,
+    "Prime City Apartments": 0,
+    "Provident Welworth City": 0,
+    "Purnima Elite": 0,
+    "RBI Layout": 0,
+    "RK Township": 0,
+    "Radhadari Nilayam": 0,
+    "Raghunathapura": 0,
+    "Raja Kempegowda Ward": 0,
+    "Rajiv Gandhi Nagar": 0,
+    "Ramky One Karnival": 0,
+    "Reliable Gardenia": 0,
+    "S.G Palya": 0,
+    "S.K Garden": 0,
+    "Sagayapuram": 0,
+    "Salarpuria East Crest": 0,
+    "Salarpuria Sattva Aspire": 0,
+    "Sampangirama Nagar": 0,
+    "Sampige Nagara": 0,
+    "Sampigehalli": 0,
+    "Sarjapur Road": 0,
+    "Saroj Dynasty": 0,
+    "Sarvabhouma Nagar": 0,
+    "Sattva Park Cubix": 0,
+    "Shampura": 0,
+    "Shanti Nagar": 0,
+    "Shapoorji Pallonji Parkwest": 0,
+    "Sheshagirihalli": 0,
+    "Shettigere Chikkajala": 0,
+    "Shivanasamudra Ward": 0,
+    "Shriram Greenfield": 0,
+    "Shriram Luxor": 0,
+    "Shriram Signiaa": 0,
+    "Shriram Smrithi": 0,
+    "Singena Agrahara": 0,
+    "Sir MV Layout": 0,
+    "Smondo 2.0": 0,
+    "Smondo 3.0": 0,
+    "Smondoville": 0,
+    "Sobha Lifestyle Legacy": 0,
+    "Southe Gowdanahalli": 0,
+    "Sri Banashankri Layout": 0,
+    "Srinagar": 0,
+    "Srinivasa Nagara": 0,
+    "Subramanyapura": 0,
+    "Sulthanpalya": 0,
+    "Suryanagar Phase 1": 0,
+    "Suryanagar Phase 2": 0,
+    "Suryanagar Phase 3": 0,
+    "Swiss Town": 0,
+    "T.C Palya": 0,
+    "TC Palya": 0,
+    "Talagattapura": 0,
+    "Tata Value Housing New Haven": 0,
+    "Tatnahalli": 0,
+    "Thataparti": 0,
+    "The Belvedere - Airport District": 0,
+    "The Commune": 0,
+    "The Lake View Address": 0,
+    "Thippasandra": 0,
+    "Thore Nagasandra": 0,
+    "Tirumagondahalli": 0,
+    "Ullal": 0,
+    "Uttanahalli": 0,
+    "V.V Puram": 0,
+    "VBHC Vaibhava": 0,
+    "Vakil EnCasa": 0,
+    "Varalakshmi Nagar": 0,
+    "Vars Parkwood": 0,
+    "Vasanthapura": 0,
+    "Venkatala": 0,
+    "Vibhootipura": 0,
+    "Vidyaranyanagara": 0,
+    "Vignananagar": 0,
+    "Vignananagara": 0,
+    "Vijinapura": 0,
+    "Virgonagar": 0,
+    "Vishwanatha Nagenahalli": 0,
+    "Vishwapriya Nagara": 0,
+    "Vishweshwaraiah Enclave": 0,
+    "Vittasandra": 0,
+    "Woods Enclave": 0,
+    "Yamalur": 0,
+    "Yarappana Bande": 0,
+    "Yartiganahalli": 0,
+    "Yelenahalli": 0,
+    "Yerrappanahalli": 0
+  },
+  "guide_sources": {
+    "6th Block": [],
+    "A Adugodi": [
+      "https://en.wikipedia.org/wiki/Adugodi"
+    ],
+    "AECS Layout": [],
+    "Abbigere": [
+      "https://en.wikipedia.org/wiki/Abbigere"
+    ],
+    "Abdul Kalam Nagar": [],
+    "Adakamaranahalli": [
+      "https://en.wikipedia.org/wiki/Adakamaranahalli,_Bengaluru"
+    ],
+    "Adarsh Pinecourt": [],
+    "Adarsh Savana": [],
+    "Adarsh Tranqville": [],
+    "Aduru": [],
+    "Agara": [
+      "https://en.wikipedia.org/wiki/Agara,_Bengaluru"
+    ],
+    "Agaram": [],
+    "Agrahara Dasarahalli": [],
+    "Ajmera Infinity Apartments": [],
+    "Ajmera Stone Park": [],
+    "Amarthine": [],
+    "Amruthahalli": [],
+    "Anagalapura": [],
+    "Anantnagar": [],
+    "Andapura": [],
+    "Andrahalli": [],
+    "Anekal": [
+      "https://en.wikipedia.org/wiki/Anekal"
+    ],
+    "Anjanapura": [
+      "https://en.wikipedia.org/wiki/Anjanapura"
+    ],
+    "Anneshvara": [],
+    "Anugondanahalli": [],
+    "Aradeshanahalli": [],
+    "Arakere": [
+      "https://en.wikipedia.org/wiki/Arekere"
+    ],
+    "Arishinakunte": [],
+    "Arkavathy Layout": [],
+    "Aryan Kasten Palm Groves": [],
+    "Ashoka Nagara": [],
+    "Ashokanagar": [],
+    "Ashwath Nagar": [],
+    "Assetz Earth & Essence": [],
+    "Assetz Soul & Soil": [],
+    "Attibele": [
+      "https://en.wikipedia.org/wiki/Attibele"
+    ],
+    "Attigupe": [],
+    "Attur": [
+      "https://en.wikipedia.org/wiki/Attur_Ward"
+    ],
+    "Austin Town": [
+      "https://en.wikipedia.org/wiki/Austin_Town,_Bengaluru"
+    ],
+    "Avadadenahalli": [],
+    "Avalahalli": [],
+    "Avalapalli": [],
+    "BDA Chandragiri Apartments": [],
+    "BTM Layout": [
+      "https://en.wikipedia.org/wiki/BTM_Layout"
+    ],
+    "BTM Layout 2nd Stage": [
+      "https://en.wikipedia.org/wiki/BTM_Layout"
+    ],
+    "Babusab Palya": [],
+    "Bagalur": [
+      "https://en.wikipedia.org/wiki/Bagalur,_Bengaluru_Urban_district"
+    ],
+    "Bagaluru": [
+      "https://en.wikipedia.org/wiki/Bagalur,_Bengaluru_Urban_district"
+    ],
+    "Baguru": [],
+    "Baiyyappanahalli": [
+      "https://en.wikipedia.org/wiki/Baiyyappanahalli"
+    ],
+    "Balagere": [],
+    "Banashankari": [
+      "https://en.wikipedia.org/wiki/Banashankari"
+    ],
+    "Banashankari 2nd Stage": [
+      "https://en.wikipedia.org/wiki/Banashankari"
+    ],
+    "Banashankari 6th Stage": [
+      "https://en.wikipedia.org/wiki/Banashankari"
+    ],
+    "Banashankari Temple Ward": [
+      "https://en.wikipedia.org/wiki/Banashankari"
+    ],
+    "Banaswadi": [
+      "https://en.wikipedia.org/wiki/Banaswadi"
+    ],
+    "Bandapura": [],
+    "Bande Bommasandra": [],
+    "Bandenallasandra": [],
+    "Bandepalya": [],
+    "Bangarappa Nagara": [],
+    "Bannerughatta": [],
+    "Bapuji Nagar": [],
+    "Bapuji Nagara": [],
+    "Basavanagudi": [
+      "https://en.wikipedia.org/wiki/Basavanagudi"
+    ],
+    "Basavanapura": [],
+    "Basaveshwara Nagara": [
+      "https://en.wikipedia.org/wiki/Basaveshwaranagara"
+    ],
+    "Begihalli": [],
+    "Beguru": [
+      "https://en.wikipedia.org/wiki/Begur,_Bengaluru"
+    ],
+    "Belathur": [
+      "https://en.wikipedia.org/wiki/Belathur"
+    ],
+    "Bellandur": [
+      "https://en.wikipedia.org/wiki/Bellandur"
+    ],
+    "Bellanduru": [
+      "https://en.wikipedia.org/wiki/Bellandur"
+    ],
+    "Bendiganahalli": [
+      "https://en.wikipedia.org/wiki/Bendiganahalli,_Bengaluru_East"
+    ],
+    "Bennamangala": [],
+    "Betta Halasuru": [],
+    "Bettadasanpura": [],
+    "Bhattarahalli": [
+      "https://en.wikipedia.org/wiki/Battarahalli"
+    ],
+    "Bhuvanahalli": [],
+    "Bidadi": [
+      "https://en.wikipedia.org/wiki/Bidadi"
+    ],
+    "Bidaraguppe": [],
+    "Bidarahalli": [],
+    "Bidarakuppe": [],
+    "Bidare Agrahara": [],
+    "Bilekahalli": [
+      "https://en.wikipedia.org/wiki/Bilekahalli"
+    ],
+    "Billapura": [],
+    "Binnypete": [],
+    "Bommanahalli": [
+      "https://en.wikipedia.org/wiki/Bommanahalli"
+    ],
+    "Bommasandra": [
+      "https://en.wikipedia.org/wiki/Bommasandra"
+    ],
+    "Bommenahalli": [
+      "https://en.wikipedia.org/wiki/Bommenahalli,_Bengaluru_East"
+    ],
+    "Brigade El Dorado": [],
+    "Brigade Oasis": [],
+    "Brigade Orchards": [],
+    "Budigere": [
+      "https://en.wikipedia.org/wiki/Budigere"
+    ],
+    "Byadarahalli": [],
+    "Byagadadenahalli": [],
+    "Byappanahalli": [
+      "https://en.wikipedia.org/wiki/Baiyyappanahalli"
+    ],
+    "Byatarayanapura": [
+      "https://en.wikipedia.org/wiki/Byatarayanapura"
+    ],
+    "Byrathi": [
+      "https://en.wikipedia.org/wiki/Byrathi"
+    ],
+    "C V Raman Nagar": [
+      "https://en.wikipedia.org/wiki/CV_Raman_Nagar"
+    ],
+    "Carmelaram": [
+      "https://en.wikipedia.org/wiki/Carmelaram"
+    ],
+    "Century Artizan": [],
+    "Century Sports Village": [],
+    "Chagalatti": [],
+    "Chamarajapete": [
+      "https://en.wikipedia.org/wiki/Chamarajpet"
+    ],
+    "Chandapura": [
+      "https://en.wikipedia.org/wiki/Chandapura"
+    ],
+    "Chandra Layout": [],
+    "Channasandra": [
+      "https://en.wikipedia.org/wiki/Channasandra"
+    ],
+    "Chatekere Palya": [],
+    "Chellakere": [],
+    "Chikka Banavara": [
+      "https://en.wikipedia.org/wiki/Chikkabanavara"
+    ],
+    "Chikkaballapura": [
+      "https://en.wikipedia.org/wiki/Chikkaballapur"
+    ],
+    "Chikkagubbi": [],
+    "Chikkajala": [
+      "https://en.wikipedia.org/wiki/Chikkajala"
+    ],
+    "Chikkalasandra": [
+      "https://en.wikipedia.org/wiki/Chikkalasandra"
+    ],
+    "Chikkanagamangala": [],
+    "Chikkanayakanahalli": [],
+    "Chikkapete": [
+      "https://en.wikipedia.org/wiki/Chickpet"
+    ],
+    "Chikkasanni": [],
+    "Chikkathoguru": [],
+    "Chikkatirupati": [],
+    "Chimasandra": [],
+    "Chokkanahalli": [],
+    "Chokkasandra": [],
+    "Chokkenahalli": [],
+    "Choodasandra": [],
+    "Chunchanakuppe": [],
+    "Church Street": [
+      "https://en.wikipedia.org/wiki/Church_Street,_Bengaluru"
+    ],
+    "Concorde Cuppertino Villas": [],
+    "Concorde Manhattans Apartments": [],
+    "Concorde Silicon Valley": [],
+    "Cox Town": [
+      "https://en.wikipedia.org/wiki/Cox_Town,_Bengaluru"
+    ],
+    "DSR Highland Greens": [],
+    "Dabaspete": [],
+    "Darga Mohalla": [],
+    "Dargajogihalli": [
+      "https://en.wikipedia.org/wiki/Dargajogihalli"
+    ],
+    "Dasanapura": [],
+    "Dasarahalli": [
+      "https://en.wikipedia.org/wiki/Dasarahalli"
+    ],
+    "Deepanjali Nagara": [],
+    "Devanagondi": [],
+    "Devanahalli": [
+      "https://en.wikipedia.org/wiki/Devanahalli"
+    ],
+    "Devarabeesanahalli": [],
+    "Devarachikkanahalli": [
+      "https://en.wikipedia.org/wiki/Devarachikkanahalli"
+    ],
+    "Devaraj Urs Ward": [],
+    "Devasandra": [],
+    "Devenahalli": [],
+    "Dharmagiri Ward": [],
+    "Dodda Cheemanahalli": [],
+    "Dodda Dunnasandra": [],
+    "Dodda Gubbi": [],
+    "Dodda Hosahalli": [],
+    "Dodda Nekkundi": [],
+    "Doddabanahalli": [],
+    "Doddabettahalli": [
+      "https://en.wikipedia.org/wiki/Doddabettahalli"
+    ],
+    "Doddabommasandra": [],
+    "Doddajala": [],
+    "Doddakammanahalli": [],
+    "Doddakannalli": [],
+    "Doddasanne": [],
+    "Doddathoguru": [],
+    "Domlur": [
+      "https://en.wikipedia.org/wiki/Domlur"
+    ],
+    "Domluru": [
+      "https://en.wikipedia.org/wiki/Domlur"
+    ],
+    "Dommasandra": [
+      "https://en.wikipedia.org/wiki/Dommasandra"
+    ],
+    "Dooravaninagar": [],
+    "Doresanipalya": [],
+    "Dr. Shivaram Karanth Layout": [],
+    "EPIP Zone": [],
+    "Eagleton Golf Village": [],
+    "Electronic City": [
+      "https://en.wikipedia.org/wiki/Electronic_City"
+    ],
+    "Electronics City Phase 1": [
+      "https://en.wikipedia.org/wiki/Electronic_City"
+    ],
+    "Electronics City Phase 2 (East)": [
+      "https://en.wikipedia.org/wiki/Electronic_City"
+    ],
+    "Electronics City Phase 2 (West)": [
+      "https://en.wikipedia.org/wiki/Electronic_City"
+    ],
+    "Embassy Boulevard": [],
+    "Ferrar Nagar": [],
+    "Fortius Under the Sun": [],
+    "Frazer Town": [
+      "https://en.wikipedia.org/wiki/Fraser_Town,_Bengaluru"
+    ],
+    "G.M Palya": [
+      "https://en.wikipedia.org/wiki/G._M._Palya"
+    ],
+    "GM Infinite E-City": [],
+    "GM Townsville": [],
+    "Ganga Vertica Apartments": [],
+    "Ganganagar": [
+      "https://en.wikipedia.org/wiki/Ganganagar,_Bengaluru"
+    ],
+    "Ganganamidde": [],
+    "Gangapura": [],
+    "Gangenahalli": [],
+    "Gangodanahalli": [],
+    "Garvebavi Palya": [],
+    "Gattahalli": [],
+    "Geddalahalli": [],
+    "Girinagar": [
+      "https://en.wikipedia.org/wiki/Girinagar"
+    ],
+    "Godrej Ananda": [],
+    "Godrej E-City": [],
+    "Godrej Nurture": [],
+    "Godrej Reserve": [],
+    "Gollahalli": [],
+    "Gopalapura": [],
+    "Gopalpura": [],
+    "Gottigere": [
+      "https://en.wikipedia.org/wiki/Gottigere"
+    ],
+    "Gowrenahalli": [],
+    "Guddahatti": [],
+    "Guddanahalli": [],
+    "Gummanahalli": [],
+    "Gunjur": [],
+    "HBR Layout": [],
+    "HSR": [
+      "https://en.wikipedia.org/wiki/HSR_Layout"
+    ],
+    "HSR Layout": [
+      "https://en.wikipedia.org/wiki/HSR_Layout"
+    ],
+    "Hadosiddapura": [],
+    "Halanayakanahalli": [],
+    "Hamam": [],
+    "Hancharahalli": [
+      "https://en.wikipedia.org/wiki/Hancharahalli"
+    ],
+    "Hanumanthanagar": [
+      "https://en.wikipedia.org/wiki/Hanumanthanagar,_Bengaluru"
+    ],
+    "Haragadde": [],
+    "Haralur": [],
+    "Hebbagodi": [
+      "https://en.wikipedia.org/wiki/Hebbagodi"
+    ],
+    "Hebbal": [
+      "https://en.wikipedia.org/wiki/Hebbal,_Bengaluru"
+    ],
+    "Hebron Avenue": [],
+    "Heelalige": [],
+    "Heggondahalli": [],
+    "Hemmigepura": [],
+    "Hemmigepura Gollahalli": [],
+    "Hennagara": [],
+    "Hennur": [],
+    "Hindiganala Cross": [],
+    "Hirandahalli": [],
+    "Hongasandra": [],
+    "Hoodi": [
+      "https://en.wikipedia.org/wiki/Hoodi"
+    ],
+    "Horamavu": [
+      "https://en.wikipedia.org/wiki/Horamavu"
+    ],
+    "Hosahalli": [],
+    "Hosahudya": [],
+    "Hosapalya": [],
+    "Hoskote": [
+      "https://en.wikipedia.org/wiki/Hoskote"
+    ],
+    "Hosur Road": [
+      "https://en.wikipedia.org/wiki/Hosur_Road"
+    ],
+    "House of Hiranandani": [],
+    "Hoysala Nagara East": [],
+    "Hulimangala": [],
+    "Hulimavu": [
+      "https://en.wikipedia.org/wiki/Hulimavu"
+    ],
+    "Hurali Chikkanahalli": [],
+    "Hurulagurki": [],
+    "Huskur": [
+      "https://en.wikipedia.org/wiki/Huskur,_Bengaluru_East"
+    ],
+    "Huvinayakanahalli": [],
+    "IPD Salappa Ward": [],
+    "Iblur": [],
+    "Iconest 3": [],
+    "Iggaluru": [],
+    "Indiranagar": [
+      "https://en.wikipedia.org/wiki/Indiranagar,_Bengaluru"
+    ],
+    "Indlabele": [],
+    "Ittamadu": [
+      "https://en.wikipedia.org/wiki/Ittamadu"
+    ],
+    "Ittina Neela Apartments": [],
+    "J.P Nagar": [
+      "https://en.wikipedia.org/wiki/Jayaprakash_Nagar,_Bengaluru"
+    ],
+    "JP Nagar": [
+      "https://en.wikipedia.org/wiki/Jayaprakash_Nagar,_Bengaluru"
+    ],
+    "Jadalatimmanahalli": [],
+    "Jade Garden": [],
+    "Jakkasandra": [
+      "https://en.wikipedia.org/wiki/Jakkasandra"
+    ],
+    "Jakkur": [
+      "https://en.wikipedia.org/wiki/Jakkur"
+    ],
+    "Jayamahal": [],
+    "Jayanagar 7th Block": [
+      "https://en.wikipedia.org/wiki/Jayanagar,_Bengaluru"
+    ],
+    "Jayanagar East": [
+      "https://en.wikipedia.org/wiki/Jayanagar,_Bengaluru"
+    ],
+    "Jeevanahalli": [],
+    "Jigani": [
+      "https://en.wikipedia.org/wiki/Jigani"
+    ],
+    "Jnana Bharathi": [],
+    "K Chennasandra": [],
+    "K Dommasandra": [],
+    "K Narayanapura": [],
+    "K.P Agrahara": [],
+    "KR Puram": [
+      "https://en.wikipedia.org/wiki/Krishnarajapuram"
+    ],
+    "Kaadubeesanahalli": [],
+    "Kacharakanahalli": [],
+    "Kadaagrahara": [],
+    "Kadagrahara": [],
+    "Kadirenahalli": [],
+    "Kadugodi": [
+      "https://en.wikipedia.org/wiki/Kadugodi"
+    ],
+    "Kaggadasapura": [
+      "https://en.wikipedia.org/wiki/Kaggadasapura"
+    ],
+    "Kaggalahalli": [],
+    "Kalkere": [
+      "https://en.wikipedia.org/wiki/Kalkere"
+    ],
+    "Kalyan Nagar": [
+      "https://en.wikipedia.org/wiki/Kalyan_Nagar"
+    ],
+    "Kalyanagar": [
+      "https://en.wikipedia.org/wiki/Kalyan_Nagar"
+    ],
+    "Kamakshipalya": [
+      "https://en.wikipedia.org/wiki/Kamakshipalya"
+    ],
+    "Kamakya Layout": [],
+    "Kammagondanahalli": [],
+    "Kammanahalli": [
+      "https://en.wikipedia.org/wiki/Kammanahalli"
+    ],
+    "Kanamanapalli": [],
+    "Kannamangala": [
+      "https://en.wikipedia.org/wiki/Kannamangala"
+    ],
+    "Kannamangala Palya": [],
+    "Kannuru": [],
+    "Kasavanahalli": [],
+    "Kasturbha Nagar": [],
+    "Kasturi Nagar": [],
+    "Kaval Byrasandra": [],
+    "Kaveri Nagara": [],
+    "Kempapura": [],
+    "Ketohalli": [],
+    "Keya The Green Terraces": [],
+    "Kittaganahalli": [],
+    "Kittaganuru": [],
+    "Kodagalahatti": [],
+    "Kodappanahalli": [],
+    "Kodati": [],
+    "Kodi Chikkanahalli": [],
+    "Kodigehalli": [
+      "https://en.wikipedia.org/wiki/Kodigehalli"
+    ],
+    "Kogilu": [],
+    "Kommasandra": [],
+    "Konadasapura": [
+      "https://en.wikipedia.org/wiki/Konadasapura"
+    ],
+    "Koramangala": [
+      "https://en.wikipedia.org/wiki/Koramangala"
+    ],
+    "Koramangala 5th Block": [
+      "https://en.wikipedia.org/wiki/Koramangala"
+    ],
+    "Kormangala East": [
+      "https://en.wikipedia.org/wiki/Koramangala"
+    ],
+    "Kormangala West": [
+      "https://en.wikipedia.org/wiki/Koramangala"
+    ],
+    "Kothnur": [
+      "https://en.wikipedia.org/wiki/Kothnur"
+    ],
+    "Kudlu": [],
+    "Kumaraswamy Layout": [
+      "https://en.wikipedia.org/wiki/Kumaraswamy_Layout"
+    ],
+    "Kundalahalli": [
+      "https://en.wikipedia.org/wiki/Kundalahalli"
+    ],
+    "Kurubarakunte": [],
+    "Lakkasandra": [],
+    "Lakkenahalli": [],
+    "Lakshmisagara": [],
+    "Lavelle Road": [
+      "https://en.wikipedia.org/wiki/Lavelle_Road"
+    ],
+    "Lingarajpura": [
+      "https://en.wikipedia.org/wiki/Lingarajapuram"
+    ],
+    "Madeena Nagar": [],
+    "Madhavara": [],
+    "Mahadevapura": [
+      "https://en.wikipedia.org/wiki/Mahadevapura,_Bengaluru"
+    ],
+    "Mahaveer Orchids": [],
+    "Mahendra Aarya": [],
+    "Mallathahalli": [],
+    "Malleshwaram": [
+      "https://en.wikipedia.org/wiki/Malleshwaram"
+    ],
+    "Manchanahalli": [],
+    "Mandur": [
+      "https://en.wikipedia.org/wiki/Mandur,_Bengaluru_East"
+    ],
+    "Manjunath Nagara": [],
+    "Manjunatha Nagar": [],
+    "Mantanakurchi": [],
+    "Maragondanahalli": [],
+    "Marasandra": [],
+    "Marathahalli": [
+      "https://en.wikipedia.org/wiki/Marathahalli"
+    ],
+    "Maruthi Seva Nagara": [],
+    "Mathikere": [],
+    "Mattanahalli": [],
+    "Mayasandra": [],
+    "Medahalli": [],
+    "Misiganahalli": [],
+    "Mookandapalli": [],
+    "Mulluru": [],
+    "Muneshwara Block": [],
+    "Munnenkolalu": [],
+    "Muttanalluru": [],
+    "N.R Colony": [],
+    "N.S Palya": [],
+    "NTY Layout": [],
+    "Nada prabhu Kempegowda Nagara": [],
+    "Naganathapura": [],
+    "Nagasandra": [],
+    "Nagavara": [
+      "https://en.wikipedia.org/wiki/Nagavara"
+    ],
+    "Nandi": [],
+    "Nanjapura": [],
+    "Navrathna Agrahara": [],
+    "Nettigere": [],
+    "New Tavarekere": [],
+    "New Thippasandra": [],
+    "Orchid Greens": [],
+    "Ozone Urbana": [],
+    "Panathur": [],
+    "Parkway Homes": [],
+    "Pattanduru Agrahara": [],
+    "Peddhanapalya": [],
+    "Prestige Finsbury Park": [],
+    "Prestige Finsbury Park - Hyde": [],
+    "Prestige Golfshire": [
+      "https://en.wikipedia.org/wiki/Prestige_Golfshire"
+    ],
+    "Prestige Sunrise Park": [],
+    "Prestige Tranquility Apartments": [],
+    "Prime City Apartments": [],
+    "Provident Welworth City": [],
+    "Pulakeshi Nagar": [
+      "https://en.wikipedia.org/wiki/Fraser_Town,_Bengaluru"
+    ],
+    "Purnima Elite": [],
+    "R.T Nagar": [
+      "https://en.wikipedia.org/wiki/R._T._Nagar"
+    ],
+    "RBI Layout": [],
+    "RK Township": [],
+    "RT Nagar": [
+      "https://en.wikipedia.org/wiki/R._T._Nagar"
+    ],
+    "Radhadari Nilayam": [],
+    "Raghunathapura": [],
+    "Raja Kempegowda Ward": [],
+    "Rajajinagar": [
+      "https://en.wikipedia.org/wiki/Rajajinagar"
+    ],
+    "Rajiv Gandhi Nagar": [],
+    "Ramky One Karnival": [],
+    "Reliable Gardenia": [],
+    "S.G Palya": [],
+    "S.K Garden": [],
+    "Sadashivanagar": [
+      "https://en.wikipedia.org/wiki/Sadashivanagar"
+    ],
+    "Sagayapuram": [],
+    "Salarpuria East Crest": [],
+    "Salarpuria Sattva Aspire": [],
+    "Sampangirama Nagar": [],
+    "Sampige Nagara": [],
+    "Sampigehalli": [],
+    "Sarjapur Road": [],
+    "Sarjapura": [
+      "https://en.wikipedia.org/wiki/Sarjapura"
+    ],
+    "Saroj Dynasty": [],
+    "Sarvabhouma Nagar": [],
+    "Sattva Park Cubix": [],
+    "Shampura": [],
+    "Shanti Nagar": [],
+    "Shapoorji Pallonji Parkwest": [],
+    "Sheshagirihalli": [],
+    "Shettigere Chikkajala": [],
+    "Shettihalli": [
+      "https://en.wikipedia.org/wiki/Shettihalli"
+    ],
+    "Shivanasamudra Ward": [],
+    "Shriram Greenfield": [],
+    "Shriram Luxor": [],
+    "Shriram Signiaa": [],
+    "Shriram Smrithi": [],
+    "Singasandra": [
+      "https://en.wikipedia.org/wiki/Singasandra"
+    ],
+    "Singena Agrahara": [],
+    "Sir MV Layout": [],
+    "Smondo 2.0": [],
+    "Smondo 3.0": [],
+    "Smondoville": [],
+    "Sobha Lifestyle Legacy": [],
+    "Southe Gowdanahalli": [],
+    "Sri Banashankri Layout": [],
+    "Srinagar": [],
+    "Srinivasa Nagara": [],
+    "Subramanyapura": [],
+    "Sulthanpalya": [],
+    "Suryanagar Phase 1": [],
+    "Suryanagar Phase 2": [],
+    "Suryanagar Phase 3": [],
+    "Swiss Town": [],
+    "T.C Palya": [],
+    "TC Palya": [],
+    "Talagattapura": [],
+    "Tata Value Housing New Haven": [],
+    "Tatnahalli": [],
+    "Thanisandra": [
+      "https://en.wikipedia.org/wiki/Thanisandra"
+    ],
+    "Thataparti": [],
+    "The Belvedere - Airport District": [],
+    "The Commune": [],
+    "The Lake View Address": [],
+    "Thippasandra": [],
+    "Thore Nagasandra": [],
+    "Thyagarajnagar": [
+      "https://en.wikipedia.org/wiki/Thyagarajanagar"
+    ],
+    "Tirumagondahalli": [],
+    "Ullal": [],
+    "Ullalu": [
+      "https://en.wikipedia.org/wiki/Ullalu"
+    ],
+    "Uttanahalli": [],
+    "V.V Puram": [],
+    "VBHC Vaibhava": [],
+    "Vakil EnCasa": [],
+    "Varalakshmi Nagar": [],
+    "Vars Parkwood": [],
+    "Vasanthapura": [],
+    "Venkatala": [],
+    "Vibhootipura": [],
+    "Vidyaranyanagara": [],
+    "Vignananagar": [],
+    "Vignananagara": [],
+    "Vijaya Bank Layout": [
+      "https://en.wikipedia.org/wiki/Vijaya_bank_layout"
+    ],
+    "Vijinapura": [],
+    "Virgonagar": [],
+    "Vishwanatha Nagenahalli": [],
+    "Vishwapriya Nagara": [],
+    "Vishweshwaraiah Enclave": [],
+    "Vittasandra": [],
+    "Whitefield": [
+      "https://en.wikipedia.org/wiki/Whitefield,_Bengaluru"
+    ],
+    "Wilson Garden": [
+      "https://en.wikipedia.org/wiki/Wilson_Garden"
+    ],
+    "Woods Enclave": [],
+    "Yamalur": [],
+    "Yarappana Bande": [],
+    "Yartiganahalli": [],
+    "Yelenahalli": [],
+    "Yerrappanahalli": []
+  },
+  "chromadb_version": "1.5.9",
+  "onnxruntime_version": "1.29.0"
 }

@@ -68,6 +68,28 @@ def from_import(
     return DatasetManifest.model_validate(base)
 
 
+def from_index(counts: dict[str, int]) -> DatasetManifest:
+    """The index half: which model built the guide index, and how much each locality got."""
+    import chromadb
+    import onnxruntime
+
+    from scout.pipeline.embedding import EMBEDDING_MODEL, model_fingerprint
+
+    m = load_manifest()
+    assert m is not None, "run the import half first"
+    sources = json.loads(Path("data/guides/sources.json").read_text(encoding="utf-8"))
+    return m.model_copy(
+        update={
+            "embedding_model": EMBEDDING_MODEL,
+            "embedding_model_version": model_fingerprint(),
+            "chunk_count_per_locality": counts,
+            "guide_sources": sources,
+            "chromadb_version": chromadb.__version__,
+            "onnxruntime_version": onnxruntime.__version__,
+        }
+    )
+
+
 if __name__ == "__main__":
     ap = argparse.ArgumentParser()
     ap.add_argument(
