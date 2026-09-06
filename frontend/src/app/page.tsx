@@ -22,6 +22,7 @@ export default function Page() {
   const ws = useRef<WsClient | null>(null);
   const mic = useRef<MicCapture | null>(null);
   const player = useRef<PcmPlayer | null>(null);
+  const unmuteTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
 
   async function startMic() {
     setError("");
@@ -37,9 +38,26 @@ export default function Page() {
         if (final) setAck("");
       };
       client.onAck = (text) => setAck(`heard: ${text}`);
-      client.onAudioStart = (a) => player.current?.setSampleRate(a.sample_rate);
+      client.onAudioStart = (a) => {
+        player.current?.setSampleRate(a.sample_rate);
+        // Mute BEFORE the first chunk plays, so the reply never reaches Deepgram.
+        clearTimeout(unmuteTimer.current);
+        mic.current?.mute();
+      };
       client.onAudioChunk = (pcm) => player.current?.enqueue(pcm);
-      client.onAudioStop = () => player.current?.stop();
+      client.onAudioEnd = () => {
+        // Un-mute when playback finishes, not when the server stops sending: the
+        // queue can still hold seconds of speech at this point. 150 ms of margin
+        // covers the speaker-to-microphone tail.
+        const wait = (player.current?.remainingMs() ?? 0) + 150;
+        clearTimeout(unmuteTimer.current);
+        unmuteTimer.current = setTimeout(() => mic.current?.unmute(), wait);
+      };
+      client.onAudioStop = () => {
+        player.current?.stop();
+        clearTimeout(unmuteTimer.current);
+        mic.current?.unmute(); // nothing is playing any more
+      };
       client.onOutcome = (o) => setOutcome(JSON.stringify(o, null, 2));
       client.onClosed = (reason) => {
         setLive(false);
@@ -65,6 +83,7 @@ export default function Page() {
   }
 
   function stopMic() {
+    clearTimeout(unmuteTimer.current);
     mic.current?.stop();
     ws.current?.close();
     player.current?.stop();

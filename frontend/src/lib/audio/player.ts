@@ -63,6 +63,17 @@ export class PcmPlayer {
     this.sources.push(src);
   }
 
+  /**
+   * Milliseconds until the last queued buffer finishes. `audio_out end` means the
+   * server has finished SENDING, not that the browser has finished PLAYING — chunks
+   * arrive in a burst and are scheduled back to back, so several seconds of speech
+   * can still be queued when the end marker lands.
+   */
+  remainingMs(): number {
+    if (!this.ctx) return 0;
+    return Math.max(0, this.nextAt - this.ctx.currentTime) * 1000;
+  }
+
   stop() {
     for (const s of this.sources) {
       try {
