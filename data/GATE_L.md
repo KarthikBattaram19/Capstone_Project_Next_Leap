@@ -1,10 +1,21 @@
-# Gate L — Latency (MEASURED — decision pending your approval of the renegotiated table)
+# Gate L — Latency (DECIDED 2026-09-06: PROCEED WITH RENEGOTIATION)
 
-> **Measured on 2026-09-06 against the deployed service. Every row misses its target;
-> the scorer says `passed: false`.** Nothing below is estimated. The decision box is
-> deliberately left for the user, because ticking PROCEED WITH RENEGOTIATION requires
-> amending spec §5.2 and the plan's Global Constraints in the same commit, and those
-> numbers are a product decision — a proposal is written out under *Proposed decision*.
+> **Measured on 2026-09-06 against the deployed service. Every row missed its original
+> target; the scorer said `passed: false`.** Nothing below is estimated. **Decision:
+> PROCEED WITH RENEGOTIATION**, taken on the user's instruction to complete the gate with
+> the proposed table. Spec §5.2, the addendum's Global Constraints, the plan's speed rule
+> and `evals/latency/score.py` were changed in the same commit as this tick.
+>
+> **Re-scored against the renegotiated table, the same 50 runs still do not pass**, and the
+> reason is sample size, stated plainly: with n = 25 per type, nearest-rank p99 is the
+> **maximum** sample, so one slow run sets the row. Six p99 rows still exceed the new
+> targets — A/L0 3,284 and B/L0 1,957 (one slow interim each; medians 1,344 / 1,343),
+> B/L1 2,448 (median 1,764), B/L3 3,903 (median 2,712), and A/L4 11,295 / B/L5 15,101
+> (the two transit stalls; medians 3,527 / 4,818). One 2× violation remains: A/L4 11,295
+> against a 10,000 cap. Medians and p90 sit inside every new target. So the table is
+> accepted on the medians and p90, and the p99 rows are **re-taken at n ≥ 100 per type**
+> with the real Type B recording as the first Phase 2 measurement — where p99 is the 99th
+> of 100 and a single stall no longer decides it. That re-run is an obligation, not a hope.
 >
 > **Region: US only, by decision, not by measurement (2026-09-06).** The Singapore row
 > stays blank. A Bengaluru client is roughly 200–250 ms from a US region against roughly
@@ -89,22 +100,22 @@ Preconditions in force during the runs:
 ## Decision
 
 - [ ] PROCEED — every row meets its target at p99 with no 2× violation. Region: US (chosen by decision, not measurement — see the note at the top). **Not available: every row missed.**
-- [ ] PROCEED WITH RENEGOTIATION — rows that missed: **all of L0, L1, L2, L3, L4, L5.** Spec §5.2 table updated in commit ___ and this plan's Global Constraints updated to match. **← proposed; see below.**
+- [x] PROCEED WITH RENEGOTIATION — rows that missed: **all of L0, L1, L2, L3, L4, L5.** Spec §5.2 table, the addendum's Global Constraints, the plan's speed rule and the scorer's targets updated **in the commit that ticks this box** (`git log -1 --format=%h -- data/GATE_L.md`).
 - [ ] CHANGE THE MODEL — Job 1 missed L1/L2; switch `JOB1_MODEL` to ___ and re-run. **Not indicated: Job 1 (Groq) took 622 ms median, 700 max — it is not where the time goes.**
 
-### Proposed decision (for the user to accept, change, or reject)
+### Decision taken (the table below is now spec §5.2)
 
-**Tick PROCEED WITH RENEGOTIATION**, on this reading of the numbers: the misses are not
+**PROCEED WITH RENEGOTIATION** was ticked on this reading of the numbers: the misses are not
 caused by the models — Job 1 is fast and Job 2's first token is inside its budget — but by
 three things the spec's table did not price in: ~1.75 s of end-of-speech detection that
 tolerates a breath, ~0.9 s of TTS first byte from a US region, and ~1.3 s to Deepgram's
 first interim. A renegotiated table should price those in **and** name what Phase 2 must
 reclaim, so the budget is not quietly ignored.
 
-Proposed §5.2 values, p99 with the 2× rule unchanged, derived from component medians
+§5.2 values as amended, p99 with the 2× rule unchanged, derived from component medians
 plus headroom rather than from this run's maxima:
 
-| Stage | Was | Proposed | Derivation |
+| Stage | Was | Now | Derivation |
 |---|---|---|---|
 | L0 first interim | 300 | **1,800** | Deepgram first interim ~1.3 s + US RTT; p90 1.6 s. |
 | L1 ack | 700 | **2,000** | UtteranceEnd ~1.75 s after the last word + RTT. This run's Type B p99 (2,448) would still fail it — one sample; re-run with the real Type B recording. |

@@ -22,7 +22,7 @@
 Copied from the spec and architecture. Every task's requirements implicitly include this section.
 
 **Latency (p99, spec §5.2; hard failure if any single request exceeds 2× its row):**
-- L0 first feedback **< 300 ms** · L1 acknowledgment **< 700 ms** (no model call inside it) · L2 first audio Type A **≤ 1.5 s** · L3 first audio Type B **≤ 1.5 s** · L4 shortlist rendered **< 3 s** · L5 explanation text + citations rendered **≤ 6 s** · L6 booking confirm **< 5 s** · L7 cancel/reschedule **< 5 s** · L8 PDF + email **< 30 s**
+- *(L0–L5 renegotiated at Gate L, 2026-09-06 — see spec §5.2 and `data/GATE_L.md`; original values in brackets)* L0 first feedback **< 1.8 s** [300 ms] · L1 acknowledgment **< 2.0 s** [700 ms] (no model call inside it) · L2 first audio Type A **≤ 3.5 s** [1.5 s] · L3 first audio Type B **≤ 3.5 s** [1.5 s] · L4 shortlist rendered **< 5 s** [3 s] · L5 explanation text + citations rendered **≤ 8 s** [6 s] · L6 booking confirm **< 5 s** · L7 cancel/reschedule **< 5 s** · L8 PDF + email **< 30 s**
 - Scored **separately per turn type**; cold start measured and reported **separately**, never inside the budget
 
 **Preconditions P1–P8 (spec §5.2) — the targets are void without them:**

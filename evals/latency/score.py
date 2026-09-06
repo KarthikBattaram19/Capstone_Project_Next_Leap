@@ -7,13 +7,18 @@ import math
 import sys
 from dataclasses import dataclass, field
 
+# Spec 5.2 as renegotiated at Gate L on 2026-09-06 (data/GATE_L.md). The original
+# table read L0 300 / L1 700 / L2 1500 / L3 1500 / L4 3000 / L5 6000; measured on the
+# deployed US service the models were quick but ~1.75 s of end-of-speech detection,
+# ~0.9 s of TTS first byte and ~1.3 s to Deepgram's first interim were not priced in.
+# L6-L8 are unmeasured by the skeleton and unchanged.
 TARGETS_MS = {
-    "L0": 300,
-    "L1": 700,
-    "L2": 1500,
-    "L3": 1500,
-    "L4": 3000,
-    "L5": 6000,
+    "L0": 1800,
+    "L1": 2000,
+    "L2": 3500,
+    "L3": 3500,
+    "L4": 5000,
+    "L5": 8000,
     "L6": 5000,
     "L7": 5000,
     "L8": 30000,
