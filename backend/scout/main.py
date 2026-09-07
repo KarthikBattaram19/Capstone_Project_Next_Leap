@@ -13,12 +13,17 @@ from scout.api.ws import router as ws_router
 from scout.config import Settings
 from scout.conversation.stub_turn import StubSession
 from scout.platform import telemetry
-from scout.platform.boot import BootError, check_secrets, run_boot_checks
+from scout.platform.artefacts import ArtefactStore
+from scout.platform.boot import BootError, check_bundle, check_secrets, run_boot_checks
 
 
 def create_app(settings: Settings) -> FastAPI:
     app = FastAPI(title="scout", docs_url=None, redoc_url=None)
     app.state.settings = settings
+    # Loaded once, here, and never written afterwards (arch §6.3). Under `main()` the
+    # boot checks have already loaded it once; the second load is the price of a
+    # store that is refused before the port is bound.
+    app.state.store = ArtefactStore.load(settings.bundle_dir)
     app.add_middleware(
         CORSMiddleware,
         allow_origins=settings.origins,
@@ -33,7 +38,7 @@ def create_app(settings: Settings) -> FastAPI:
     return app
 
 
-BOOT_CHECKS = [check_secrets]  # Task 1.4 appends the bundle checks
+BOOT_CHECKS = [check_secrets, check_bundle]
 
 
 def main() -> None:

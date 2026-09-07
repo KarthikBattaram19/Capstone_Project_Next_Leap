@@ -54,6 +54,17 @@ def check_secrets(s: Settings) -> None:
         raise BootError("CORS_ALLOWED_ORIGINS must be an explicit allowlist, never '*' or empty")
 
 
+def check_bundle(s: Settings) -> None:
+    # Local import: avoids chroma at import time (and a circular import, since the
+    # store raises BootError from this module).
+    from scout.platform.artefacts import ArtefactStore
+
+    # Raises BootError with the specific reason: unreadable file, contract_version,
+    # listing count, OSM coverage, embedding fingerprint, or a locality with no
+    # collection.
+    ArtefactStore.load(s.bundle_dir)
+
+
 def run_boot_checks(s: Settings, checks: list[BootCheck]) -> None:
     failures: list[str] = []
     for check in checks:

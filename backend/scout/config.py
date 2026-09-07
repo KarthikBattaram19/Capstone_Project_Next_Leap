@@ -31,7 +31,9 @@ class Settings(BaseSettings):
     google_owner_calendar_id: str = ""
     google_sender_email: str = ""
     operator_token: str = ""
-    bundle_dir: str = "../data/bundle"
+    # Resolved from the code, not the cwd: `python -m scout.main` must find the bundle
+    # from the repo root and from backend/ alike. Docker overrides it with BUNDLE_DIR.
+    bundle_dir: str = str(BACKEND_DIR.parent / "data" / "bundle")
     cors_allowed_origins: str = ""
     latency_log_path: str | None = None
     port: int = 8000
@@ -58,6 +60,15 @@ class Settings(BaseSettings):
     @property
     def origins(self) -> list[str]:
         return [o.strip() for o in self.cors_allowed_origins.split(",") if o.strip()]
+
+    @field_validator("bundle_dir")
+    @classmethod
+    def _bundle_dir_absolute(cls, v: str) -> str:
+        # A relative value is taken relative to backend/ (where .env lives), never to the
+        # working directory: "../data/bundle" in backend/.env must name the same directory
+        # whether the server starts from the repo root or from backend/. An absolute
+        # value (Docker's /data/bundle) passes through unchanged.
+        return str((BACKEND_DIR / v).resolve())
 
     @field_validator("deepgram_endpointing_ms")
     @classmethod

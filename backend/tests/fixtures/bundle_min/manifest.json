@@ -1,0 +1,49 @@
+{
+  "bundle_version": "1",
+  "contract_version": "1",
+  "scraped_on": "2026-09-05",
+  "localities": {
+    "Koramangala": 2,
+    "HSR Layout": 1
+  },
+  "total_listings": 3,
+  "availability_marker": "availability_status column: Yes = available, No = unavailable",
+  "curation_rule": "fixture: hand-written, nothing dropped",
+  "fields_published": [
+    "locality",
+    "rent",
+    "coordinates"
+  ],
+  "fields_missing": [
+    "maintenance_charges",
+    "amenities"
+  ],
+  "merged_records": {},
+  "osm_query_set": [
+    "nearest_metro",
+    "nearest_bus_stop",
+    "nearest_supermarket",
+    "nearest_hospital",
+    "nearest_pharmacy",
+    "nearest_school",
+    "nearest_park",
+    "restaurants_within_500m"
+  ],
+  "osm_index_date": "2026-09-07",
+  "embedding_model": "all-MiniLM-L6-v2",
+  "embedding_model_version": "onnx:sha256:4f148ba8ae9c2c7f",
+  "chunk_count_per_locality": {
+    "Koramangala": 2,
+    "HSR Layout": 2
+  },
+  "guide_sources": {
+    "Koramangala": [
+      "https://en.wikipedia.org/wiki/Koramangala"
+    ],
+    "HSR Layout": [
+      "https://en.wikipedia.org/wiki/HSR_Layout"
+    ]
+  },
+  "chromadb_version": "1.5.9",
+  "onnxruntime_version": "1.29.0"
+}

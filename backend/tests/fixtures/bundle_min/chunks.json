@@ -1,0 +1,38 @@
+[
+ {
+  "id": "koramangala-0-0",
+  "locality": "Koramangala",
+  "title": "Koramangala",
+  "url": "https://en.wikipedia.org/wiki/Koramangala",
+  "text": "Koramangala is a residential locality in south-east Bengaluru, laid out in eight blocks along the Inner Ring Road and Hosur Road. Forum Mall on Hosur Road anchors the 7th Block end, and the 5th Block strip is lined with cafes, pubs and start-up offices that stay busy late into the evening.",
+  "position": 0,
+  "fetched_on": "2026-09-06"
+ },
+ {
+  "id": "koramangala-0-1",
+  "locality": "Koramangala",
+  "title": "Koramangala",
+  "url": "https://en.wikipedia.org/wiki/Koramangala",
+  "text": "The blocks nearest Forum Mall and the Sony World junction are the noisiest at night; the 3rd and 4th Blocks behind the National Games Village are quieter, tree-lined and mostly independent houses. Koramangala has no Namma Metro station yet; the nearest are on the Pink Line, still under construction.",
+  "position": 1,
+  "fetched_on": "2026-09-06"
+ },
+ {
+  "id": "hsr-layout-0-0",
+  "locality": "HSR Layout",
+  "title": "HSR Layout",
+  "url": "https://en.wikipedia.org/wiki/HSR_Layout",
+  "text": "HSR Layout (Hosur-Sarjapur Road Layout) is a planned residential suburb in south-east Bengaluru, divided into seven sectors around a central BDA complex and the 27th Main commercial strip. Agara Lake and its park lie on the northern edge; the sectors are quiet after dark and popular with families.",
+  "position": 0,
+  "fetched_on": "2026-09-06"
+ },
+ {
+  "id": "hsr-layout-0-1",
+  "locality": "HSR Layout",
+  "title": "HSR Layout",
+  "url": "https://en.wikipedia.org/wiki/HSR_Layout",
+  "text": "HSR Layout borders Koramangala to the north-west across the Agara junction, and Bommanahalli and Sarjapur Road to the south and east. Buses on the Outer Ring Road connect it to Silk Board and the IT corridor; the nearest metro is Silk Board on the Yellow Line.",
+  "position": 1,
+  "fetched_on": "2026-09-06"
+ }
+]

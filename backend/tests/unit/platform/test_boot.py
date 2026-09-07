@@ -2,7 +2,7 @@ from pathlib import Path
 
 import pytest
 
-from scout.config import Settings
+from scout.config import BACKEND_DIR, Settings
 from scout.platform.boot import REQUIRED, BootError, check_secrets, run_boot_checks
 
 
@@ -65,3 +65,19 @@ def test_every_required_name_is_in_env_example():
     text = (Path(__file__).resolve().parents[4] / ".env.example").read_text(encoding="utf-8")
     names = {line.split("=", 1)[0] for line in text.splitlines() if "=" in line}
     assert set(REQUIRED) <= names, set(REQUIRED) - names
+
+
+def test_default_bundle_dir_is_absolute_and_exists():
+    # "../data/bundle" was relative to the cwd, so `python -m scout.main` found the
+    # bundle from backend/ and not from the repo root. Resolved from the code instead.
+    d = Path(Settings(_env_file=None).bundle_dir)
+    assert d.is_absolute() and d.is_dir(), d
+
+
+def test_relative_bundle_dir_is_resolved_against_backend_dir():
+    # A relative BUNDLE_DIR (the old .env.example shipped "../data/bundle") is taken
+    # relative to backend/, where .env lives, not to the cwd: it must mean the same
+    # directory from the repo root and from backend/ alike.
+    got = Path(Settings(_env_file=None, bundle_dir="../data/bundle").bundle_dir)
+    assert got.is_absolute(), got
+    assert got == (BACKEND_DIR.parent / "data" / "bundle").resolve()
