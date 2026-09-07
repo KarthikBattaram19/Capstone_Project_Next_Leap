@@ -38,7 +38,7 @@ export function ShortlistCards({
           </div>
         </section>
       ))}
-      {shortlist.unknown_on.map((u) => (
+      {(shortlist.unknown_on ?? []).map((u) => (
         <div key={u.field} className="notice notice--unknown">
           <p>{u.spoken}</p>
           {onShowUnknown ? (

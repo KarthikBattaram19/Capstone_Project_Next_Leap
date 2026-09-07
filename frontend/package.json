@@ -7,7 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "contract": "json2ts -i ../contract/v1.schema.json -o src/lib/viewmodels/contract.ts --additionalProperties false",
+    "contract": "json2ts -i ../contract/v1.schema.json -o src/lib/viewmodels/contract.generated.ts --additionalProperties false",
     "test": "vitest run"
   },
   "dependencies": {

@@ -117,7 +117,7 @@ export function reduce(s: SessionState, a: Action): SessionState {
           const vm = o.view_model;
           return {
             ...base,
-            readback: vm.constraints_readback,
+            readback: vm.constraints_readback ?? [],
             shortlist: vm.shortlist ?? s.shortlist,
             explanation: vm.explanation ?? null,
             snapshot: vm.snapshot ?? null,
@@ -147,7 +147,7 @@ export function reduce(s: SessionState, a: Action): SessionState {
         case "needs_input":
           return {
             ...base,
-            question: { question: o.question, field: o.field, options: o.options },
+            question: { question: o.question, field: o.field, options: o.options ?? [] },
           };
       }
       return s;

@@ -1,0 +1,1166 @@
+{
+  "$defs": {
+    "AckMsg": {
+      "additionalProperties": false,
+      "properties": {
+        "state": {
+          "const": "processing",
+          "default": "processing",
+          "title": "State",
+          "type": "string"
+        },
+        "text": {
+          "title": "Text",
+          "type": "string"
+        },
+        "type": {
+          "const": "ack",
+          "default": "ack",
+          "title": "Type",
+          "type": "string"
+        }
+      },
+      "required": [
+        "text"
+      ],
+      "title": "AckMsg",
+      "type": "object"
+    },
+    "Answered": {
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "const": "answered",
+          "default": "answered",
+          "title": "Kind",
+          "type": "string"
+        },
+        "spoken": {
+          "title": "Spoken",
+          "type": "string"
+        },
+        "view_model": {
+          "$ref": "#/$defs/AnsweredViewModel"
+        }
+      },
+      "required": [
+        "spoken",
+        "view_model"
+      ],
+      "title": "Answered",
+      "type": "object"
+    },
+    "AnsweredViewModel": {
+      "additionalProperties": false,
+      "properties": {
+        "booking": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/BookingVM"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "constraints_readback": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Constraints Readback",
+          "type": "array"
+        },
+        "explanation": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ExplanationVM"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "notices": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Notices",
+          "type": "array"
+        },
+        "offered_slots": {
+          "items": {
+            "$ref": "#/$defs/SlotVM"
+          },
+          "title": "Offered Slots",
+          "type": "array"
+        },
+        "shortlist": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ShortlistVM"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "snapshot": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/SnapshotVM"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        }
+      },
+      "title": "AnsweredViewModel",
+      "type": "object"
+    },
+    "AudioOutMsg": {
+      "additionalProperties": false,
+      "properties": {
+        "event": {
+          "enum": [
+            "start",
+            "end",
+            "stop"
+          ],
+          "title": "Event",
+          "type": "string"
+        },
+        "format": {
+          "anyOf": [
+            {
+              "const": "pcm16",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Format"
+        },
+        "sample_rate": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Sample Rate"
+        },
+        "type": {
+          "const": "audio_out",
+          "default": "audio_out",
+          "title": "Type",
+          "type": "string"
+        }
+      },
+      "required": [
+        "event"
+      ],
+      "title": "AudioOutMsg",
+      "type": "object"
+    },
+    "AvailabilityToggle": {
+      "additionalProperties": false,
+      "properties": {
+        "available": {
+          "title": "Available",
+          "type": "boolean"
+        },
+        "listing_id": {
+          "title": "Listing Id",
+          "type": "string"
+        }
+      },
+      "required": [
+        "listing_id",
+        "available"
+      ],
+      "title": "AvailabilityToggle",
+      "type": "object"
+    },
+    "BookingRequest": {
+      "additionalProperties": false,
+      "properties": {
+        "email": {
+          "title": "Email",
+          "type": "string"
+        },
+        "listing_id": {
+          "title": "Listing Id",
+          "type": "string"
+        },
+        "session_id": {
+          "title": "Session Id",
+          "type": "string"
+        },
+        "slot_start_ist": {
+          "title": "Slot Start Ist",
+          "type": "string"
+        }
+      },
+      "required": [
+        "session_id",
+        "listing_id",
+        "slot_start_ist",
+        "email"
+      ],
+      "title": "BookingRequest",
+      "type": "object"
+    },
+    "BookingResponse": {
+      "additionalProperties": false,
+      "properties": {
+        "booking": {
+          "$ref": "#/$defs/BookingVM"
+        },
+        "spoken": {
+          "title": "Spoken",
+          "type": "string"
+        }
+      },
+      "required": [
+        "booking",
+        "spoken"
+      ],
+      "title": "BookingResponse",
+      "type": "object"
+    },
+    "BookingVM": {
+      "additionalProperties": false,
+      "properties": {
+        "calendar_sync": {
+          "enum": [
+            "complete",
+            "reconciling"
+          ],
+          "title": "Calendar Sync",
+          "type": "string"
+        },
+        "code": {
+          "title": "Code",
+          "type": "string"
+        },
+        "listing_id": {
+          "title": "Listing Id",
+          "type": "string"
+        },
+        "pdf_status": {
+          "enum": [
+            "pending",
+            "sent",
+            "failed",
+            "not_applicable"
+          ],
+          "title": "Pdf Status",
+          "type": "string"
+        },
+        "slot": {
+          "$ref": "#/$defs/SlotVM"
+        },
+        "state": {
+          "enum": [
+            "offered",
+            "confirming",
+            "booked",
+            "cancelled",
+            "withdrawn"
+          ],
+          "title": "State",
+          "type": "string"
+        }
+      },
+      "required": [
+        "code",
+        "listing_id",
+        "slot",
+        "state",
+        "pdf_status",
+        "calendar_sync"
+      ],
+      "title": "BookingVM",
+      "type": "object"
+    },
+    "CancelRequest": {
+      "additionalProperties": false,
+      "properties": {
+        "code": {
+          "pattern": "^[A-Z0-9]{6}$",
+          "title": "Code",
+          "type": "string"
+        }
+      },
+      "required": [
+        "code"
+      ],
+      "title": "CancelRequest",
+      "type": "object"
+    },
+    "CardVM": {
+      "additionalProperties": false,
+      "properties": {
+        "amenities": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Amenities",
+          "type": "array"
+        },
+        "available_from": {
+          "title": "Available From",
+          "type": "string"
+        },
+        "bhk_type": {
+          "title": "Bhk Type",
+          "type": "string"
+        },
+        "deposit": {
+          "title": "Deposit",
+          "type": "string"
+        },
+        "floor": {
+          "title": "Floor",
+          "type": "string"
+        },
+        "furnishing": {
+          "title": "Furnishing",
+          "type": "string"
+        },
+        "listing_id": {
+          "title": "Listing Id",
+          "type": "string"
+        },
+        "locality": {
+          "title": "Locality",
+          "type": "string"
+        },
+        "maintenance": {
+          "title": "Maintenance",
+          "type": "string"
+        },
+        "parking": {
+          "title": "Parking",
+          "type": "string"
+        },
+        "rank": {
+          "title": "Rank",
+          "type": "integer"
+        },
+        "rent": {
+          "title": "Rent",
+          "type": "string"
+        },
+        "society_name": {
+          "title": "Society Name",
+          "type": "string"
+        },
+        "square_footage": {
+          "title": "Square Footage",
+          "type": "string"
+        },
+        "transit": {
+          "$ref": "#/$defs/CommuteRowVM"
+        },
+        "your_commute": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/CommuteRowVM"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        }
+      },
+      "required": [
+        "listing_id",
+        "rank",
+        "locality",
+        "society_name",
+        "rent",
+        "deposit",
+        "maintenance",
+        "bhk_type",
+        "square_footage",
+        "floor",
+        "parking",
+        "furnishing",
+        "amenities",
+        "available_from",
+        "transit"
+      ],
+      "title": "CardVM",
+      "type": "object"
+    },
+    "CitationVM": {
+      "additionalProperties": false,
+      "properties": {
+        "as_of": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "As Of"
+        },
+        "label": {
+          "title": "Label",
+          "type": "string"
+        },
+        "method": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Method"
+        },
+        "ref": {
+          "title": "Ref",
+          "type": "string"
+        },
+        "timing": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Timing"
+        },
+        "title": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Title"
+        },
+        "url": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Url"
+        }
+      },
+      "required": [
+        "ref",
+        "label"
+      ],
+      "title": "CitationVM",
+      "type": "object"
+    },
+    "ClaimVM": {
+      "additionalProperties": false,
+      "properties": {
+        "citation_refs": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Citation Refs",
+          "type": "array"
+        },
+        "text": {
+          "title": "Text",
+          "type": "string"
+        }
+      },
+      "required": [
+        "text",
+        "citation_refs"
+      ],
+      "title": "ClaimVM",
+      "type": "object"
+    },
+    "CommuteRowVM": {
+      "additionalProperties": false,
+      "properties": {
+        "badge": {
+          "title": "Badge",
+          "type": "string"
+        },
+        "full_label": {
+          "title": "Full Label",
+          "type": "string"
+        },
+        "spoken": {
+          "title": "Spoken",
+          "type": "string"
+        },
+        "value_text": {
+          "title": "Value Text",
+          "type": "string"
+        },
+        "what": {
+          "title": "What",
+          "type": "string"
+        }
+      },
+      "required": [
+        "what",
+        "value_text",
+        "badge",
+        "full_label",
+        "spoken"
+      ],
+      "title": "CommuteRowVM",
+      "type": "object"
+    },
+    "Degraded": {
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "const": "degraded",
+          "default": "degraded",
+          "title": "Kind",
+          "type": "string"
+        },
+        "missing": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Missing",
+          "type": "array"
+        },
+        "spoken": {
+          "title": "Spoken",
+          "type": "string"
+        },
+        "view_model": {
+          "$ref": "#/$defs/AnsweredViewModel"
+        },
+        "why": {
+          "title": "Why",
+          "type": "string"
+        }
+      },
+      "required": [
+        "spoken",
+        "view_model",
+        "missing",
+        "why"
+      ],
+      "title": "Degraded",
+      "type": "object"
+    },
+    "Empty": {
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "const": "empty",
+          "default": "empty",
+          "title": "Kind",
+          "type": "string"
+        },
+        "spoken": {
+          "title": "Spoken",
+          "type": "string"
+        },
+        "suggestions": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Suggestions",
+          "type": "array"
+        },
+        "unmet": {
+          "items": {
+            "$ref": "#/$defs/UnmetConstraint"
+          },
+          "title": "Unmet",
+          "type": "array"
+        }
+      },
+      "required": [
+        "spoken",
+        "unmet",
+        "suggestions"
+      ],
+      "title": "Empty",
+      "type": "object"
+    },
+    "ExplanationVM": {
+      "additionalProperties": false,
+      "properties": {
+        "claims": {
+          "items": {
+            "$ref": "#/$defs/ClaimVM"
+          },
+          "title": "Claims",
+          "type": "array"
+        },
+        "gaps": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Gaps",
+          "type": "array"
+        },
+        "listing_id": {
+          "title": "Listing Id",
+          "type": "string"
+        },
+        "opener": {
+          "title": "Opener",
+          "type": "string"
+        },
+        "sources": {
+          "items": {
+            "$ref": "#/$defs/CitationVM"
+          },
+          "title": "Sources",
+          "type": "array"
+        }
+      },
+      "required": [
+        "listing_id",
+        "opener",
+        "claims",
+        "gaps",
+        "sources"
+      ],
+      "title": "ExplanationVM",
+      "type": "object"
+    },
+    "Failed": {
+      "additionalProperties": false,
+      "properties": {
+        "capability": {
+          "enum": [
+            "speech_in",
+            "understanding",
+            "explanation",
+            "speech_out",
+            "calendar",
+            "mail"
+          ],
+          "title": "Capability",
+          "type": "string"
+        },
+        "kind": {
+          "const": "failed",
+          "default": "failed",
+          "title": "Kind",
+          "type": "string"
+        },
+        "retry_worth_it": {
+          "title": "Retry Worth It",
+          "type": "boolean"
+        },
+        "spoken": {
+          "title": "Spoken",
+          "type": "string"
+        },
+        "tell_renter": {
+          "title": "Tell Renter",
+          "type": "string"
+        }
+      },
+      "required": [
+        "spoken",
+        "capability",
+        "tell_renter",
+        "retry_worth_it"
+      ],
+      "title": "Failed",
+      "type": "object"
+    },
+    "HelloIn": {
+      "additionalProperties": false,
+      "properties": {
+        "contract_version": {
+          "title": "Contract Version",
+          "type": "string"
+        },
+        "type": {
+          "const": "hello",
+          "default": "hello",
+          "title": "Type",
+          "type": "string"
+        }
+      },
+      "required": [
+        "contract_version"
+      ],
+      "title": "HelloIn",
+      "type": "object"
+    },
+    "HelloOut": {
+      "additionalProperties": false,
+      "properties": {
+        "contract_version": {
+          "title": "Contract Version",
+          "type": "string"
+        },
+        "session_id": {
+          "title": "Session Id",
+          "type": "string"
+        },
+        "type": {
+          "const": "hello",
+          "default": "hello",
+          "title": "Type",
+          "type": "string"
+        }
+      },
+      "required": [
+        "contract_version",
+        "session_id"
+      ],
+      "title": "HelloOut",
+      "type": "object"
+    },
+    "LocalityGroupVM": {
+      "additionalProperties": false,
+      "properties": {
+        "cards": {
+          "items": {
+            "$ref": "#/$defs/CardVM"
+          },
+          "title": "Cards",
+          "type": "array"
+        },
+        "count": {
+          "title": "Count",
+          "type": "integer"
+        },
+        "locality": {
+          "title": "Locality",
+          "type": "string"
+        }
+      },
+      "required": [
+        "locality",
+        "count",
+        "cards"
+      ],
+      "title": "LocalityGroupVM",
+      "type": "object"
+    },
+    "NeedsInput": {
+      "additionalProperties": false,
+      "properties": {
+        "field": {
+          "title": "Field",
+          "type": "string"
+        },
+        "kind": {
+          "const": "needs_input",
+          "default": "needs_input",
+          "title": "Kind",
+          "type": "string"
+        },
+        "options": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Options",
+          "type": "array"
+        },
+        "question": {
+          "title": "Question",
+          "type": "string"
+        },
+        "spoken": {
+          "title": "Spoken",
+          "type": "string"
+        }
+      },
+      "required": [
+        "spoken",
+        "question",
+        "field"
+      ],
+      "title": "NeedsInput",
+      "type": "object"
+    },
+    "OutcomeMsg": {
+      "additionalProperties": false,
+      "properties": {
+        "outcome": {
+          "discriminator": {
+            "mapping": {
+              "answered": "#/$defs/Answered",
+              "degraded": "#/$defs/Degraded",
+              "empty": "#/$defs/Empty",
+              "failed": "#/$defs/Failed",
+              "needs_input": "#/$defs/NeedsInput"
+            },
+            "propertyName": "kind"
+          },
+          "oneOf": [
+            {
+              "$ref": "#/$defs/Answered"
+            },
+            {
+              "$ref": "#/$defs/Empty"
+            },
+            {
+              "$ref": "#/$defs/Degraded"
+            },
+            {
+              "$ref": "#/$defs/Failed"
+            },
+            {
+              "$ref": "#/$defs/NeedsInput"
+            }
+          ],
+          "title": "Outcome"
+        },
+        "type": {
+          "const": "outcome",
+          "default": "outcome",
+          "title": "Type",
+          "type": "string"
+        }
+      },
+      "required": [
+        "outcome"
+      ],
+      "title": "OutcomeMsg",
+      "type": "object"
+    },
+    "RescheduleRequest": {
+      "additionalProperties": false,
+      "properties": {
+        "code": {
+          "pattern": "^[A-Z0-9]{6}$",
+          "title": "Code",
+          "type": "string"
+        },
+        "slot_start_ist": {
+          "title": "Slot Start Ist",
+          "type": "string"
+        }
+      },
+      "required": [
+        "code",
+        "slot_start_ist"
+      ],
+      "title": "RescheduleRequest",
+      "type": "object"
+    },
+    "ShortlistVM": {
+      "additionalProperties": false,
+      "properties": {
+        "groups": {
+          "items": {
+            "$ref": "#/$defs/LocalityGroupVM"
+          },
+          "title": "Groups",
+          "type": "array"
+        },
+        "order": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Order",
+          "type": "array"
+        },
+        "unknown_on": {
+          "items": {
+            "$ref": "#/$defs/UnknownGroupVM"
+          },
+          "title": "Unknown On",
+          "type": "array"
+        }
+      },
+      "required": [
+        "order",
+        "groups"
+      ],
+      "title": "ShortlistVM",
+      "type": "object"
+    },
+    "SlotVM": {
+      "additionalProperties": false,
+      "properties": {
+        "end_ist": {
+          "title": "End Ist",
+          "type": "string"
+        },
+        "spoken": {
+          "title": "Spoken",
+          "type": "string"
+        },
+        "start_ist": {
+          "title": "Start Ist",
+          "type": "string"
+        }
+      },
+      "required": [
+        "start_ist",
+        "end_ist",
+        "spoken"
+      ],
+      "title": "SlotVM",
+      "type": "object"
+    },
+    "SlotsRequest": {
+      "additionalProperties": false,
+      "properties": {
+        "listing_id": {
+          "title": "Listing Id",
+          "type": "string"
+        }
+      },
+      "required": [
+        "listing_id"
+      ],
+      "title": "SlotsRequest",
+      "type": "object"
+    },
+    "SlotsResponse": {
+      "additionalProperties": false,
+      "properties": {
+        "slots": {
+          "items": {
+            "$ref": "#/$defs/SlotVM"
+          },
+          "title": "Slots",
+          "type": "array"
+        },
+        "spoken": {
+          "title": "Spoken",
+          "type": "string"
+        }
+      },
+      "required": [
+        "slots",
+        "spoken"
+      ],
+      "title": "SlotsResponse",
+      "type": "object"
+    },
+    "SnapshotVM": {
+      "additionalProperties": false,
+      "properties": {
+        "claims": {
+          "items": {
+            "$ref": "#/$defs/ClaimVM"
+          },
+          "title": "Claims",
+          "type": "array"
+        },
+        "gaps": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Gaps",
+          "type": "array"
+        },
+        "limited": {
+          "title": "Limited",
+          "type": "boolean"
+        },
+        "listing_id": {
+          "title": "Listing Id",
+          "type": "string"
+        }
+      },
+      "required": [
+        "listing_id",
+        "claims",
+        "gaps",
+        "limited"
+      ],
+      "title": "SnapshotVM",
+      "type": "object"
+    },
+    "TextIn": {
+      "additionalProperties": false,
+      "properties": {
+        "text": {
+          "title": "Text",
+          "type": "string"
+        },
+        "type": {
+          "const": "text",
+          "default": "text",
+          "title": "Type",
+          "type": "string"
+        }
+      },
+      "required": [
+        "text"
+      ],
+      "title": "TextIn",
+      "type": "object"
+    },
+    "TranscriptMsg": {
+      "additionalProperties": false,
+      "properties": {
+        "final": {
+          "title": "Final",
+          "type": "boolean"
+        },
+        "text": {
+          "title": "Text",
+          "type": "string"
+        },
+        "type": {
+          "const": "transcript",
+          "default": "transcript",
+          "title": "Type",
+          "type": "string"
+        }
+      },
+      "required": [
+        "text",
+        "final"
+      ],
+      "title": "TranscriptMsg",
+      "type": "object"
+    },
+    "UnknownGroupVM": {
+      "additionalProperties": false,
+      "properties": {
+        "field": {
+          "title": "Field",
+          "type": "string"
+        },
+        "listing_ids": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Listing Ids",
+          "type": "array"
+        },
+        "spoken": {
+          "title": "Spoken",
+          "type": "string"
+        }
+      },
+      "required": [
+        "field",
+        "listing_ids",
+        "spoken"
+      ],
+      "title": "UnknownGroupVM",
+      "type": "object"
+    },
+    "UnmetConstraint": {
+      "additionalProperties": false,
+      "properties": {
+        "binding": {
+          "title": "Binding",
+          "type": "boolean"
+        },
+        "field": {
+          "title": "Field",
+          "type": "string"
+        },
+        "value": {
+          "title": "Value",
+          "type": "string"
+        }
+      },
+      "required": [
+        "field",
+        "value",
+        "binding"
+      ],
+      "title": "UnmetConstraint",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "contract_version": "1",
+  "description": "A root model whose fields pull every message and body into one $defs table.",
+  "properties": {
+    "ack": {
+      "$ref": "#/$defs/AckMsg"
+    },
+    "audio_out": {
+      "$ref": "#/$defs/AudioOutMsg"
+    },
+    "availability_toggle": {
+      "$ref": "#/$defs/AvailabilityToggle"
+    },
+    "booking_request": {
+      "$ref": "#/$defs/BookingRequest"
+    },
+    "booking_response": {
+      "$ref": "#/$defs/BookingResponse"
+    },
+    "cancel_request": {
+      "$ref": "#/$defs/CancelRequest"
+    },
+    "hello_in": {
+      "$ref": "#/$defs/HelloIn"
+    },
+    "hello_out": {
+      "$ref": "#/$defs/HelloOut"
+    },
+    "outcome": {
+      "$ref": "#/$defs/OutcomeMsg"
+    },
+    "reschedule_request": {
+      "$ref": "#/$defs/RescheduleRequest"
+    },
+    "slots_request": {
+      "$ref": "#/$defs/SlotsRequest"
+    },
+    "slots_response": {
+      "$ref": "#/$defs/SlotsResponse"
+    },
+    "text_in": {
+      "$ref": "#/$defs/TextIn"
+    },
+    "transcript": {
+      "$ref": "#/$defs/TranscriptMsg"
+    }
+  },
+  "required": [
+    "hello_in",
+    "hello_out",
+    "text_in",
+    "transcript",
+    "ack",
+    "audio_out",
+    "outcome",
+    "slots_request",
+    "slots_response",
+    "booking_request",
+    "booking_response",
+    "cancel_request",
+    "reschedule_request",
+    "availability_toggle"
+  ],
+  "title": "scout-contract-v1",
+  "type": "object"
+}
