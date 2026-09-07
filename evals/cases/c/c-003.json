@@ -1,0 +1,14 @@
+{
+  "id": "c-003",
+  "locality": "HSR Layout",
+  "turns": [
+    "two BHK in HSR Layout under thirty five thousand",
+    "yes",
+    "tell me about the first one"
+  ],
+  "expect": {
+    "listing_id": "hsr-layout-08220",
+    "your_commute_absent": true
+  },
+  "note": "No commute point stated in any turn, so the card's 'Your commute' row must be absent (None), not an empty row. hsr-layout-08220 (2BHK, 33,000) is the only HSR Layout slice listing that is 2BHK and at or under 35,000, so it ranks first."
+}

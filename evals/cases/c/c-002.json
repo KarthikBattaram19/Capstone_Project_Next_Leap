@@ -1,0 +1,16 @@
+{
+  "id": "c-002",
+  "locality": "Whitefield",
+  "turns": [
+    "one BHK in Whitefield under fifteen thousand",
+    "yes",
+    "how far is the metro from that one?"
+  ],
+  "expect": {
+    "listing_id": "whitefield-05165",
+    "commute_method": "ROUTED",
+    "row": "transit",
+    "gaps_declared": ["metro"]
+  },
+  "note": "Partial coverage - must declare the gap. whitefield-05165 (1BHK, 12,000) is the only listing in the three slice localities whose nearest_metro row is null (no Koramangala or HSR Layout listing has one; the real bundle has no straight-line rows at all). The card's metro row must read 'not stated' with no badge, which is what assert_three_layers_agree checks for a not-stated row; the explanation must list the metro among its gaps rather than invent a distance."
+}

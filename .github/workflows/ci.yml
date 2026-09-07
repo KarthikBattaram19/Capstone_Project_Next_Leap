@@ -31,3 +31,25 @@ jobs:
           python-version: "3.12"
       - run: pip install -e "backend[dev]"
       - run: python -m scout.contract.export | diff - contract/v1.schema.json
+  evals:
+    needs: [backend-unit]
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        run: [1, 2, 3]
+    env:
+      GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
+      ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+      LATENCY_LOG_PATH: latency/evals-run${{ matrix.run }}.jsonl
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install -e "backend[dev]"
+      - run: python -m pytest evals -q
+      - uses: actions/upload-artifact@v4
+        with:
+          name: latency-run${{ matrix.run }}
+          path: latency/

@@ -1,0 +1,16 @@
+{
+  "id": "c-001",
+  "locality": "Koramangala",
+  "turns": [
+    "two BHK in Koramangala under forty thousand",
+    "yes that's right",
+    "why did you pick the first one?"
+  ],
+  "expect": {
+    "listing_id": "koramangala-06651",
+    "commute_method": "ROUTED",
+    "row": "transit",
+    "spoken_contains": ["by route"]
+  },
+  "note": "Commute verification, ROUTED (spec section 2.3 table). koramangala-06651 is the lowest-rent 2BHK at or under 40,000 in the Koramangala slice (26,000; the other candidate koramangala-06662 is 39,000), so Task 2.6's ranking (-soft_hits, rent asc, id) puts it first with no soft constraints. Its nearest_metro row is ROUTED (Central Silk Board, 4,580 m)."
+}

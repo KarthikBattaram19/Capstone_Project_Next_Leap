@@ -1,0 +1,14 @@
+{
+  "id": "c-005",
+  "locality": "HSR Layout",
+  "turns": [
+    "two BHK in HSR Layout under thirty five thousand",
+    "yes",
+    "what is it like living around the first one?"
+  ],
+  "expect": {
+    "listing_id": "hsr-layout-08220",
+    "must_not_mention": ["Inner Ring Road", "Majestic train station"]
+  },
+  "note": "Adjacent-locality contamination probe (Koramangala / HSR Layout). Both phrases occur in the real Koramangala chunk koramangala-0-1 and in none of the six HSR Layout chunks nor the synthetic chunk (checked by evals/cases/test_cases.py against the slice's chunks.json). The HSR chunks do say 'Koramangala' and 'Outer Ring Road', so the probe cannot be passed or failed on the locality name alone; an HSR answer that names the Inner Ring Road or Majestic station could only have come from the Koramangala partition. assert_every_claim_cites additionally rejects any guide citation whose chunk is not HSR Layout."
+}

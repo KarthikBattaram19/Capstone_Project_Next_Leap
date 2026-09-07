@@ -1,0 +1,2845 @@
+[
+ {
+  "listing_id": "hsr-layout-08112",
+  "query": "nearest_metro",
+  "name": "Hongasandra",
+  "distance_m": 3660,
+  "duration_min": null,
+  "count": null,
+  "method": "ROUTED",
+  "retrieved_on": "2026-09-07",
+  "raw": {
+   "nearest": {
+    "name": "Hongasandra",
+    "lat": 12.9016952,
+    "lng": 77.6319861
+   },
+   "route": {
+    "distance_m": 3660,
+    "duration_s": 378,
+    "mode_requested": "foot",
+    "profile_honoured": false
+   }
+  }
+ },
+ {
+  "listing_id": "hsr-layout-08112",
+  "query": "nearest_bus_stop",
+  "name": "HSR Club",
+  "distance_m": 90,
+  "duration_min": null,
+  "count": null,
+  "method": "ROUTED",
+  "retrieved_on": "2026-09-07",
+  "raw": {
+   "nearest": {
+    "name": "HSR Club",
+    "lat": 12.9092648,
+    "lng": 77.6423818
+   },
+   "route": {
+    "distance_m": 90,
+    "duration_s": 8,
+    "mode_requested": "foot",
+    "profile_honoured": false
+   }
+  }
+ },
+ {
+  "listing_id": "hsr-layout-08112",
+  "query": "nearest_supermarket",
+  "name": "Aishwarya Supermarket",
+  "distance_m": 229,
+  "duration_min": null,
+  "count": null,
+  "method": "ROUTED",
+  "retrieved_on": "2026-09-07",
+  "raw": {
+   "nearest": {
+    "name": "Aishwarya Supermarket",
+    "lat": 12.9083472,
+    "lng": 77.6446906
+   },
+   "route": {
+    "distance_m": 229,
+    "duration_s": 25,
+    "mode_requested": "foot",
+    "profile_honoured": false
+   }
+  }
+ },
+ {
+  "listing_id": "hsr-layout-08112",
+  "query": "nearest_hospital",
+  "name": "Ovum Women & Child Speciality Hospital",
+  "distance_m": 444,
+  "duration_min": null,
+  "count": null,
+  "method": "ROUTED",
+  "retrieved_on": "2026-09-07",
+  "raw": {
+   "nearest": {
+    "name": "Ovum Women & Child Speciality Hospital",
+    "lat": 12.9072685,
+    "lng": 77.64555
+   },
+   "route": {
+    "distance_m": 444,
+    "duration_s": 61,
+    "mode_requested": "foot",
+    "profile_honoured": false
+   }
+  }
+ },
+ {
+  "listing_id": "hsr-layout-08112",
+  "query": "nearest_pharmacy",
+  "name": "Ovum Pharmacy",
+  "distance_m": 449,
+  "duration_min": null,
+  "count": null,
+  "method": "ROUTED",
+  "retrieved_on": "2026-09-07",
+  "raw": {
+   "nearest": {
+    "name": "Ovum Pharmacy",
+    "lat": 12.9073327,
+    "lng": 77.6456192
+   },
+   "route": {
+    "distance_m": 449,
+    "duration_s": 59,
+    "mode_requested": "foot",
+    "profile_honoured": false
+   }
+  }
+ },
+ {
+  "listing_id": "hsr-layout-08112",
+  "query": "nearest_school",
+  "name": "GHPS Yellukunte",
+  "distance_m": 640,
+  "duration_min": null,
+  "count": null,
+  "method": "ROUTED",
+  "retrieved_on": "2026-09-07",
+  "raw": {
+   "nearest": {
+    "name": "GHPS Yellukunte",
+    "lat": 12.9056484,
+    "lng": 77.6414765
+   },
+   "route": {
+    "distance_m": 640,
+    "duration_s": 66,
+    "mode_requested": "foot",
+    "profile_honoured": false
+   }
+  }
+ },
+ {
+  "listing_id": "hsr-layout-08112",
+  "query": "nearest_park",
+  "name": null,
+  "distance_m": null,
+  "duration_min": null,
+  "count": null,
+  "method": null,
+  "retrieved_on": "2026-09-07",
+  "raw": null
+ },
+ {
+  "listing_id": "hsr-layout-08112",
+  "query": "restaurants_within_500m",
+  "name": null,
+  "distance_m": null,
+  "duration_min": null,
+  "count": 12,
+  "method": null,
+  "retrieved_on": "2026-09-07",
+  "raw": {
+   "places": [
+    {
+     "name": "Nandini Cool Joint",
+     "lat": 12.9110059,
+     "lng": 77.6444953
+    },
+    {
+     "name": "Helloo Delhi",
+     "lat": 12.911789,
+     "lng": 77.6432674
+    },
+    {
+     "name": "Udaan",
+     "lat": 12.9116699,
+     "lng": 77.643421
+    },
+    {
+     "name": "Rebarbiq",
+     "lat": 12.9123452,
+     "lng": 77.6425923
+    },
+    {
+     "name": "Leon Grill",
+     "lat": 12.9117875,
+     "lng": 77.6437931
+    },
+    {
+     "name": "Chinese Wok",
+     "lat": 12.909461,
+     "lng": 77.6386269
+    },
+    {
+     "name": "Daily Sushi",
+     "lat": 12.9094243,
+     "lng": 77.6386255
+    },
+    {
+     "name": "Anands Kitchen",
+     "lat": 12.9086561,
+     "lng": 77.6445904
+    },
+    {
+     "name": "Indian Coffee House",
+     "lat": 12.9092366,
+     "lng": 77.6446155
+    },
+    {
+     "name": "Dhanraj",
+     "lat": 12.9094241,
+     "lng": 77.6387596
+    },
+    {
+     "name": "Mast Marathi",
+     "lat": 12.9114081,
+     "lng": 77.6443062
+    },
+    {
+     "name": "Chakum Chukum",
+     "lat": 12.9058091,
+     "lng": 77.64458
+    }
+   ]
+  }
+ },
+ {
+  "listing_id": "hsr-layout-08114",
+  "query": "nearest_metro",
+  "name": "Bommanahalli",
+  "distance_m": 4700,
+  "duration_min": null,
+  "count": null,
+  "method": "ROUTED",
+  "retrieved_on": "2026-09-07",
+  "raw": {
+   "nearest": {
+    "name": "Bommanahalli",
+    "lat": 12.9106157,
+    "lng": 77.6264782
+   },
+   "route": {
+    "distance_m": 4700,
+    "duration_s": 362,
+    "mode_requested": "foot",
+    "profile_honoured": false
+   }
+  }
+ },
+ {
+  "listing_id": "hsr-layout-08114",
+  "query": "nearest_bus_stop",
+  "name": "Jakkasandra",
+  "distance_m": 398,
+  "duration_min": null,
+  "count": null,
+  "method": "ROUTED",
+  "retrieved_on": "2026-09-07",
+  "raw": {
+   "nearest": {
+    "name": "Jakkasandra",
+    "lat": 12.9247454,
+    "lng": 77.637922
+   },
+   "route": {
+    "distance_m": 398,
+    "duration_s": 43,
+    "mode_requested": "foot",
+    "profile_honoured": false
+   }
+  }
+ },
+ {
+  "listing_id": "hsr-layout-08114",
+  "query": "nearest_supermarket",
+  "name": "Fish Mart",
+  "distance_m": 2151,
+  "duration_min": null,
+  "count": null,
+  "method": "ROUTED",
+  "retrieved_on": "2026-09-07",
+  "raw": {
+   "nearest": {
+    "name": "Fish Mart",
+    "lat": 12.9165578,
+    "lng": 77.6356311
+   },
+   "route": {
+    "distance_m": 2151,
+    "duration_s": 223,
+    "mode_requested": "foot",
+    "profile_honoured": false
+   }
+  }
+ },
+ {
+  "listing_id": "hsr-layout-08114",
+  "query": "nearest_hospital",
+  "name": "Sankeerthana Hospital and Fertility Center",
+  "distance_m": 1181,
+  "duration_min": null,
+  "count": null,
+  "method": "ROUTED",
+  "retrieved_on": "2026-09-07",
+  "raw": {
+   "nearest": {
+    "name": "Sankeerthana Hospital and Fertility Center",
+    "lat": 12.9256013,
+    "lng": 77.6359638
+   },
+   "route": {
+    "distance_m": 1181,
+    "duration_s": 118,
+    "mode_requested": "foot",
+    "profile_honoured": false
+   }
+  }
+ },
+ {
+  "listing_id": "hsr-layout-08114",
+  "query": "nearest_pharmacy",
+  "name": "Pragathi Homeo Pharmacy",
+  "distance_m": 1369,
+  "duration_min": null,
+  "count": null,
+  "method": "ROUTED",
+  "retrieved_on": "2026-09-07",
+  "raw": {
+   "nearest": {
+    "name": "Pragathi Homeo Pharmacy",
+    "lat": 12.9255085,
+    "lng": 77.6343557
+   },
+   "route": {
+    "distance_m": 1369,
+    "duration_s": 123,
+    "mode_requested": "foot",
+    "profile_honoured": false
+   }
+  }
+ },
+ {
+  "listing_id": "hsr-layout-08114",
+  "query": "nearest_school",
+  "name": "Kripanidhi Cambridge Public School",
+  "distance_m": 1357,
+  "duration_min": null,
+  "count": null,
+  "method": "ROUTED",
+  "retrieved_on": "2026-09-07",
+  "raw": {
+   "nearest": {
+    "name": "Kripanidhi Cambridge Public School",
+    "lat": 12.9246365,
+    "lng": 77.6384508
+   },
+   "route": {
+    "distance_m": 1357,
+    "duration_s": 103,
+    "mode_requested": "foot",
+    "profile_honoured": false
+   }
+  }
+ },
+ {
+  "listing_id": "hsr-layout-08114",
+  "query": "nearest_park",
+  "name": "S T Bed Park and Field at 8th Cross",
+  "distance_m": 1932,
+  "duration_min": null,
+  "count": null,
+  "method": "ROUTED",
+  "retrieved_on": "2026-09-07",
+  "raw": {
+   "nearest": {
+    "name": "S T Bed Park and Field at 8th Cross",
+    "lat": 12.9330379,
+    "lng": 77.6329291
+   },
+   "route": {
+    "distance_m": 1932,
+    "duration_s": 186,
+    "mode_requested": "foot",
+    "profile_honoured": false
+   }
+  }
+ },
+ {
+  "listing_id": "hsr-layout-08114",
+  "query": "restaurants_within_500m",
+  "name": null,
+  "distance_m": null,
+  "duration_min": null,
+  "count": 3,
+  "method": null,
+  "retrieved_on": "2026-09-07",
+  "raw": {
+   "places": [
+    {
+     "name": "Barbeque Nation",
+     "lat": 12.9255152,
+     "lng": 77.6370763
+    },
+    {
+     "name": "Mani's Dum Biriyani",
+     "lat": 12.9274912,
+     "lng": 77.6373711
+    },
+    {
+     "name": "Barbeque Nation",
+     "lat": 12.9251513,
+     "lng": 77.6378065
+    }
+   ]
+  }
+ },
+ {
+  "listing_id": "hsr-layout-08134",
+  "query": "nearest_metro",
+  "name": "Bommanahalli",
+  "distance_m": 1740,
+  "duration_min": null,
+  "count": null,
+  "method": "ROUTED",
+  "retrieved_on": "2026-09-07",
+  "raw": {
+   "nearest": {
+    "name": "Bommanahalli",
+    "lat": 12.9106157,
+    "lng": 77.6264782
+   },
+   "route": {
+    "distance_m": 1740,
+    "duration_s": 230,
+    "mode_requested": "foot",
+    "profile_honoured": false
+   }
+  }
+ },
+ {
+  "listing_id": "hsr-layout-08134",
+  "query": "nearest_bus_stop",
+  "name": "Roopena Agrahara",
+  "distance_m": 619,
+  "duration_min": null,
+  "count": null,
+  "method": "ROUTED",
+  "retrieved_on": "2026-09-07",
+  "raw": {
+   "nearest": {
+    "name": "Roopena Agrahara",
+    "lat": 12.9119896,
+    "lng": 77.6260402
+   },
+   "route": {
+    "distance_m": 619,
+    "duration_s": 138,
+    "mode_requested": "foot",
+    "profile_honoured": false
+   }
+  }
+ },
+ {
+  "listing_id": "hsr-layout-08134",
+  "query": "nearest_supermarket",
+  "name": "Vishal Mega Mart",
+  "distance_m": 574,
+  "duration_min": null,
+  "count": null,
+  "method": "ROUTED",
+  "retrieved_on": "2026-09-07",
+  "raw": {
+   "nearest": {
+    "name": "Vishal Mega Mart",
+    "lat": 12.9132992,
+    "lng": 77.6255557
+   },
+   "route": {
+    "distance_m": 574,
+    "duration_s": 94,
+    "mode_requested": "foot",
+    "profile_honoured": false
+   }
+  }
+ },
+ {
+  "listing_id": "hsr-layout-08134",
+  "query": "nearest_hospital",
+  "name": "Vasan Eye Care",
+  "distance_m": 1714,
+  "duration_min": null,
+  "count": null,
+  "method": "ROUTED",
+  "retrieved_on": "2026-09-07",
+  "raw": {
+   "nearest": {
+    "name": "Vasan Eye Care",
+    "lat": 12.9102705,
+    "lng": 77.6265538
+   },
+   "route": {
+    "distance_m": 1714,
+    "duration_s": 227,
+    "mode_requested": "foot",
+    "profile_honoured": false
+   }
+  }
+ },
+ {
+  "listing_id": "hsr-layout-08134",
+  "query": "nearest_pharmacy",
+  "name": "Focus Diagnostics Centre & Speciality Clinics",
+  "distance_m": 627,
+  "duration_min": null,
+  "count": null,
+  "method": "ROUTED",
+  "retrieved_on": "2026-09-07",
+  "raw": {
+   "nearest": {
+    "name": "Focus Diagnostics Centre & Speciality Clinics",
+    "lat": 12.9159162,
+    "lng": 77.6285313
+   },
+   "route": {
+    "distance_m": 627,
+    "duration_s": 105,
+    "mode_requested": "foot",
+    "profile_honoured": false
+   }
+  }
+ },
+ {
+  "listing_id": "hsr-layout-08134",
+  "query": "nearest_school",
+  "name": "Sadhguru Sai Baba HPS Roopena Bommanahalli",
+  "distance_m": 2043,
+  "duration_min": null,
+  "count": null,
+  "method": "ROUTED",
+  "retrieved_on": "2026-09-07",
+  "raw": {
+   "nearest": {
+    "name": "Sadhguru Sai Baba HPS Roopena Bommanahalli",
+    "lat": 12.9103875,
+    "lng": 77.6249479
+   },
+   "route": {
+    "distance_m": 2043,
+    "duration_s": 281,
+    "mode_requested": "foot",
+    "profile_honoured": false
+   }
+  }
+ },
+ {
+  "listing_id": "hsr-layout-08134",
+  "query": "nearest_park",
+  "name": null,
+  "distance_m": null,
+  "duration_min": null,
+  "count": null,
+  "method": null,
+  "retrieved_on": "2026-09-07",
+  "raw": null
+ },
+ {
+  "listing_id": "hsr-layout-08134",
+  "query": "restaurants_within_500m",
+  "name": null,
+  "distance_m": null,
+  "duration_min": null,
+  "count": 4,
+  "method": null,
+  "retrieved_on": "2026-09-07",
+  "raw": {
+   "places": [
+    {
+     "name": "Sardarji Ka Dhaba",
+     "lat": 12.9121011,
+     "lng": 77.6262626
+    },
+    {
+     "name": "Atthemane Restaurants",
+     "lat": 12.9139562,
+     "lng": 77.6322007
+    },
+    {
+     "name": "Bismilla Biriyani",
+     "lat": 12.9106722,
+     "lng": 77.6294978
+    },
+    {
+     "name": "Champaran Dhaba",
+     "lat": 12.9121081,
+     "lng": 77.6244415
+    }
+   ]
+  }
+ },
+ {
+  "listing_id": "hsr-layout-08145",
+  "query": "nearest_metro",
+  "name": "Hongasandra",
+  "distance_m": 4568,
+  "duration_min": null,
+  "count": null,
+  "method": "ROUTED",
+  "retrieved_on": "2026-09-07",
+  "raw": {
+   "nearest": {
+    "name": "Hongasandra",
+    "lat": 12.9016952,
+    "lng": 77.6319861
+   },
+   "route": {
+    "distance_m": 4568,
+    "duration_s": 440,
+    "mode_requested": "foot",
+    "profile_honoured": false
+   }
+  }
+ },
+ {
+  "listing_id": "hsr-layout-08145",
+  "query": "nearest_bus_stop",
+  "name": "Parangipalya",
+  "distance_m": 200,
+  "duration_min": null,
+  "count": null,
+  "method": "ROUTED",
+  "retrieved_on": "2026-09-07",
+  "raw": {
+   "nearest": {
+    "name": "Parangipalya",
+    "lat": 12.9089682,
+    "lng": 77.6492718
+   },
+   "route": {
+    "distance_m": 200,
+    "duration_s": 27,
+    "mode_requested": "foot",
+    "profile_honoured": false
+   }
+  }
+ },
+ {
+  "listing_id": "hsr-layout-08145",
+  "query": "nearest_supermarket",
+  "name": "Daily Essentials",
+  "distance_m": 253,
+  "duration_min": null,
+  "count": null,
+  "method": "ROUTED",
+  "retrieved_on": "2026-09-07",
+  "raw": {
+   "nearest": {
+    "name": "Daily Essentials",
+    "lat": 12.908584,
+    "lng": 77.6500091
+   },
+   "route": {
+    "distance_m": 253,
+    "duration_s": 32,
+    "mode_requested": "foot",
+    "profile_honoured": false
+   }
+  }
+ },
+ {
+  "listing_id": "hsr-layout-08145",
+  "query": "nearest_hospital",
+  "name": "health nest",
+  "distance_m": 22,
+  "duration_min": null,
+  "count": null,
+  "method": "ROUTED",
+  "retrieved_on": "2026-09-07",
+  "raw": {
+   "nearest": {
+    "name": "health nest",
+    "lat": 12.9075992,
+    "lng": 77.6488507
+   },
+   "route": {
+    "distance_m": 22,
+    "duration_s": 5,
+    "mode_requested": "foot",
+    "profile_honoured": false
+   }
+  }
+ },
+ {
+  "listing_id": "hsr-layout-08145",
+  "query": "nearest_pharmacy",
+  "name": "Ganesh Medicals",
+  "distance_m": 69,
+  "duration_min": null,
+  "count": null,
+  "method": "ROUTED",
+  "retrieved_on": "2026-09-07",
+  "raw": {
+   "nearest": {
+    "name": "Ganesh Medicals",
+    "lat": 12.9075461,
+    "lng": 77.6490336
+   },
+   "route": {
+    "distance_m": 69,
+    "duration_s": 13,
+    "mode_requested": "foot",
+    "profile_honoured": false
+   }
+  }
+ },
+ {
+  "listing_id": "hsr-layout-08145",
+  "query": "nearest_school",
+  "name": "GULPS Parangipalya, BBMP Agara",
+  "distance_m": 362,
+  "duration_min": null,
+  "count": null,
+  "method": "ROUTED",
+  "retrieved_on": "2026-09-07",
+  "raw": {
+   "nearest": {
+    "name": "GULPS Parangipalya, BBMP Agara",
+    "lat": 12.9097245,
+    "lng": 77.650152
+   },
+   "route": {
+    "distance_m": 362,
+    "duration_s": 49,
+    "mode_requested": "foot",
+    "profile_honoured": false
+   }
+  }
+ },
+ {
+  "listing_id": "hsr-layout-08145",
+  "query": "nearest_park",
+  "name": null,
+  "distance_m": null,
+  "duration_min": null,
+  "count": null,
+  "method": null,
+  "retrieved_on": "2026-09-07",
+  "raw": null
+ },
+ {
+  "listing_id": "hsr-layout-08145",
+  "query": "restaurants_within_500m",
+  "name": null,
+  "distance_m": null,
+  "duration_min": null,
+  "count": 10,
+  "method": null,
+  "retrieved_on": "2026-09-07",
+  "raw": {
+   "places": [
+    {
+     "name": "Just momo",
+     "lat": 12.912101,
+     "lng": 77.6485607
+    },
+    {
+     "name": "Fish & Fries",
+     "lat": 12.9085132,
+     "lng": 77.6515084
+    },
+    {
+     "name": "You Me And Tea",
+     "lat": 12.9089414,
+     "lng": 77.6517168
+    },
+    {
+     "name": "Kapoor's Cafe",
+     "lat": 12.9080295,
+     "lng": 77.6519331
+    },
+    {
+     "name": "Suku",
+     "lat": 12.9038504,
+     "lng": 77.6490166
+    },
+    {
+     "name": "Anands Kitchen",
+     "lat": 12.9086561,
+     "lng": 77.6445904
+    },
+    {
+     "name": "Imperio",
+     "lat": 12.9117112,
+     "lng": 77.6497366
+    },
+    {
+     "name": "Indian Coffee House",
+     "lat": 12.9092366,
+     "lng": 77.6446155
+    },
+    {
+     "name": "The Madras Mess",
+     "lat": 12.906594,
+     "lng": 77.6492113
+    },
+    {
+     "name": "Chakum Chukum",
+     "lat": 12.9058091,
+     "lng": 77.64458
+    }
+   ]
+  }
+ },
+ {
+  "listing_id": "hsr-layout-08220",
+  "query": "nearest_metro",
+  "name": "Hongasandra",
+  "distance_m": 5099,
+  "duration_min": null,
+  "count": null,
+  "method": "ROUTED",
+  "retrieved_on": "2026-09-07",
+  "raw": {
+   "nearest": {
+    "name": "Hongasandra",
+    "lat": 12.9016952,
+    "lng": 77.6319861
+   },
+   "route": {
+    "distance_m": 5099,
+    "duration_s": 495,
+    "mode_requested": "foot",
+    "profile_honoured": false
+   }
+  }
+ },
+ {
+  "listing_id": "hsr-layout-08220",
+  "query": "nearest_bus_stop",
+  "name": "27th Main 13th Cross HSR Layout",
+  "distance_m": 286,
+  "duration_min": null,
+  "count": null,
+  "method": "ROUTED",
+  "retrieved_on": "2026-09-07",
+  "raw": {
+   "nearest": {
+    "name": "27th Main 13th Cross HSR Layout",
+    "lat": 12.9159916,
+    "lng": 77.6518272
+   },
+   "route": {
+    "distance_m": 286,
+    "duration_s": 32,
+    "mode_requested": "foot",
+    "profile_honoured": false
+   }
+  }
+ },
+ {
+  "listing_id": "hsr-layout-08220",
+  "query": "nearest_supermarket",
+  "name": "Maha Bazaar",
+  "distance_m": 125,
+  "duration_min": null,
+  "count": null,
+  "method": "ROUTED",
+  "retrieved_on": "2026-09-07",
+  "raw": {
+   "nearest": {
+    "name": "Maha Bazaar",
+    "lat": 12.9173946,
+    "lng": 77.6493143
+   },
+   "route": {
+    "distance_m": 125,
+    "duration_s": 18,
+    "mode_requested": "foot",
+    "profile_honoured": false
+   }
+  }
+ },
+ {
+  "listing_id": "hsr-layout-08220",
+  "query": "nearest_hospital",
+  "name": "Bangalore Gastro Centre",
+  "distance_m": 358,
+  "duration_min": null,
+  "count": null,
+  "method": "ROUTED",
+  "retrieved_on": "2026-09-07",
+  "raw": {
+   "nearest": {
+    "name": "Bangalore Gastro Centre",
+    "lat": 12.9160037,
+    "lng": 77.6523087
+   },
+   "route": {
+    "distance_m": 358,
+    "duration_s": 46,
+    "mode_requested": "foot",
+    "profile_honoured": false
+   }
+  }
+ },
+ {
+  "listing_id": "hsr-layout-08220",
+  "query": "nearest_pharmacy",
+  "name": "Shivakumar Medicals & General Store",
+  "distance_m": 218,
+  "duration_min": null,
+  "count": null,
+  "method": "ROUTED",
+  "retrieved_on": "2026-09-07",
+  "raw": {
+   "nearest": {
+    "name": "Shivakumar Medicals & General Store",
+    "lat": 12.9180833,
+    "lng": 77.6515737
+   },
+   "route": {
+    "distance_m": 218,
+    "duration_s": 30,
+    "mode_requested": "foot",
+    "profile_honoured": false
+   }
+  }
+ },
+ {
+  "listing_id": "hsr-layout-08220",
+  "query": "nearest_school",
+  "name": "Brilliant HPS HSR Layout, BBMP Agara",
+  "distance_m": 244,
+  "duration_min": null,
+  "count": null,
+  "method": "ROUTED",
+  "retrieved_on": "2026-09-07",
+  "raw": {
+   "nearest": {
+    "name": "Brilliant HPS HSR Layout, BBMP Agara",
+    "lat": 12.9177887,
+    "lng": 77.648656
+   },
+   "route": {
+    "distance_m": 244,
+    "duration_s": 37,
+    "mode_requested": "foot",
+    "profile_honoured": false
+   }
+  }
+ },
+ {
+  "listing_id": "hsr-layout-08220",
+  "query": "nearest_park",
+  "name": null,
+  "distance_m": null,
+  "duration_min": null,
+  "count": null,
+  "method": null,
+  "retrieved_on": "2026-09-07",
+  "raw": null
+ },
+ {
+  "listing_id": "hsr-layout-08220",
+  "query": "restaurants_within_500m",
+  "name": null,
+  "distance_m": null,
+  "duration_min": null,
+  "count": 27,
+  "method": null,
+  "retrieved_on": "2026-09-07",
+  "raw": {
+   "places": [
+    {
+     "name": null,
+     "lat": 12.913356,
+     "lng": 77.651692
+    },
+    {
+     "name": "Lou Han",
+     "lat": 12.9159911,
+     "lng": 77.6513702
+    },
+    {
+     "name": "Napoli",
+     "lat": 12.9160016,
+     "lng": 77.6519298
+    },
+    {
+     "name": "Greasy Spoon",
+     "lat": 12.9168988,
+     "lng": 77.6515537
+    },
+    {
+     "name": "Sharekhan Restaurant",
+     "lat": 12.9187187,
+     "lng": 77.6491667
+    },
+    {
+     "name": "Kohinoor",
+     "lat": 12.9174988,
+     "lng": 77.6519079
+    },
+    {
+     "name": "Tomatina",
+     "lat": 12.9153154,
+     "lng": 77.6516588
+    },
+    {
+     "name": "Hotel Tanish",
+     "lat": 12.9156309,
+     "lng": 77.6468534
+    },
+    {
+     "name": "Bhartiya Jalpan",
+     "lat": 12.9155289,
+     "lng": 77.6515804
+    },
+    {
+     "name": "Bathinda Station",
+     "lat": 12.9186175,
+     "lng": 77.6515432
+    },
+    {
+     "name": "Kolkata Famous Kati Roll",
+     "lat": 12.9136695,
+     "lng": 77.6516824
+    },
+    {
+     "name": "Sri Balaji Sweets",
+     "lat": 12.9134457,
+     "lng": 77.6519727
+    },
+    {
+     "name": "Light of Italy",
+     "lat": 12.9160112,
+     "lng": 77.6511084
+    },
+    {
+     "name": "Basil Bistro",
+     "lat": 12.9155123,
+     "lng": 77.6489119
+    },
+    {
+     "name": "Miss Misal",
+     "lat": 12.9153968,
+     "lng": 77.6491631
+    },
+    {
+     "name": "Central Jail Restaurant",
+     "lat": 12.9156318,
+     "lng": 77.651576
+    },
+    {
+     "name": "Sadda Punjabi Cafe",
+     "lat": 12.9155862,
+     "lng": 77.6515716
+    },
+    {
+     "name": "Amaravati",
+     "lat": 12.9205921,
+     "lng": 77.6494971
+    },
+    {
+     "name": "Casa Fresco",
+     "lat": 12.9206676,
+     "lng": 77.6504656
+    },
+    {
+     "name": "The Vijayanagar Tiffins and Coffee",
+     "lat": 12.9158807,
+     "lng": 77.649347
+    },
+    {
+     "name": "HSR Donne Biryani",
+     "lat": 12.9146948,
+     "lng": 77.6489015
+    },
+    {
+     "name": "Galatta",
+     "lat": 12.915076,
+     "lng": 77.6491414
+    },
+    {
+     "name": "Roti Kulcha aur Naan",
+     "lat": 12.919647,
+     "lng": 77.6506868
+    },
+    {
+     "name": "Dexter's",
+     "lat": 12.9219357,
+     "lng": 77.651361
+    },
+    {
+     "name": "Anmay",
+     "lat": 12.9155146,
+     "lng": 77.651541
+    },
+    {
+     "name": "Annapoorani",
+     "lat": 12.9159788,
+     "lng": 77.6510171
+    },
+    {
+     "name": "Goan POIEE",
+     "lat": 12.913639,
+     "lng": 77.6490788
+    }
+   ]
+  }
+ },
+ {
+  "listing_id": "koramangala-06651",
+  "query": "nearest_metro",
+  "name": "Central Silk Board",
+  "distance_m": 4580,
+  "duration_min": null,
+  "count": null,
+  "method": "ROUTED",
+  "retrieved_on": "2026-09-07",
+  "raw": {
+   "nearest": {
+    "name": "Central Silk Board",
+    "lat": 12.9165816,
+    "lng": 77.620567
+   },
+   "route": {
+    "distance_m": 4580,
+    "duration_s": 421,
+    "mode_requested": "foot",
+    "profile_honoured": false
+   }
+  }
+ },
+ {
+  "listing_id": "koramangala-06651",
+  "query": "nearest_bus_stop",
+  "name": "Koramangala Sony World",
+  "distance_m": 1314,
+  "duration_min": null,
+  "count": null,
+  "method": "ROUTED",
+  "retrieved_on": "2026-09-07",
+  "raw": {
+   "nearest": {
+    "name": "Koramangala Sony World",
+    "lat": 12.9382139,
+    "lng": 77.6281909
+   },
+   "route": {
+    "distance_m": 1314,
+    "duration_s": 127,
+    "mode_requested": "foot",
+    "profile_honoured": false
+   }
+  }
+ },
+ {
+  "listing_id": "koramangala-06651",
+  "query": "nearest_supermarket",
+  "name": "Mark & Spencer",
+  "distance_m": 411,
+  "duration_min": null,
+  "count": null,
+  "method": "ROUTED",
+  "retrieved_on": "2026-09-07",
+  "raw": {
+   "nearest": {
+    "name": "Mark & Spencer",
+    "lat": 12.9386176,
+    "lng": 77.6288681
+   },
+   "route": {
+    "distance_m": 411,
+    "duration_s": 75,
+    "mode_requested": "foot",
+    "profile_honoured": false
+   }
+  }
+ },
+ {
+  "listing_id": "koramangala-06651",
+  "query": "nearest_hospital",
+  "name": "Shiva Vision Care",
+  "distance_m": 1217,
+  "duration_min": null,
+  "count": null,
+  "method": "ROUTED",
+  "retrieved_on": "2026-09-07",
+  "raw": {
+   "nearest": {
+    "name": "Shiva Vision Care",
+    "lat": 12.9366526,
+    "lng": 77.6277125
+   },
+   "route": {
+    "distance_m": 1217,
+    "duration_s": 124,
+    "mode_requested": "foot",
+    "profile_honoured": false
+   }
+  }
+ },
+ {
+  "listing_id": "koramangala-06651",
+  "query": "nearest_pharmacy",
+  "name": "MedPlus",
+  "distance_m": 373,
+  "duration_min": null,
+  "count": null,
+  "method": "ROUTED",
+  "retrieved_on": "2026-09-07",
+  "raw": {
+   "nearest": {
+    "name": "MedPlus",
+    "lat": 12.9411755,
+    "lng": 77.6277014
+   },
+   "route": {
+    "distance_m": 373,
+    "duration_s": 70,
+    "mode_requested": "foot",
+    "profile_honoured": false
+   }
+  }
+ },
+ {
+  "listing_id": "koramangala-06651",
+  "query": "nearest_school",
+  "name": "Chinmaya Vidya Kendra HPS",
+  "distance_m": 137,
+  "duration_min": null,
+  "count": null,
+  "method": "ROUTED",
+  "retrieved_on": "2026-09-07",
+  "raw": {
+   "nearest": {
+    "name": "Chinmaya Vidya Kendra HPS",
+    "lat": 12.9401321,
+    "lng": 77.6306411
+   },
+   "route": {
+    "distance_m": 137,
+    "duration_s": 24,
+    "mode_requested": "foot",
+    "profile_honoured": false
+   }
+  }
+ },
+ {
+  "listing_id": "koramangala-06651",
+  "query": "nearest_park",
+  "name": "S T Bed Park at 5th Cross",
+  "distance_m": 1033,
+  "duration_min": null,
+  "count": null,
+  "method": "ROUTED",
+  "retrieved_on": "2026-09-07",
+  "raw": {
+   "nearest": {
+    "name": "S T Bed Park at 5th Cross",
+    "lat": 12.9342822,
+    "lng": 77.6317632
+   },
+   "route": {
+    "distance_m": 1033,
+    "duration_s": 168,
+    "mode_requested": "foot",
+    "profile_honoured": false
+   }
+  }
+ },
+ {
+  "listing_id": "koramangala-06651",
+  "query": "restaurants_within_500m",
+  "name": null,
+  "distance_m": null,
+  "duration_min": null,
+  "count": 19,
+  "method": null,
+  "retrieved_on": "2026-09-07",
+  "raw": {
+   "places": [
+    {
+     "name": "Gangothri Restaurant",
+     "lat": 12.9377655,
+     "lng": 77.6267552
+    },
+    {
+     "name": "Pizza Hut",
+     "lat": 12.9398542,
+     "lng": 77.6251855
+    },
+    {
+     "name": "Chalo Punjab",
+     "lat": 12.9377944,
+     "lng": 77.6266966
+    },
+    {
+     "name": "Kwality Walls",
+     "lat": 12.9380577,
+     "lng": 77.6261445
+    },
+    {
+     "name": "Cube Multi-cuisine Restaurant",
+     "lat": 12.938682,
+     "lng": 77.6299136
+    },
+    {
+     "name": "Polynation",
+     "lat": 12.9375545,
+     "lng": 77.6281177
+    },
+    {
+     "name": "Taste of Bihar",
+     "lat": 12.9376735,
+     "lng": 77.6264373
+    },
+    {
+     "name": "Great Indian Thali",
+     "lat": 12.9365165,
+     "lng": 77.6274121
+    },
+    {
+     "name": "Ichin Restaurant",
+     "lat": 12.937762,
+     "lng": 77.6271125
+    },
+    {
+     "name": "Cilantro",
+     "lat": 12.9360665,
+     "lng": 77.6314327
+    },
+    {
+     "name": "Bakasur",
+     "lat": 12.9380609,
+     "lng": 77.6275572
+    },
+    {
+     "name": "Carrots",
+     "lat": 12.9388196,
+     "lng": 77.625775
+    },
+    {
+     "name": "The Tiffin Express",
+     "lat": 12.9367615,
+     "lng": 77.6276835
+    },
+    {
+     "name": "Devi Sri Juice and Condiments",
+     "lat": 12.9420698,
+     "lng": 77.6280215
+    },
+    {
+     "name": "Uttara Karnataka Food Store",
+     "lat": 12.9390473,
+     "lng": 77.6283697
+    },
+    {
+     "name": "Ambur Biryani",
+     "lat": 12.9386047,
+     "lng": 77.6292569
+    },
+    {
+     "name": "Ssura",
+     "lat": 12.9398026,
+     "lng": 77.625213
+    },
+    {
+     "name": "Royal Tandoor",
+     "lat": 12.9367572,
+     "lng": 77.6276099
+    },
+    {
+     "name": "Jolly Johnny's Bar",
+     "lat": 12.9400829,
+     "lng": 77.6255134
+    }
+   ]
+  }
+ },
+ {
+  "listing_id": "koramangala-06656",
+  "query": "nearest_metro",
+  "name": "Central Silk Board",
+  "distance_m": 4668,
+  "duration_min": null,
+  "count": null,
+  "method": "ROUTED",
+  "retrieved_on": "2026-09-07",
+  "raw": {
+   "nearest": {
+    "name": "Central Silk Board",
+    "lat": 12.9165816,
+    "lng": 77.620567
+   },
+   "route": {
+    "distance_m": 4668,
+    "duration_s": 438,
+    "mode_requested": "foot",
+    "profile_honoured": false
+   }
+  }
+ },
+ {
+  "listing_id": "koramangala-06656",
+  "query": "nearest_bus_stop",
+  "name": "Ejipura School",
+  "distance_m": 470,
+  "duration_min": null,
+  "count": null,
+  "method": "ROUTED",
+  "retrieved_on": "2026-09-07",
+  "raw": {
+   "nearest": {
+    "name": "Ejipura School",
+    "lat": 12.9427087,
+    "lng": 77.6307137
+   },
+   "route": {
+    "distance_m": 470,
+    "duration_s": 70,
+    "mode_requested": "foot",
+    "profile_honoured": false
+   }
+  }
+ },
+ {
+  "listing_id": "koramangala-06656",
+  "query": "nearest_supermarket",
+  "name": "Mark & Spencer",
+  "distance_m": 484,
+  "duration_min": null,
+  "count": null,
+  "method": "ROUTED",
+  "retrieved_on": "2026-09-07",
+  "raw": {
+   "nearest": {
+    "name": "Mark & Spencer",
+    "lat": 12.9386176,
+    "lng": 77.6288681
+   },
+   "route": {
+    "distance_m": 484,
+    "duration_s": 88,
+    "mode_requested": "foot",
+    "profile_honoured": false
+   }
+  }
+ },
+ {
+  "listing_id": "koramangala-06656",
+  "query": "nearest_hospital",
+  "name": "Vasan Eye Care Hospital, Koramangala",
+  "distance_m": 972,
+  "duration_min": null,
+  "count": null,
+  "method": "ROUTED",
+  "retrieved_on": "2026-09-07",
+  "raw": {
+   "nearest": {
+    "name": "Vasan Eye Care Hospital, Koramangala",
+    "lat": 12.9402371,
+    "lng": 77.6253403
+   },
+   "route": {
+    "distance_m": 972,
+    "duration_s": 149,
+    "mode_requested": "foot",
+    "profile_honoured": false
+   }
+  }
+ },
+ {
+  "listing_id": "koramangala-06656",
+  "query": "nearest_pharmacy",
+  "name": "Mahaveer Medical",
+  "distance_m": 289,
+  "duration_min": null,
+  "count": null,
+  "method": "ROUTED",
+  "retrieved_on": "2026-09-07",
+  "raw": {
+   "nearest": {
+    "name": "Mahaveer Medical",
+    "lat": 12.9417192,
+    "lng": 77.6278767
+   },
+   "route": {
+    "distance_m": 289,
+    "duration_s": 57,
+    "mode_requested": "foot",
+    "profile_honoured": false
+   }
+  }
+ },
+ {
+  "listing_id": "koramangala-06656",
+  "query": "nearest_school",
+  "name": "Chinmaya Vidya Kendra HPS",
+  "distance_m": 220,
+  "duration_min": null,
+  "count": null,
+  "method": "ROUTED",
+  "retrieved_on": "2026-09-07",
+  "raw": {
+   "nearest": {
+    "name": "Chinmaya Vidya Kendra HPS",
+    "lat": 12.9401321,
+    "lng": 77.6306411
+   },
+   "route": {
+    "distance_m": 220,
+    "duration_s": 41,
+    "mode_requested": "foot",
+    "profile_honoured": false
+   }
+  }
+ },
+ {
+  "listing_id": "koramangala-06656",
+  "query": "nearest_park",
+  "name": null,
+  "distance_m": 1447,
+  "duration_min": null,
+  "count": null,
+  "method": "ROUTED",
+  "retrieved_on": "2026-09-07",
+  "raw": {
+   "nearest": {
+    "name": null,
+    "lat": 12.9446893,
+    "lng": 77.6236964
+   },
+   "route": {
+    "distance_m": 1447,
+    "duration_s": 215,
+    "mode_requested": "foot",
+    "profile_honoured": false
+   }
+  }
+ },
+ {
+  "listing_id": "koramangala-06656",
+  "query": "restaurants_within_500m",
+  "name": null,
+  "distance_m": null,
+  "duration_min": null,
+  "count": 14,
+  "method": null,
+  "retrieved_on": "2026-09-07",
+  "raw": {
+   "places": [
+    {
+     "name": "Gangothri Restaurant",
+     "lat": 12.9377655,
+     "lng": 77.6267552
+    },
+    {
+     "name": "Pizza Hut",
+     "lat": 12.9398542,
+     "lng": 77.6251855
+    },
+    {
+     "name": "Chalo Punjab",
+     "lat": 12.9377944,
+     "lng": 77.6266966
+    },
+    {
+     "name": "Kwality Walls",
+     "lat": 12.9380577,
+     "lng": 77.6261445
+    },
+    {
+     "name": "Cube Multi-cuisine Restaurant",
+     "lat": 12.938682,
+     "lng": 77.6299136
+    },
+    {
+     "name": "Polynation",
+     "lat": 12.9375545,
+     "lng": 77.6281177
+    },
+    {
+     "name": "Ichin Restaurant",
+     "lat": 12.937762,
+     "lng": 77.6271125
+    },
+    {
+     "name": "Bakasur",
+     "lat": 12.9380609,
+     "lng": 77.6275572
+    },
+    {
+     "name": "Carrots",
+     "lat": 12.9388196,
+     "lng": 77.625775
+    },
+    {
+     "name": "Devi Sri Juice and Condiments",
+     "lat": 12.9420698,
+     "lng": 77.6280215
+    },
+    {
+     "name": "Uttara Karnataka Food Store",
+     "lat": 12.9390473,
+     "lng": 77.6283697
+    },
+    {
+     "name": "Ambur Biryani",
+     "lat": 12.9386047,
+     "lng": 77.6292569
+    },
+    {
+     "name": "Ssura",
+     "lat": 12.9398026,
+     "lng": 77.625213
+    },
+    {
+     "name": "Jolly Johnny's Bar",
+     "lat": 12.9400829,
+     "lng": 77.6255134
+    }
+   ]
+  }
+ },
+ {
+  "listing_id": "koramangala-06655",
+  "query": "nearest_metro",
+  "name": "Central Silk Board",
+  "distance_m": 4196,
+  "duration_min": null,
+  "count": null,
+  "method": "ROUTED",
+  "retrieved_on": "2026-09-07",
+  "raw": {
+   "nearest": {
+    "name": "Central Silk Board",
+    "lat": 12.9165816,
+    "lng": 77.620567
+   },
+   "route": {
+    "distance_m": 4196,
+    "duration_s": 404,
+    "mode_requested": "foot",
+    "profile_honoured": false
+   }
+  }
+ },
+ {
+  "listing_id": "koramangala-06655",
+  "query": "nearest_bus_stop",
+  "name": "Koramangala Sony World",
+  "distance_m": 888,
+  "duration_min": null,
+  "count": null,
+  "method": "ROUTED",
+  "retrieved_on": "2026-09-07",
+  "raw": {
+   "nearest": {
+    "name": "Koramangala Sony World",
+    "lat": 12.9382139,
+    "lng": 77.6281909
+   },
+   "route": {
+    "distance_m": 888,
+    "duration_s": 108,
+    "mode_requested": "foot",
+    "profile_honoured": false
+   }
+  }
+ },
+ {
+  "listing_id": "koramangala-06655",
+  "query": "nearest_supermarket",
+  "name": "Mark & Spencer",
+  "distance_m": 298,
+  "duration_min": null,
+  "count": null,
+  "method": "ROUTED",
+  "retrieved_on": "2026-09-07",
+  "raw": {
+   "nearest": {
+    "name": "Mark & Spencer",
+    "lat": 12.9386176,
+    "lng": 77.6288681
+   },
+   "route": {
+    "distance_m": 298,
+    "duration_s": 57,
+    "mode_requested": "foot",
+    "profile_honoured": false
+   }
+  }
+ },
+ {
+  "listing_id": "koramangala-06655",
+  "query": "nearest_hospital",
+  "name": "Vasan Eye Care Hospital, Koramangala",
+  "distance_m": 687,
+  "duration_min": null,
+  "count": null,
+  "method": "ROUTED",
+  "retrieved_on": "2026-09-07",
+  "raw": {
+   "nearest": {
+    "name": "Vasan Eye Care Hospital, Koramangala",
+    "lat": 12.9402371,
+    "lng": 77.6253403
+   },
+   "route": {
+    "distance_m": 687,
+    "duration_s": 92,
+    "mode_requested": "foot",
+    "profile_honoured": false
+   }
+  }
+ },
+ {
+  "listing_id": "koramangala-06655",
+  "query": "nearest_pharmacy",
+  "name": "MedPlus",
+  "distance_m": 138,
+  "duration_min": null,
+  "count": null,
+  "method": "ROUTED",
+  "retrieved_on": "2026-09-07",
+  "raw": {
+   "nearest": {
+    "name": "MedPlus",
+    "lat": 12.9411755,
+    "lng": 77.6277014
+   },
+   "route": {
+    "distance_m": 138,
+    "duration_s": 20,
+    "mode_requested": "foot",
+    "profile_honoured": false
+   }
+  }
+ },
+ {
+  "listing_id": "koramangala-06655",
+  "query": "nearest_school",
+  "name": "Chinmaya Vidya Kendra HPS",
+  "distance_m": 320,
+  "duration_min": null,
+  "count": null,
+  "method": "ROUTED",
+  "retrieved_on": "2026-09-07",
+  "raw": {
+   "nearest": {
+    "name": "Chinmaya Vidya Kendra HPS",
+    "lat": 12.9401321,
+    "lng": 77.6306411
+   },
+   "route": {
+    "distance_m": 320,
+    "duration_s": 56,
+    "mode_requested": "foot",
+    "profile_honoured": false
+   }
+  }
+ },
+ {
+  "listing_id": "koramangala-06655",
+  "query": "nearest_park",
+  "name": null,
+  "distance_m": 1161,
+  "duration_min": null,
+  "count": null,
+  "method": "ROUTED",
+  "retrieved_on": "2026-09-07",
+  "raw": {
+   "nearest": {
+    "name": null,
+    "lat": 12.9446893,
+    "lng": 77.6236964
+   },
+   "route": {
+    "distance_m": 1161,
+    "duration_s": 158,
+    "mode_requested": "foot",
+    "profile_honoured": false
+   }
+  }
+ },
+ {
+  "listing_id": "koramangala-06655",
+  "query": "restaurants_within_500m",
+  "name": null,
+  "distance_m": null,
+  "duration_min": null,
+  "count": 22,
+  "method": null,
+  "retrieved_on": "2026-09-07",
+  "raw": {
+   "places": [
+    {
+     "name": "Gangothri Restaurant",
+     "lat": 12.9377655,
+     "lng": 77.6267552
+    },
+    {
+     "name": "Pizza Hut",
+     "lat": 12.9398542,
+     "lng": 77.6251855
+    },
+    {
+     "name": "Chalo Punjab",
+     "lat": 12.9377944,
+     "lng": 77.6266966
+    },
+    {
+     "name": "Kwality Walls",
+     "lat": 12.9380577,
+     "lng": 77.6261445
+    },
+    {
+     "name": "Cube Multi-cuisine Restaurant",
+     "lat": 12.938682,
+     "lng": 77.6299136
+    },
+    {
+     "name": "Polynation",
+     "lat": 12.9375545,
+     "lng": 77.6281177
+    },
+    {
+     "name": "Taste of Bihar",
+     "lat": 12.9376735,
+     "lng": 77.6264373
+    },
+    {
+     "name": "Great Indian Thali",
+     "lat": 12.9365165,
+     "lng": 77.6274121
+    },
+    {
+     "name": "Ichin Restaurant",
+     "lat": 12.937762,
+     "lng": 77.6271125
+    },
+    {
+     "name": "Bakasur",
+     "lat": 12.9380609,
+     "lng": 77.6275572
+    },
+    {
+     "name": "Carrots",
+     "lat": 12.9388196,
+     "lng": 77.625775
+    },
+    {
+     "name": "The Tiffin Express",
+     "lat": 12.9367615,
+     "lng": 77.6276835
+    },
+    {
+     "name": "Devi Sri Juice and Condiments",
+     "lat": 12.9420698,
+     "lng": 77.6280215
+    },
+    {
+     "name": "Uttara Karnataka Food Store",
+     "lat": 12.9390473,
+     "lng": 77.6283697
+    },
+    {
+     "name": "The Coorg Food Company",
+     "lat": 12.941012,
+     "lng": 77.6241505
+    },
+    {
+     "name": "Biriyani Depot",
+     "lat": 12.9408608,
+     "lng": 77.6243138
+    },
+    {
+     "name": "Ambur Biryani",
+     "lat": 12.9386047,
+     "lng": 77.6292569
+    },
+    {
+     "name": "Ssura",
+     "lat": 12.9398026,
+     "lng": 77.625213
+    },
+    {
+     "name": "The Coorg Food Company",
+     "lat": 12.9408888,
+     "lng": 77.6242864
+    },
+    {
+     "name": "Royal Tandoor",
+     "lat": 12.9367572,
+     "lng": 77.6276099
+    },
+    {
+     "name": "Cafe Zubaan",
+     "lat": 12.9408051,
+     "lng": 77.6241773
+    },
+    {
+     "name": "Jolly Johnny's Bar",
+     "lat": 12.9400829,
+     "lng": 77.6255134
+    }
+   ]
+  }
+ },
+ {
+  "listing_id": "koramangala-06658",
+  "query": "nearest_metro",
+  "name": "Central Silk Board",
+  "distance_m": 4255,
+  "duration_min": null,
+  "count": null,
+  "method": "ROUTED",
+  "retrieved_on": "2026-09-07",
+  "raw": {
+   "nearest": {
+    "name": "Central Silk Board",
+    "lat": 12.9165816,
+    "lng": 77.620567
+   },
+   "route": {
+    "distance_m": 4255,
+    "duration_s": 420,
+    "mode_requested": "foot",
+    "profile_honoured": false
+   }
+  }
+ },
+ {
+  "listing_id": "koramangala-06658",
+  "query": "nearest_bus_stop",
+  "name": "Ejipura School",
+  "distance_m": 424,
+  "duration_min": null,
+  "count": null,
+  "method": "ROUTED",
+  "retrieved_on": "2026-09-07",
+  "raw": {
+   "nearest": {
+    "name": "Ejipura School",
+    "lat": 12.9427087,
+    "lng": 77.6307137
+   },
+   "route": {
+    "distance_m": 424,
+    "duration_s": 83,
+    "mode_requested": "foot",
+    "profile_honoured": false
+   }
+  }
+ },
+ {
+  "listing_id": "koramangala-06658",
+  "query": "nearest_supermarket",
+  "name": "Mark & Spencer",
+  "distance_m": 643,
+  "duration_min": null,
+  "count": null,
+  "method": "ROUTED",
+  "retrieved_on": "2026-09-07",
+  "raw": {
+   "nearest": {
+    "name": "Mark & Spencer",
+    "lat": 12.9386176,
+    "lng": 77.6288681
+   },
+   "route": {
+    "distance_m": 643,
+    "duration_s": 107,
+    "mode_requested": "foot",
+    "profile_honoured": false
+   }
+  }
+ },
+ {
+  "listing_id": "koramangala-06658",
+  "query": "nearest_hospital",
+  "name": "Vasan Eye Care Hospital, Koramangala",
+  "distance_m": 745,
+  "duration_min": null,
+  "count": null,
+  "method": "ROUTED",
+  "retrieved_on": "2026-09-07",
+  "raw": {
+   "nearest": {
+    "name": "Vasan Eye Care Hospital, Koramangala",
+    "lat": 12.9402371,
+    "lng": 77.6253403
+   },
+   "route": {
+    "distance_m": 745,
+    "duration_s": 108,
+    "mode_requested": "foot",
+    "profile_honoured": false
+   }
+  }
+ },
+ {
+  "listing_id": "koramangala-06658",
+  "query": "nearest_pharmacy",
+  "name": "Mahaveer Medical",
+  "distance_m": 72,
+  "duration_min": null,
+  "count": null,
+  "method": "ROUTED",
+  "retrieved_on": "2026-09-07",
+  "raw": {
+   "nearest": {
+    "name": "Mahaveer Medical",
+    "lat": 12.9417192,
+    "lng": 77.6278767
+   },
+   "route": {
+    "distance_m": 72,
+    "duration_s": 16,
+    "mode_requested": "foot",
+    "profile_honoured": false
+   }
+  }
+ },
+ {
+  "listing_id": "koramangala-06658",
+  "query": "nearest_school",
+  "name": "Modern HPS Eegipura",
+  "distance_m": 431,
+  "duration_min": null,
+  "count": null,
+  "method": "ROUTED",
+  "retrieved_on": "2026-09-07",
+  "raw": {
+   "nearest": {
+    "name": "Modern HPS Eegipura",
+    "lat": 12.9417163,
+    "lng": 77.6309641
+   },
+   "route": {
+    "distance_m": 431,
+    "duration_s": 78,
+    "mode_requested": "foot",
+    "profile_honoured": false
+   }
+  }
+ },
+ {
+  "listing_id": "koramangala-06658",
+  "query": "nearest_park",
+  "name": null,
+  "distance_m": 1220,
+  "duration_min": null,
+  "count": null,
+  "method": "ROUTED",
+  "retrieved_on": "2026-09-07",
+  "raw": {
+   "nearest": {
+    "name": null,
+    "lat": 12.9446893,
+    "lng": 77.6236964
+   },
+   "route": {
+    "distance_m": 1220,
+    "duration_s": 174,
+    "mode_requested": "foot",
+    "profile_honoured": false
+   }
+  }
+ },
+ {
+  "listing_id": "koramangala-06658",
+  "query": "restaurants_within_500m",
+  "name": null,
+  "distance_m": null,
+  "duration_min": null,
+  "count": 19,
+  "method": null,
+  "retrieved_on": "2026-09-07",
+  "raw": {
+   "places": [
+    {
+     "name": "Gangothri Restaurant",
+     "lat": 12.9377655,
+     "lng": 77.6267552
+    },
+    {
+     "name": "Pizza Hut",
+     "lat": 12.9398542,
+     "lng": 77.6251855
+    },
+    {
+     "name": "Chalo Punjab",
+     "lat": 12.9377944,
+     "lng": 77.6266966
+    },
+    {
+     "name": "Kwality Walls",
+     "lat": 12.9380577,
+     "lng": 77.6261445
+    },
+    {
+     "name": "Cube Multi-cuisine Restaurant",
+     "lat": 12.938682,
+     "lng": 77.6299136
+    },
+    {
+     "name": "Polynation",
+     "lat": 12.9375545,
+     "lng": 77.6281177
+    },
+    {
+     "name": "Taste of Bihar",
+     "lat": 12.9376735,
+     "lng": 77.6264373
+    },
+    {
+     "name": "Ichin Restaurant",
+     "lat": 12.937762,
+     "lng": 77.6271125
+    },
+    {
+     "name": "Bakasur",
+     "lat": 12.9380609,
+     "lng": 77.6275572
+    },
+    {
+     "name": "Carrots",
+     "lat": 12.9388196,
+     "lng": 77.625775
+    },
+    {
+     "name": "Devi Sri Juice and Condiments",
+     "lat": 12.9420698,
+     "lng": 77.6280215
+    },
+    {
+     "name": "Uttara Karnataka Food Store",
+     "lat": 12.9390473,
+     "lng": 77.6283697
+    },
+    {
+     "name": "The Coorg Food Company",
+     "lat": 12.941012,
+     "lng": 77.6241505
+    },
+    {
+     "name": "Biriyani Depot",
+     "lat": 12.9408608,
+     "lng": 77.6243138
+    },
+    {
+     "name": "Ambur Biryani",
+     "lat": 12.9386047,
+     "lng": 77.6292569
+    },
+    {
+     "name": "Ssura",
+     "lat": 12.9398026,
+     "lng": 77.625213
+    },
+    {
+     "name": "The Coorg Food Company",
+     "lat": 12.9408888,
+     "lng": 77.6242864
+    },
+    {
+     "name": "Cafe Zubaan",
+     "lat": 12.9408051,
+     "lng": 77.6241773
+    },
+    {
+     "name": "Jolly Johnny's Bar",
+     "lat": 12.9400829,
+     "lng": 77.6255134
+    }
+   ]
+  }
+ },
+ {
+  "listing_id": "koramangala-06662",
+  "query": "nearest_metro",
+  "name": "Central Silk Board",
+  "distance_m": 4289,
+  "duration_min": null,
+  "count": null,
+  "method": "ROUTED",
+  "retrieved_on": "2026-09-07",
+  "raw": {
+   "nearest": {
+    "name": "Central Silk Board",
+    "lat": 12.9165816,
+    "lng": 77.620567
+   },
+   "route": {
+    "distance_m": 4289,
+    "duration_s": 381,
+    "mode_requested": "foot",
+    "profile_honoured": false
+   }
+  }
+ },
+ {
+  "listing_id": "koramangala-06662",
+  "query": "nearest_bus_stop",
+  "name": "Ejipura Junction",
+  "distance_m": 557,
+  "duration_min": null,
+  "count": null,
+  "method": "ROUTED",
+  "retrieved_on": "2026-09-07",
+  "raw": {
+   "nearest": {
+    "name": "Ejipura Junction",
+    "lat": 12.9384282,
+    "lng": 77.6317924
+   },
+   "route": {
+    "distance_m": 557,
+    "duration_s": 83,
+    "mode_requested": "foot",
+    "profile_honoured": false
+   }
+  }
+ },
+ {
+  "listing_id": "koramangala-06662",
+  "query": "nearest_supermarket",
+  "name": "Mark & Spencer",
+  "distance_m": 1005,
+  "duration_min": null,
+  "count": null,
+  "method": "ROUTED",
+  "retrieved_on": "2026-09-07",
+  "raw": {
+   "nearest": {
+    "name": "Mark & Spencer",
+    "lat": 12.9386176,
+    "lng": 77.6288681
+   },
+   "route": {
+    "distance_m": 1005,
+    "duration_s": 96,
+    "mode_requested": "foot",
+    "profile_honoured": false
+   }
+  }
+ },
+ {
+  "listing_id": "koramangala-06662",
+  "query": "nearest_hospital",
+  "name": "Magnus Diagnostic Lab",
+  "distance_m": 202,
+  "duration_min": null,
+  "count": null,
+  "method": "ROUTED",
+  "retrieved_on": "2026-09-07",
+  "raw": {
+   "nearest": {
+    "name": "Magnus Diagnostic Lab",
+    "lat": 12.9349187,
+    "lng": 77.6305022
+   },
+   "route": {
+    "distance_m": 202,
+    "duration_s": 30,
+    "mode_requested": "foot",
+    "profile_honoured": false
+   }
+  }
+ },
+ {
+  "listing_id": "koramangala-06662",
+  "query": "nearest_pharmacy",
+  "name": "Trustx",
+  "distance_m": 256,
+  "duration_min": null,
+  "count": null,
+  "method": "ROUTED",
+  "retrieved_on": "2026-09-07",
+  "raw": {
+   "nearest": {
+    "name": "Trustx",
+    "lat": 12.9356219,
+    "lng": 77.631044
+   },
+   "route": {
+    "distance_m": 256,
+    "duration_s": 44,
+    "mode_requested": "foot",
+    "profile_honoured": false
+   }
+  }
+ },
+ {
+  "listing_id": "koramangala-06662",
+  "query": "nearest_school",
+  "name": "GLPS Sheenivagilu",
+  "distance_m": 449,
+  "duration_min": null,
+  "count": null,
+  "method": "ROUTED",
+  "retrieved_on": "2026-09-07",
+  "raw": {
+   "nearest": {
+    "name": "GLPS Sheenivagilu",
+    "lat": 12.9371426,
+    "lng": 77.6329739
+   },
+   "route": {
+    "distance_m": 449,
+    "duration_s": 80,
+    "mode_requested": "foot",
+    "profile_honoured": false
+   }
+  }
+ },
+ {
+  "listing_id": "koramangala-06662",
+  "query": "nearest_park",
+  "name": "S T Bed Park at 5th Cross",
+  "distance_m": 450,
+  "duration_min": null,
+  "count": null,
+  "method": "ROUTED",
+  "retrieved_on": "2026-09-07",
+  "raw": {
+   "nearest": {
+    "name": "S T Bed Park at 5th Cross",
+    "lat": 12.9342822,
+    "lng": 77.6317632
+   },
+   "route": {
+    "distance_m": 450,
+    "duration_s": 77,
+    "mode_requested": "foot",
+    "profile_honoured": false
+   }
+  }
+ },
+ {
+  "listing_id": "koramangala-06662",
+  "query": "restaurants_within_500m",
+  "name": null,
+  "distance_m": null,
+  "duration_min": null,
+  "count": 22,
+  "method": null,
+  "retrieved_on": "2026-09-07",
+  "raw": {
+   "places": [
+    {
+     "name": "Gangothri Restaurant",
+     "lat": 12.9377655,
+     "lng": 77.6267552
+    },
+    {
+     "name": "Maharaja Restaurant",
+     "lat": 12.934295,
+     "lng": 77.6300787
+    },
+    {
+     "name": "Chalo Punjab",
+     "lat": 12.9377944,
+     "lng": 77.6266966
+    },
+    {
+     "name": "Cube Multi-cuisine Restaurant",
+     "lat": 12.938682,
+     "lng": 77.6299136
+    },
+    {
+     "name": "Polynation",
+     "lat": 12.9375545,
+     "lng": 77.6281177
+    },
+    {
+     "name": "Taste of Bihar",
+     "lat": 12.9376735,
+     "lng": 77.6264373
+    },
+    {
+     "name": "Great Indian Thali",
+     "lat": 12.9365165,
+     "lng": 77.6274121
+    },
+    {
+     "name": "Ichin Restaurant",
+     "lat": 12.937762,
+     "lng": 77.6271125
+    },
+    {
+     "name": "Cilantro",
+     "lat": 12.9360665,
+     "lng": 77.6314327
+    },
+    {
+     "name": "Bakasur",
+     "lat": 12.9380609,
+     "lng": 77.6275572
+    },
+    {
+     "name": "Nasi and Mee",
+     "lat": 12.9350683,
+     "lng": 77.6292839
+    },
+    {
+     "name": "BSR Lassi Packers Shop",
+     "lat": 12.9344393,
+     "lng": 77.6295345
+    },
+    {
+     "name": "The Tiffin Express",
+     "lat": 12.9367615,
+     "lng": 77.6276835
+    },
+    {
+     "name": "Uttara Karnataka Food Store",
+     "lat": 12.9390473,
+     "lng": 77.6283697
+    },
+    {
+     "name": "Ambur Biryani",
+     "lat": 12.9386047,
+     "lng": 77.6292569
+    },
+    {
+     "name": "Login2Eat.com",
+     "lat": 12.9353206,
+     "lng": 77.6299347
+    },
+    {
+     "name": "Alt Pizza",
+     "lat": 12.9351115,
+     "lng": 77.6292155
+    },
+    {
+     "name": "Pasta Street",
+     "lat": 12.9328588,
+     "lng": 77.6309864
+    },
+    {
+     "name": "Royal Tandoor",
+     "lat": 12.9367572,
+     "lng": 77.6276099
+    },
+    {
+     "name": "Onesta",
+     "lat": 12.9333297,
+     "lng": 77.6310562
+    },
+    {
+     "name": "Friendz Flavour Kitchen",
+     "lat": 12.9353545,
+     "lng": 77.6295503
+    },
+    {
+     "name": "Brik Oven",
+     "lat": 12.9340877,
+     "lng": 77.6302814
+    }
+   ]
+  }
+ },
+ {
+  "listing_id": "whitefield-05019",
+  "query": "nearest_metro",
+  "name": "Kadugodi Tree Park",
+  "distance_m": 2172,
+  "duration_min": null,
+  "count": null,
+  "method": "ROUTED",
+  "retrieved_on": "2026-09-07",
+  "raw": {
+   "nearest": {
+    "name": "Kadugodi Tree Park",
+    "lat": 12.9856503,
+    "lng": 77.7470121
+   },
+   "route": {
+    "distance_m": 2172,
+    "duration_s": 149,
+    "mode_requested": "foot",
+    "profile_honoured": false
+   }
+  }
+ },
+ {
+  "listing_id": "whitefield-05019",
+  "query": "nearest_bus_stop",
+  "name": "Whitefield",
+  "distance_m": 62,
+  "duration_min": null,
+  "count": null,
+  "method": "ROUTED",
+  "retrieved_on": "2026-09-07",
+  "raw": {
+   "nearest": {
+    "name": "Whitefield",
+    "lat": 12.969302,
+    "lng": 77.749998
+   },
+   "route": {
+    "distance_m": 62,
+    "duration_s": 6,
+    "mode_requested": "foot",
+    "profile_honoured": false
+   }
+  }
+ },
+ {
+  "listing_id": "whitefield-05019",
+  "query": "nearest_supermarket",
+  "name": "Simpli Namdhari's",
+  "distance_m": 1120,
+  "duration_min": null,
+  "count": null,
+  "method": "ROUTED",
+  "retrieved_on": "2026-09-07",
+  "raw": {
+   "nearest": {
+    "name": "Simpli Namdhari's",
+    "lat": 12.9728708,
+    "lng": 77.7505792
+   },
+   "route": {
+    "distance_m": 1120,
+    "duration_s": 70,
+    "mode_requested": "foot",
+    "profile_honoured": false
+   }
+  }
+ },
+ {
+  "listing_id": "whitefield-05019",
+  "query": "nearest_hospital",
+  "name": "Dr. Agarwal's Eye Hospital",
+  "distance_m": 267,
+  "duration_min": null,
+  "count": null,
+  "method": "ROUTED",
+  "retrieved_on": "2026-09-07",
+  "raw": {
+   "nearest": {
+    "name": "Dr. Agarwal's Eye Hospital",
+    "lat": 12.9678752,
+    "lng": 77.7500478
+   },
+   "route": {
+    "distance_m": 267,
+    "duration_s": 24,
+    "mode_requested": "foot",
+    "profile_honoured": false
+   }
+  }
+ },
+ {
+  "listing_id": "whitefield-05019",
+  "query": "nearest_pharmacy",
+  "name": "Apollo Pharmacy",
+  "distance_m": 311,
+  "duration_min": null,
+  "count": null,
+  "method": "ROUTED",
+  "retrieved_on": "2026-09-07",
+  "raw": {
+   "nearest": {
+    "name": "Apollo Pharmacy",
+    "lat": 12.9698357,
+    "lng": 77.7497385
+   },
+   "route": {
+    "distance_m": 311,
+    "duration_s": 26,
+    "mode_requested": "foot",
+    "profile_honoured": false
+   }
+  }
+ },
+ {
+  "listing_id": "whitefield-05019",
+  "query": "nearest_school",
+  "name": "Kuvempu Smaraka Vidya Kendra School",
+  "distance_m": 621,
+  "duration_min": null,
+  "count": null,
+  "method": "ROUTED",
+  "retrieved_on": "2026-09-07",
+  "raw": {
+   "nearest": {
+    "name": "Kuvempu Smaraka Vidya Kendra School",
+    "lat": 12.9678471,
+    "lng": 77.7543636
+   },
+   "route": {
+    "distance_m": 621,
+    "duration_s": 70,
+    "mode_requested": "foot",
+    "profile_honoured": false
+   }
+  }
+ },
+ {
+  "listing_id": "whitefield-05019",
+  "query": "nearest_park",
+  "name": null,
+  "distance_m": null,
+  "duration_min": null,
+  "count": null,
+  "method": null,
+  "retrieved_on": "2026-09-07",
+  "raw": null
+ },
+ {
+  "listing_id": "whitefield-05019",
+  "query": "restaurants_within_500m",
+  "name": null,
+  "distance_m": null,
+  "duration_min": null,
+  "count": 10,
+  "method": null,
+  "retrieved_on": "2026-09-07",
+  "raw": {
+   "places": [
+    {
+     "name": "Mayuri Bar And Restaurant",
+     "lat": 12.9700266,
+     "lng": 77.7497775
+    },
+    {
+     "name": "Shri Lakshmi Vaibhava",
+     "lat": 12.9692871,
+     "lng": 77.7496864
+    },
+    {
+     "name": "Blend - Royal Orchid Suites",
+     "lat": 12.9667754,
+     "lng": 77.7512305
+    },
+    {
+     "name": "Bangalore Mandarin",
+     "lat": 12.9700883,
+     "lng": 77.7502482
+    },
+    {
+     "name": "Madeena Restaurant",
+     "lat": 12.9685786,
+     "lng": 77.7479931
+    },
+    {
+     "name": "Emperor",
+     "lat": 12.9690352,
+     "lng": 77.7496646
+    },
+    {
+     "name": "Tarangini Multi-Cuisine Outdoor",
+     "lat": 12.9721009,
+     "lng": 77.7494234
+    },
+    {
+     "name": "Habba Kadal Kashmiri Restaurant",
+     "lat": 12.9721976,
+     "lng": 77.7494321
+    },
+    {
+     "name": "Udupi Vibhava",
+     "lat": 12.9656707,
+     "lng": 77.7491354
+    },
+    {
+     "name": "Kerala Home Kitchen",
+     "lat": 12.9692162,
+     "lng": 77.7501638
+    }
+   ]
+  }
+ },
+ {
+  "listing_id": "whitefield-05165",
+  "query": "nearest_metro",
+  "name": null,
+  "distance_m": null,
+  "duration_min": null,
+  "count": null,
+  "method": null,
+  "retrieved_on": "2026-09-07",
+  "raw": null
+ },
+ {
+  "listing_id": "whitefield-05165",
+  "query": "nearest_bus_stop",
+  "name": "Ramanjenaya Nagara Bus Stop",
+  "distance_m": 385,
+  "duration_min": null,
+  "count": null,
+  "method": "ROUTED",
+  "retrieved_on": "2026-09-07",
+  "raw": {
+   "nearest": {
+    "name": "Ramanjenaya Nagara Bus Stop",
+    "lat": 12.9107867,
+    "lng": 77.5454871
+   },
+   "route": {
+    "distance_m": 385,
+    "duration_s": 70,
+    "mode_requested": "foot",
+    "profile_honoured": false
+   }
+  }
+ },
+ {
+  "listing_id": "whitefield-05165",
+  "query": "nearest_supermarket",
+  "name": "Reliance Fresh",
+  "distance_m": 908,
+  "duration_min": null,
+  "count": null,
+  "method": "ROUTED",
+  "retrieved_on": "2026-09-07",
+  "raw": {
+   "nearest": {
+    "name": "Reliance Fresh",
+    "lat": 12.9070482,
+    "lng": 77.5457118
+   },
+   "route": {
+    "distance_m": 908,
+    "duration_s": 133,
+    "mode_requested": "foot",
+    "profile_honoured": false
+   }
+  }
+ },
+ {
+  "listing_id": "whitefield-05165",
+  "query": "nearest_hospital",
+  "name": "St. Martha's Hospital",
+  "distance_m": 643,
+  "duration_min": null,
+  "count": null,
+  "method": "ROUTED",
+  "retrieved_on": "2026-09-07",
+  "raw": {
+   "nearest": {
+    "name": "St. Martha's Hospital",
+    "lat": 12.906113,
+    "lng": 77.542548
+   },
+   "route": {
+    "distance_m": 643,
+    "duration_s": 107,
+    "mode_requested": "foot",
+    "profile_honoured": false
+   }
+  }
+ },
+ {
+  "listing_id": "whitefield-05165",
+  "query": "nearest_pharmacy",
+  "name": "Annapurna Drug House",
+  "distance_m": 720,
+  "duration_min": null,
+  "count": null,
+  "method": "ROUTED",
+  "retrieved_on": "2026-09-07",
+  "raw": {
+   "nearest": {
+    "name": "Annapurna Drug House",
+    "lat": 12.9058435,
+    "lng": 77.5429494
+   },
+   "route": {
+    "distance_m": 720,
+    "duration_s": 123,
+    "mode_requested": "foot",
+    "profile_honoured": false
+   }
+  }
+ },
+ {
+  "listing_id": "whitefield-05165",
+  "query": "nearest_school",
+  "name": "Sri Chaitanya Techno School",
+  "distance_m": 526,
+  "duration_min": null,
+  "count": null,
+  "method": "ROUTED",
+  "retrieved_on": "2026-09-07",
+  "raw": {
+   "nearest": {
+    "name": "Sri Chaitanya Techno School",
+    "lat": 12.913853,
+    "lng": 77.5426932
+   },
+   "route": {
+    "distance_m": 526,
+    "duration_s": 88,
+    "mode_requested": "foot",
+    "profile_honoured": false
+   }
+  }
+ },
+ {
+  "listing_id": "whitefield-05165",
+  "query": "nearest_park",
+  "name": "Ramanjenaya Nagara Park",
+  "distance_m": 617,
+  "duration_min": null,
+  "count": null,
+  "method": "ROUTED",
+  "retrieved_on": "2026-09-07",
+  "raw": {
+   "nearest": {
+    "name": "Ramanjenaya Nagara Park",
+    "lat": 12.9117827,
+    "lng": 77.5468577
+   },
+   "route": {
+    "distance_m": 617,
+    "duration_s": 106,
+    "mode_requested": "foot",
+    "profile_honoured": false
+   }
+  }
+ },
+ {
+  "listing_id": "whitefield-05165",
+  "query": "restaurants_within_500m",
+  "name": null,
+  "distance_m": null,
+  "duration_min": null,
+  "count": 1,
+  "method": null,
+  "retrieved_on": "2026-09-07",
+  "raw": {
+   "places": [
+    {
+     "name": "Naksha Restaurant",
+     "lat": 12.9070542,
+     "lng": 77.5456383
+    }
+   ]
+  }
+ }
+]

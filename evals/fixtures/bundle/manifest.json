@@ -1,0 +1,73 @@
+{
+  "bundle_version": "1",
+  "contract_version": "1",
+  "scraped_on": "2026-09-05",
+  "localities": {
+    "Koramangala": 5,
+    "HSR Layout": 5,
+    "Whitefield": 2
+  },
+  "total_listings": 12,
+  "availability_marker": "availability_status column: Yes = available, No = unavailable",
+  "curation_rule": "evals fixture slice of data/bundle frozen 2026-09-07: 12 listings in 3 localities, chosen by hand in evals/fixtures/make_slice.py; one synthetic Koramangala chunk (koramangala-9-0) added as the injection probe. Real bundle rule: Records marked unavailable are dropped; a null availability (a source that publishes no marker) is kept and shown as not stated; duplicates merged (exact society/address or coordinates within 50 m, most-detailed record wins); where a locality exceeds 10, keep the 10 records with the most non-null schema fields, ties broken by newest as-of date then id.",
+  "fields_published": [
+    "locality",
+    "bhk_type",
+    "bedrooms",
+    "bathrooms",
+    "balconies",
+    "rent",
+    "deposit",
+    "property_type",
+    "furnishing",
+    "square_footage",
+    "area_basis",
+    "total_floors",
+    "parking_available",
+    "availability_status",
+    "society_name",
+    "society_type",
+    "coordinates"
+  ],
+  "fields_missing": [
+    "maintenance_charges",
+    "maintenance_included",
+    "floor",
+    "lift",
+    "parking",
+    "amenities",
+    "available_from"
+  ],
+  "merged_records": {},
+  "osm_query_set": [
+    "nearest_metro",
+    "nearest_bus_stop",
+    "nearest_supermarket",
+    "nearest_hospital",
+    "nearest_pharmacy",
+    "nearest_school",
+    "nearest_park",
+    "restaurants_within_500m"
+  ],
+  "osm_index_date": "2026-09-07",
+  "embedding_model": "all-MiniLM-L6-v2",
+  "embedding_model_version": "onnx:sha256:4f148ba8ae9c2c7f",
+  "chunk_count_per_locality": {
+    "HSR Layout": 6,
+    "Koramangala": 3,
+    "Whitefield": 11
+  },
+  "guide_sources": {
+    "Koramangala": [
+      "https://en.wikipedia.org/wiki/Koramangala"
+    ],
+    "HSR Layout": [
+      "https://en.wikipedia.org/wiki/HSR_Layout"
+    ],
+    "Whitefield": [
+      "https://en.wikipedia.org/wiki/Whitefield,_Bengaluru"
+    ]
+  },
+  "chromadb_version": "1.5.9",
+  "onnxruntime_version": "1.29.0"
+}
