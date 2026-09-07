@@ -188,3 +188,18 @@ table above; `passed: false` means one of the two lower boxes, never the first.
 
 Type A and Type B are scored separately and never averaged: Type B meeting L3 does not
 excuse Type A missing L2.
+
+---
+
+## Footer — OSM routing coverage (Task 1.3, recorded 2026-09-07)
+
+The addendum's Task 1.3 Step 4 asks for this note here. The precompute ran the fixed
+eight-query set for all 2,370 listings (18,960 rows) through the OSM MCP server on
+2026-09-07. Of the 16,590 nearest-X rows, 11,024 found a place and **every one of them was
+routed** (OSRM public server; 0 straight-line fallbacks), so routing covered **100 %** of
+listing-anchored queries where OSM had a node — above the ≥ 90 % threshold. 5,566 rows are
+null (no node within the query radius; the MCP server returns nodes only, so amenities
+mapped as areas are invisible). Consequence for the demo: precomputed transit claims say
+"by route"; "in a straight line" will only ever be heard for the tenant's own commute
+point (live, computed from coordinates). Routed rows carry no duration (the public OSRM
+ignores the foot profile), so speech gives a distance by route, never a walking time.
