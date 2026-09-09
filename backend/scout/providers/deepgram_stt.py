@@ -25,6 +25,13 @@ from scout.platform import telemetry
 
 Handler = Callable[[str], Awaitable[None]]
 
+DOMAIN_TERMS = ["BHK", "lakh", "deposit", "maintenance", "semi furnished", "fully furnished"]
+
+
+def build_keyterms(localities: list[str]) -> list[str]:
+    """Generated from the dataset's locality field — never typed by hand (spec §5.1)."""
+    return sorted(set(localities)) + DOMAIN_TERMS
+
 
 class DeepgramStream:
     def __init__(
