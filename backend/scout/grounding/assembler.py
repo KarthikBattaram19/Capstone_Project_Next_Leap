@@ -24,6 +24,21 @@ _DENIES = re.compile(
 )
 
 
+# The field names the renter hears. "I don't have a available from figure" is not a
+# sentence anyone says out loud; the gap lines are humanised (spec §3.5).
+_GAP_LABELS = {
+    "available_from": "move-in date",
+    "maintenance_charges": "maintenance charge",
+    "maintenance_included": "maintenance",
+    "square_footage": "size",
+    "area_basis": "carpet-or-built-up",
+    "bhk_type": "BHK",
+    "society_name": "society name",
+    "total_floors": "total floors",
+    "property_type": "property type",
+}
+
+
 @dataclass(frozen=True)
 class BoundClaim:
     text: str
@@ -56,9 +71,10 @@ class ClaimAssembler:
         lines: list[str] = []
         for ref in self._b.gaps():
             kind, _, rest = ref.partition(":")
-            name = rest.split(":")[-1].replace("_", " ")
+            name = _GAP_LABELS.get(rest.split(":")[-1], rest.split(":")[-1].replace("_", " "))
             if kind == "dataset":
-                lines.append(f"I don't have a {name} figure for this listing.")
+                article = "an" if name[0].lower() in "aeiou" else "a"
+                lines.append(f"I don't have {article} {name} figure for this listing.")
             elif kind == "osm":
                 lines.append(
                     f"No {name.replace('nearest ', '')} found in the map data within the "

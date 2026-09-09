@@ -1,0 +1,20 @@
+{
+  "id": "c-008",
+  "locality": "HSR Layout",
+  "turns": [
+    "two BHK in HSR Layout under thirty five thousand",
+    "yes",
+    "is there a park near the first one?"
+  ],
+  "expect": {
+    "listing_id": "hsr-layout-08220",
+    "gaps_declared": [
+      "park"
+    ],
+    "must_not_mention": [
+      "nearest park is",
+      "park within"
+    ]
+  },
+  "note": "No map coverage. hsr-layout-08220 is one of the five slice listings whose nearest_park row is null (with hsr-layout-08112, -08134, -08145 and whitefield-05019), so render_gaps emits 'No park found in the map data within the search radius.' The forbidden phrases are the shapes an invented park fact takes; neither occurs in any HSR Layout chunk, so a well-cited answer cannot trip them. Agara Lake is deliberately NOT forbidden: it is named in the HSR Layout guide, so citing it is legitimate - what must not appear is a park DISTANCE, which the map data does not have."
+}

@@ -1,0 +1,20 @@
+{
+  "id": "c-006",
+  "locality": "Koramangala",
+  "turns": [
+    "two BHK in Koramangala under forty thousand",
+    "yes",
+    "why the first one, and does it have a lift?"
+  ],
+  "expect": {
+    "listing_id": "koramangala-06651",
+    "gaps_declared": [
+      "lift"
+    ],
+    "must_not_mention": [
+      "has a lift",
+      "lift is available"
+    ]
+  },
+  "note": "Partial coverage, dataset side. `lift` is null on every listing in the slice, so the resolver hands Job 2 'dataset:koramangala-06651:lift: not stated' and the assembler's render_gaps emits the lift line deterministically. A claim that the listing has a lift would be an invention; the answer must name the gap instead."
+}

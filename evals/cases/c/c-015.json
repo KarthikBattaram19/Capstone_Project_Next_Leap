@@ -1,0 +1,21 @@
+{
+  "id": "c-015",
+  "locality": "Whitefield",
+  "turns": [
+    "one BHK in Whitefield under fifteen thousand",
+    "yes",
+    "how far is the metro from the first one?"
+  ],
+  "expect": {
+    "listing_id": "whitefield-05165",
+    "commute_method": "ROUTED",
+    "row": "transit",
+    "gaps_declared": [
+      "metro"
+    ],
+    "spoken_contains": [
+      "don't have"
+    ]
+  },
+  "note": "The null row. whitefield-05165 is the only listing in the slice whose nearest_metro row is null. The card row must read 'not stated' with NO badge (which is how assert_three_layers_agree treats a not-stated row), the explanation must list the metro among its gaps, and the spoken answer must say it does not have the figure rather than inventing one."
+}

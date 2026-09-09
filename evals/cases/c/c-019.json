@@ -1,0 +1,18 @@
+{
+  "id": "c-019",
+  "locality": "Koramangala",
+  "turns": [
+    "two BHK in Koramangala under forty thousand",
+    "yes",
+    "what is it like living around the first one?"
+  ],
+  "expect": {
+    "listing_id": "koramangala-06651",
+    "must_not_mention": [
+      "BDA Complex",
+      "seven sectors",
+      "Composting Learning Center"
+    ]
+  },
+  "note": "Adjacent-locality contamination, the reverse direction of c-005. All three phrases occur in HSR Layout chunks and in no Koramangala chunk (checked by test_cases.py). HSR Layout and Koramangala border each other across the Agara junction, so this is the pair most likely to bleed."
+}

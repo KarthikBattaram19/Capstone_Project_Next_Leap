@@ -26,8 +26,8 @@ def _json(name: str) -> list[dict]:
     return json.loads((FIXTURES / name).read_text(encoding="utf-8"))
 
 
-def test_suite_c_has_its_first_five_cases_with_the_four_keys():
-    assert [c["id"] for c in CASES_C] == ["c-001", "c-002", "c-003", "c-004", "c-005"]
+def test_suite_c_has_twenty_cases_with_known_keys():
+    assert [c["id"] for c in CASES_C] == [f"c-{n:03d}" for n in range(1, 21)]
     for case in CASES_C:
         assert set(case) - {"note"} == {"id", "locality", "turns", "expect"}, case["id"]
         assert case["turns"] and all(isinstance(t, str) for t in case["turns"]), case["id"]
@@ -35,8 +35,76 @@ def test_suite_c_has_its_first_five_cases_with_the_four_keys():
 
 
 def test_case_files_are_named_after_their_ids():
-    for p in sorted((Path(__file__).parent / "c").glob("*.json")):
-        assert json.loads(p.read_text(encoding="utf-8"))["id"] == p.stem
+    for suite in ("a", "b", "c"):
+        for p in sorted((Path(__file__).parent / suite).glob("*.json")):
+            assert json.loads(p.read_text(encoding="utf-8"))["id"] == p.stem
+
+
+A_KEYS = {
+    "kind",
+    "readback_contains",
+    "extracted",
+    "all_matched_satisfy",
+    "matched_ids",
+    "unknown_ids",
+    "excluded_ids",
+    "unknown_field",
+    "localities_span",
+    "unmet_field",
+    "suggestions_contain",
+}
+B_KEYS = {
+    "kind",
+    "extracted",
+    "matched_ids",
+    "excluded_ids",
+    "appended_after",
+    "suggestions_contain",
+}
+
+
+def test_suites_a_and_b_have_twenty_cases_each_with_known_keys():
+    a, b = load_cases("a"), load_cases("b")
+    assert [c["id"] for c in a] == [f"a-{n:03d}" for n in range(1, 21)]
+    assert [c["id"] for c in b] == [f"b-{n:03d}" for n in range(1, 21)]
+    for case in a:
+        assert set(case) == {"id", "turns", "expect"}, case["id"]
+        assert case["turns"] and all(isinstance(t, str) for t in case["turns"]), case["id"]
+        assert set(case["expect"]) <= A_KEYS, f"{case['id']}: unknown expect key"
+    for case in b:
+        assert set(case) == {"id", "before_turns", "edit_turn", "expect"}, case["id"]
+        # The readback is confirmed somewhere in the setup; b-016..b-019 then carry the
+        # first of two sequential edits, so "yes" is not always the last turn.
+        assert "yes" in case["before_turns"], f"{case['id']}: before_turns never confirm"
+        assert set(case["expect"]) <= B_KEYS, f"{case['id']}: unknown expect key"
+
+
+def test_every_named_listing_exists_in_the_slice():
+    ids = {r["id"] for r in _json("listings.json")}
+    for suite, keys in (
+        ("a", ("matched_ids", "excluded_ids", "unknown_ids")),
+        ("b", ("matched_ids", "excluded_ids", "appended_after")),
+    ):
+        for case in load_cases(suite):
+            for key in keys:
+                for lid in case["expect"].get(key, []):
+                    assert lid in ids, f"{case['id']}: {lid} is not in the slice"
+
+
+def test_contamination_phrases_belong_to_another_locality_only():
+    """A must_not_mention phrase must not appear in the case's OWN locality's real chunks.
+
+    Otherwise the probe is unpassable: a correct, well-cited answer could contain it. The
+    injection chunk is exempt on purpose — an injection probe works precisely because the
+    forbidden words ARE in the partition and must still never be repeated.
+    """
+    chunks = [c for c in _json("chunks.json") if c["url"] != "fixture://injection"]
+    for case in CASES_C:
+        for phrase in case["expect"].get("must_not_mention", []):
+            p = phrase.lower()
+            assert not any(
+                p in c["text"].lower() for c in chunks if c["locality"] == case["locality"]
+            ), f"{case['id']}: {phrase!r} is in its own locality's chunks"
 
 
 @pytest.mark.parametrize("case", CASES_C, ids=[c["id"] for c in CASES_C])

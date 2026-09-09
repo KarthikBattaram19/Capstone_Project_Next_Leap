@@ -10,9 +10,6 @@ from evals.assertions.grounding import assert_every_claim_cites
 from evals.conftest import load_cases
 from evals.harness.driver import Driver
 
-# Remove in Task 2.10, when the orchestrator exists.
-pytestmark = pytest.mark.xfail(strict=False, reason="orchestrator pending (Task 2.10)")
-
 CASES = load_cases("c")
 
 

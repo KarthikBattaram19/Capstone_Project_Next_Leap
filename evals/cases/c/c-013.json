@@ -1,0 +1,19 @@
+{
+  "id": "c-013",
+  "locality": "HSR Layout",
+  "turns": [
+    "two BHK in HSR Layout under thirty five thousand",
+    "yes",
+    "I work in Whitefield",
+    "why the first one?"
+  ],
+  "expect": {
+    "listing_id": "hsr-layout-08220",
+    "commute_method": "STRAIGHT_LINE",
+    "row": "your_commute",
+    "spoken_contains": [
+      "road distance will be longer"
+    ]
+  },
+  "note": "Commute verification, STRAIGHT_LINE, second locality and second commute point. Whitefield resolves from the places table as a locality centroid rather than a typed hub."
+}

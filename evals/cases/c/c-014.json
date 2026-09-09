@@ -1,0 +1,14 @@
+{
+  "id": "c-014",
+  "locality": "Whitefield",
+  "turns": [
+    "one BHK in Whitefield under fifteen thousand",
+    "yes",
+    "tell me about the first one"
+  ],
+  "expect": {
+    "listing_id": "whitefield-05165",
+    "your_commute_absent": true
+  },
+  "note": "No commute point is stated in any turn, so the card's 'Your commute' row must be absent (None), not an empty row. Pairs with c-012 and c-013, which state one."
+}

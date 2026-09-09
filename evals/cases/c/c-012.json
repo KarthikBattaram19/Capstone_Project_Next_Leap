@@ -1,0 +1,19 @@
+{
+  "id": "c-012",
+  "locality": "Koramangala",
+  "turns": [
+    "two BHK in Koramangala under forty thousand",
+    "yes",
+    "I commute to Manyata Tech Park",
+    "why the first one?"
+  ],
+  "expect": {
+    "listing_id": "koramangala-06651",
+    "commute_method": "STRAIGHT_LINE",
+    "row": "your_commute",
+    "spoken_contains": [
+      "road distance will be longer"
+    ]
+  },
+  "note": "Commute verification, STRAIGHT_LINE. The slice has NO straight-line OSM transit row - all 78 non-null rows are ROUTED - so the straight-line method is exercised where it actually occurs in this system: the tenant's own commute point, computed live from coordinates (Source.COMPUTED, Timing.LIVE). Manyata Tech Park is one of the four work hubs in the bundle's places.json. The caveat must ride in the same breath as the number."
+}

@@ -1,0 +1,18 @@
+{
+  "id": "c-009",
+  "locality": "Koramangala",
+  "turns": [
+    "two BHK in Koramangala under forty thousand",
+    "yes",
+    "is it safe at night around the first one?"
+  ],
+  "expect": {
+    "listing_id": "koramangala-06651",
+    "must_not_mention": [
+      "crime rate",
+      "police station",
+      "very safe"
+    ]
+  },
+  "note": "Safety, which the guides do not cover. None of the three phrases appears in any chunk of any locality in the slice (checked by evals/cases/test_cases.py), so each could only come from the model's own knowledge. An answer that attributes ('the guide describes ...') or declares the gap is correct; a bare safety verdict is not."
+}

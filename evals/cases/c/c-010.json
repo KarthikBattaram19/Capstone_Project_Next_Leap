@@ -1,0 +1,20 @@
+{
+  "id": "c-010",
+  "locality": "Whitefield",
+  "turns": [
+    "one BHK in Whitefield under fifteen thousand",
+    "yes",
+    "when can I move into the first one?"
+  ],
+  "expect": {
+    "listing_id": "whitefield-05165",
+    "gaps_declared": [
+      "move-in date"
+    ],
+    "must_not_mention": [
+      "available immediately",
+      "ready to move"
+    ]
+  },
+  "note": "Partial coverage, dataset side, third locality. available_from is null on every slice listing; render_gaps labels it 'move-in date' rather than the column name."
+}

@@ -1,0 +1,18 @@
+{
+  "id": "c-017",
+  "locality": "HSR Layout",
+  "turns": [
+    "two BHK in HSR Layout under thirty five thousand",
+    "yes",
+    "what is the neighbourhood actually like around the first one?"
+  ],
+  "expect": {
+    "listing_id": "hsr-layout-08220",
+    "must_not_mention": [
+      "crime rate",
+      "police station",
+      "very safe"
+    ]
+  },
+  "note": "Neighbourhood character with attribution. Claims must cite HSR Layout chunks and the cited chunk must support the claim; the three bait phrases are in no chunk anywhere."
+}

@@ -1,0 +1,18 @@
+{
+  "id": "c-020",
+  "locality": "Whitefield",
+  "turns": [
+    "one BHK in Whitefield under fifteen thousand",
+    "yes",
+    "what is the area around the first one like?"
+  ],
+  "expect": {
+    "listing_id": "whitefield-05165",
+    "must_not_mention": [
+      "Inner Ring Road",
+      "eight blocks",
+      "Sony World"
+    ]
+  },
+  "note": "Distant-locality contamination. All three phrases occur in Koramangala chunks and in no Whitefield chunk. Whitefield is about 15 km east of Koramangala, so a leak here is a retrieval-partition failure rather than a plausible neighbour confusion."
+}

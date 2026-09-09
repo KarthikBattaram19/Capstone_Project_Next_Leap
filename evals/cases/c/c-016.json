@@ -1,0 +1,18 @@
+{
+  "id": "c-016",
+  "locality": "Koramangala",
+  "turns": [
+    "two BHK in Koramangala under forty thousand",
+    "yes",
+    "how far is the nearest supermarket from the first one?"
+  ],
+  "expect": {
+    "listing_id": "koramangala-06651",
+    "commute_method": "ROUTED",
+    "row": "transit",
+    "spoken_contains": [
+      "by route"
+    ]
+  },
+  "note": "Amenity distance. Every amenity claim must cite an osm: ref that resolves in the bundle (assert_every_claim_cites), and the transit row's three layers must still agree on a turn whose question was about something else."
+}

@@ -1,4 +1,4 @@
-"""The only part that knows the whole turn (arch §6.1). Lane A here; lane B is added in Task 2.13."""
+"""The only part that knows the whole turn (arch §6.1). Lane A answers, lane B explains."""
 
 from __future__ import annotations
 
@@ -6,11 +6,11 @@ import asyncio
 from collections.abc import Callable
 
 from scout.config import Settings
-from scout.contract.outcome import Answered, Empty, Failed, NeedsInput, TurnOutcome
+from scout.contract.outcome import Answered, Degraded, Empty, Failed, NeedsInput, TurnOutcome
 from scout.contract.viewmodels import AnsweredViewModel
 from scout.conversation.booking_flow import BookingFlow, BookingNotWired
 from scout.conversation.job1 import Job1, Job1Down, Job1Result
-from scout.conversation.router import classify_turn
+from scout.conversation.router import classify_turn, parse_ordinal
 from scout.conversation.session import ConfirmConstraints, Session
 from scout.conversation.speaker import Speaker, split_sentences
 from scout.domain.constraints import ConstraintEdit
@@ -144,9 +144,110 @@ class TurnOrchestrator:
             session.speaker.speak(split_sentences(outcome.spoken))
         )
 
-    async def _lane_b(self, session: Session, text: str) -> TurnOutcome:  # replaced in Task 2.13
-        msg = "I can't explain this one right now."
-        return Failed(capability="explanation", tell_renter=msg, retry_worth_it=True, spoken=msg)
+    async def _lane_b(self, session: Session, text: str) -> TurnOutcome:
+        from scout.contract.viewmodels import ClaimVM, ExplanationVM, SnapshotVM
+        from scout.conversation.job2 import Job2Down
+        from scout.grounding.assembler import ClaimAssembler
+        from scout.grounding.opener import build_opener
+        from scout.grounding.resolvers import ResolverRegistry
+        from scout.grounding.retrieval import Retrieval
+
+        if self.job2 is None:
+            msg = "I can't explain this one right now."
+            return Failed(
+                capability="explanation", tell_renter=msg, retry_worth_it=True, spoken=msg
+            )
+
+        # The ordinal is read HERE, not by Job 1: lane B never calls Job 1, so
+        # Job1Result.reference does not exist on this path. "Why did you pick the second
+        # one?" routes here on the word "why", and without this it would explain whichever
+        # listing happened to be in focus (eval.md EC-J1-14).
+        heard = session.last_read_order
+        n = parse_ordinal(text)
+        if n is not None and 1 <= n <= len(heard):
+            lid = heard[n - 1]
+            session.focus_listing_id = lid
+        elif n is not None:
+            return NeedsInput(
+                question=CONVERSATIONAL_REPLIES["which_listing"],
+                field="reference",
+                spoken="Which one do you mean?",
+            )
+        else:
+            lid = session.focus_listing_id or (heard[0] if heard else None)
+            if lid is None:
+                return NeedsInput(
+                    question="Which listing do you mean?",
+                    field="reference",
+                    spoken="Which listing do you mean?",
+                )
+            # Falling back to the first one they heard still fixes the focus: "book it" in
+            # the next breath has to mean the listing just explained.
+            session.focus_listing_id = lid
+
+        registry = ResolverRegistry(self.store, self.commute, Retrieval(self.store))
+        commute_point = session.constraints.commute
+        bundle = registry.resolve(lid, text, commute_point)
+        opener = build_opener(bundle, commute_point.name if commute_point else None)
+        assembler = ClaimAssembler(bundle)
+
+        queue: asyncio.Queue[str | None] = asyncio.Queue()
+        await queue.put(opener)  # P8: sound before Job 2's first token
+
+        async def sentences():
+            while True:
+                s = await queue.get()
+                if s is None:
+                    return
+                yield s
+
+        session.speaker = (session.speaker_factory or self.speaker_factory)()
+        session.speaking = asyncio.create_task(session.speaker.speak(sentences()))
+
+        claims: list[ClaimVM] = []
+        bound_facts: dict = {}
+        job2_failed = False
+        try:
+            session.job2_task = asyncio.current_task()
+            async for s in self.job2.explain(bundle, text):
+                claim = assembler.bind(s)
+                if claim is None:
+                    continue  # dropped: no resolvable citation
+                claims.append(ClaimVM(text=claim.text, citation_refs=claim.refs))
+                bound_facts.update(claim.facts)
+                await queue.put(claim.text)  # released only once its citation resolved
+        except Job2Down:
+            job2_failed = True
+        finally:
+            await queue.put(None)  # the speaker's generator terminates
+
+        gaps = assembler.render_gaps() + [g for g in getattr(self.job2, "last_gaps", []) if g]
+        sources = [self.vm.citation(f, lid) for f in bound_facts.values()]
+        vm = self._view(session)
+
+        if job2_failed:
+            vm.notices = [
+                "I can't explain this one right now — the explanation service is unavailable."
+            ]
+            out: TurnOutcome = Degraded(
+                view_model=vm,
+                missing=["explanation"],
+                why="explanation provider unavailable",
+                spoken=opener + " I can't explain further right now.",
+            )
+        else:
+            vm.explanation = ExplanationVM(
+                listing_id=lid, opener=opener, claims=claims, gaps=gaps, sources=sources
+            )
+            vm.snapshot = SnapshotVM(
+                listing_id=lid, claims=claims, gaps=gaps, limited=not bundle.chunks
+            )
+            out = Answered(
+                view_model=vm,
+                spoken=" ".join([opener] + [c.text for c in claims] + gaps),
+            )
+        object.__setattr__(out, "_already_spoken", True)  # lane B spoke as it went
+        return out
 
     async def _lane_a(self, session: Session, text: str) -> TurnOutcome:
         try:

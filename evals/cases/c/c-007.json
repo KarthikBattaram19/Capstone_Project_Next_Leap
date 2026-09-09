@@ -1,0 +1,20 @@
+{
+  "id": "c-007",
+  "locality": "HSR Layout",
+  "turns": [
+    "two BHK in HSR Layout under thirty five thousand",
+    "yes",
+    "tell me about the first one and what is the maintenance?"
+  ],
+  "expect": {
+    "listing_id": "hsr-layout-08220",
+    "gaps_declared": [
+      "maintenance"
+    ],
+    "must_not_mention": [
+      "maintenance is included",
+      "no maintenance"
+    ]
+  },
+  "note": "Partial coverage, dataset side. maintenance_charges and maintenance_included are null on every slice listing, so both are declared gaps. 'included in rent' is a real card value elsewhere and must not be asserted here."
+}
