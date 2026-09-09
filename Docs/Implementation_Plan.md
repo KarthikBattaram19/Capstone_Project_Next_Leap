@@ -360,33 +360,44 @@ Both gates have cleared. 1.1–1.3 (the knowledge layer) and 1.4–1.6 (store, c
 
 **Phase 2 exit:** all 60 cases pass locally three times; the deployed backend serves a full Type A and Type B conversation (the frontend still shows raw results until Phase 3).
 
-**Phase 2 exit status, 2026-09-09: NOT met, and blocked on one thing.** All thirteen tasks
-are implemented and their unit tests pass (318 offline tests green, ruff clean), and
-`create_app` boots against the real bundle — 2,370 listings, 464 localities, 466 places,
-Job 1 and Job 2 both wired, `/health` and `/contract` answering. What is missing is the
-evidence: **60 cases × 3 runs cannot be produced on the current Groq account.**
+**Phase 2 exit status, 2026-09-09: NOT met — one suite run away, gated by a daily token
+allowance.** All thirteen tasks are implemented and their unit tests pass (277 unit tests
+green, ruff clean), and `create_app` boots against the real bundle — 2,370 listings, 464
+localities, 466 places, Job 1 and Job 2 both wired, `/health` and `/contract` answering.
 
-The numbers, measured from the 429 bodies on 2026-09-09:
+**The decision that unblocked it (2026-09-09): Job 1 keeps Groq and asks for
+`reasoning_effort="low"`.** `gpt-oss-120b` reasons before it writes its JSON; at the default
+effort that was 268 of 388 completion tokens. At `low` it is 45–81, the call falls from
+1,147 to 886 tokens used (~1,020 reserved against the rate limiter, down from ~1,400), and
+accuracy held at 5/5 on the extractions that had previously failed. One 60-case run is 151
+Job 1 calls ≈ **154,000 charged tokens, inside the 200,000 daily allowance** — where before
+it was ~211,000 and could not fit at all.
 
-| | |
+**What was measured and rejected on the way there:**
+
+| Option | Why not |
 |---|---|
-| Groq tier | on-demand, `openai/gpt-oss-120b` |
-| Daily token limit | **200,000 (TPD)** |
-| Cost of one Job 1 call | 1,315–1,512 tokens (system prompt + strict schema + reasoning completion) |
-| Calls in one full suite run | ~150 (60 cases × ~2.5 turns) |
-| Tokens for one full run | **~210,000** |
-| Tokens for sign-off (3 runs) | **~630,000** |
+| `max_completion_tokens=512` | Caps reasoning too. The reply was cut off mid-object and Groq rejected its own generation against the strict schema. |
+| `openai/gpt-oss-20b` | 1,351 tokens/call — *more* than the 120b, because it reasons harder. |
+| `qwen/qwen3.8-27b` | Cheapest at 464 tokens/call, but returns `intent: out_of_scope` for "fully furnished 2BHK apartment in Koramangala under 30,000" — twice, identically, at temperature 0. It would refuse a valid request. |
+| `qwen/qwen3.6-27b` | Cannot produce valid JSON against the strict schema (HTTP 400). |
+| `groq/compound-mini` | No `json_schema` support. |
+| **`claude-haiku-4-5`** | **6/6 correct, and the paid Anthropic plan has no daily cap (12M tokens/minute — a whole run is 1.6% of one minute). Rejected on latency: 3.73 s median against Groq's 1.50 s, same machine and network. Job 1 must finish before the shortlist exists, so first audio would land near 4.2 s against an L2 target of 3.5 s.** Groq was chosen for its speed; taking it out would have meant a second Gate L renegotiation. The decision was latency over convenience. |
 
-A single run does not fit inside a day, let alone three. Every Suite B case failed with
-`Failed(capability="understanding")` — Job 1 down on a 429 — not on anything the cases or
-the code assert. The transport already retries four times honouring `Retry-After`, which
-absorbs the per-minute limit (8,000 TPM) but cannot absorb a daily one.
+Every free-plan Groq chat model shares the same 200K/day and 8K/minute limits, so no model
+switch buys a bigger allowance — only a cheaper call.
 
-**The decision this needs is an account decision, not a code change:** a Groq tier whose
-daily allowance covers at least one suite run (three for sign-off), or a Job 1 model with a
-materially lower per-call cost. Until then Phase 2 cannot be signed off, and Phase 3 should
-not be built on an unverified Phase 2.
+**Where the suites stand.** Suite A's last complete run was **18/20**. Both failures were
+one defect — `square_footage_min` arriving as `"1274 sq ft"` and failing to coerce — now
+fixed with unit tests, but the re-run did not complete: the day's Groq allowance was spent
+(199,918 of 200,000). Suite B has never completed a run. Suite C has not been run. **None of
+the three is claimed green.**
 
+**What is left is one day's allowance per run.** At ~154K per run the free plan affords one
+run per calendar day, so the three consecutive runs sign-off requires take three days.
+Groq's pay-as-you-go tier ($0.15/M in, $0.60/M out — about **$0.09 for the whole three-run
+sign-off**) would remove the daily cap and let all three run in one sitting; that remains an
+account decision, not a code change.
 ---
 
 ## Phase 3 — Completing the product

@@ -35,7 +35,7 @@ score.
 | Suite C, run 1 | **not run** | see below |
 | Suite C, run 2 | **not run** | |
 | Suite C, run 3 | **not run** | |
-| Suite A, best complete run | **19 / 20** (2026-09-09) | the twentieth failed on a furnishing value the reducer has since learned to read; not re-run |
+| Suite A, best complete run | **18 / 20** (2026-09-09, with `reasoning_effort=low`) | both failures were one defect — a size arriving as "1274 sq ft" — since fixed; the re-run exhausted the day's allowance |
 | Suite B, any run | **0 / 20 completed** | every case failed with Job 1 down on a 429, not on anything it asserts |
 | Dropped sentences per case | **not logged** | the assembler drops silently today; the counter is added when the suite first runs |
 | L3 / L5 from traces | **not measured** | needs a suite run |
@@ -55,6 +55,8 @@ the strict schema and the reasoning completion). The three suites are 60 cases o
 turns each — roughly 150 calls, about **210,000 tokens per run**, and sign-off asks for
 three consecutive runs. On the current 200,000-tokens-per-day tier a single run does not
 fit, let alone three.
+
+**Update, later the same day:** `reasoning_effort="low"` was adopted (see the Phase 2 exit note in `Docs/Implementation_Plan.md`). It cuts the call to 886 tokens used / ~1,020 reserved, so one run now costs ~154K and fits inside a day — one run per day, three days for sign-off, or one sitting on Groq's paid tier for about $0.09.
 
 Capping `max_completion_tokens` was tried as a way to shrink the reservation and rejected:
 `gpt-oss-120b` is a reasoning model that spends completion tokens before it writes the
