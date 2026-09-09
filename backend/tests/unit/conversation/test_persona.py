@@ -21,6 +21,16 @@ def test_greeting_is_a_constant_not_a_call():
     assert "providers" not in inspect.getsource(persona)
 
 
+def test_every_conversational_reply_fits_the_sentence_cap():
+    # What makes arch §11.2's "at most 3 sentences" a rule rather than an aspiration. The
+    # shortlist reading and the Type B explanation are deliberately not in this dict: their
+    # length is set by the facts that resolved, not by the persona.
+    from scout.conversation.orchestrator import CONVERSATIONAL_REPLIES
+
+    for name, text in CONVERSATIONAL_REPLIES.items():
+        assert len(split_sentences(text)) <= persona.MAX_REPLY_SENTENCES, name
+
+
 def test_job1_schema_has_no_slot_for_personal_data():
     # Where the privacy rule is actually enforced: extraction has no field to put a phone
     # number in, so wording is not the only thing standing between the renter and an

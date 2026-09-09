@@ -30,23 +30,36 @@ pytestmark = pytest.mark.skipif(
 )
 
 
+SENTENCES_SCHEMA = {
+    "type": "object",
+    "properties": {"sentences": {"type": "array", "items": {"type": "string"}}},
+    "required": ["sentences"],
+    "additionalProperties": False,
+}
+
+ECHO_SCHEMA = {
+    "type": "object",
+    "properties": {"echo": {"type": "string"}},
+    "required": ["echo"],
+    "additionalProperties": False,
+}
+
+
 async def test_groq_returns_strict_json():
-    from scout.conversation.stub_turn import STUB_SCHEMA
     from scout.providers.groq_job1 import GroqJob1Client
 
     out = await GroqJob1Client(Settings()).complete_json(
-        "Echo as JSON.", "hello", "echo", STUB_SCHEMA
+        "Echo as JSON.", "hello", "echo", ECHO_SCHEMA
     )
     assert set(out) == {"echo"}
 
 
 async def test_anthropic_streams_json():
-    from scout.conversation.stub_turn import STUB_J2_SCHEMA
     from scout.providers.anthropic_job2 import AnthropicJob2Client
 
     buf = ""
     async for delta in AnthropicJob2Client(Settings()).stream_json(
-        "Two sentences as JSON.", "Koramangala", STUB_J2_SCHEMA
+        "Two sentences as JSON.", "Koramangala", SENTENCES_SCHEMA
     ):
         buf += delta
     assert '"sentences"' in buf

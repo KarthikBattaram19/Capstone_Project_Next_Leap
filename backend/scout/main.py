@@ -2,7 +2,10 @@
 
 from __future__ import annotations
 
+import asyncio
+import contextlib
 import sys
+from collections.abc import AsyncIterator
 
 import uvicorn
 from fastapi import FastAPI
@@ -11,19 +14,49 @@ from fastapi.middleware.cors import CORSMiddleware
 from scout.api.http import router as http_router
 from scout.api.ws import router as ws_router
 from scout.config import Settings
-from scout.conversation.stub_turn import StubSession
+from scout.conversation.job1 import Job1
+from scout.conversation.live import LiveSession
+from scout.conversation.orchestrator import TurnOrchestrator
+from scout.conversation.session import SessionManager
+from scout.engines.availability import AvailabilityRegister
 from scout.platform import telemetry
 from scout.platform.artefacts import ArtefactStore
 from scout.platform.boot import BootError, check_bundle, check_secrets, run_boot_checks
+from scout.providers.groq_job1 import GroqJob1Client
+
+EXPIRY_SWEEP_S = 60
 
 
 def create_app(settings: Settings) -> FastAPI:
-    app = FastAPI(title="scout", docs_url=None, redoc_url=None)
-    app.state.settings = settings
     # Loaded once, here, and never written afterwards (arch §6.3). Under `main()` the
     # boot checks have already loaded it once; the second load is the price of a
     # store that is refused before the port is bound.
-    app.state.store = ArtefactStore.load(settings.bundle_dir)
+    store = ArtefactStore.load(settings.bundle_dir)
+    sessions = SessionManager(settings.session_ttl_s)
+    orchestrator = TurnOrchestrator(
+        store,
+        settings,
+        job1=Job1(GroqJob1Client(settings), store.localities),
+        job2=_job2(settings),
+        availability=AvailabilityRegister(store),
+        speaker_factory=lambda: None,  # every live session supplies its own (Task 2.10)
+    )
+
+    @contextlib.asynccontextmanager
+    async def lifespan(_: FastAPI) -> AsyncIterator[None]:
+        sweeper = asyncio.create_task(_expire_loop(sessions))
+        try:
+            yield
+        finally:
+            sweeper.cancel()
+            with contextlib.suppress(asyncio.CancelledError):
+                await sweeper
+
+    app = FastAPI(title="scout", docs_url=None, redoc_url=None, lifespan=lifespan)
+    app.state.settings = settings
+    app.state.store = store
+    app.state.sessions = sessions
+    app.state.orchestrator = orchestrator
     app.add_middleware(
         CORSMiddleware,
         allow_origins=settings.origins,
@@ -33,9 +66,26 @@ def create_app(settings: Settings) -> FastAPI:
     )
     app.include_router(http_router)
     app.include_router(ws_router)
-    app.state.session_factory = StubSession
+    app.state.session_factory = lambda s, sink: LiveSession(s, sink, orchestrator, sessions)
     telemetry.configure(settings.latency_log_path)
     return app
+
+
+def _job2(settings: Settings):
+    """Job 2 arrives in Task 2.12; until then lane B answers with a typed failure."""
+    try:
+        from scout.conversation.job2 import Job2
+        from scout.providers.anthropic_job2 import AnthropicJob2Client
+
+        return Job2(AnthropicJob2Client(settings))
+    except ImportError:
+        return None
+
+
+async def _expire_loop(sessions: SessionManager) -> None:
+    while True:
+        await asyncio.sleep(EXPIRY_SWEEP_S)
+        sessions.expire_idle()
 
 
 BOOT_CHECKS = [check_secrets, check_bundle]
