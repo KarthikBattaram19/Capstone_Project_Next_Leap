@@ -23,7 +23,7 @@ from scout.engines.reducer import Contradiction, apply_edits, confirm_all
 from scout.platform import telemetry
 from scout.platform.artefacts import ArtefactStore
 from scout.presentation.viewmodel import ViewModelBuilder
-from scout.providers.groq_job1 import GroqJob1Client
+from scout.providers import make_job1_client
 
 # Every fixed conversational line this file speaks, in one place. The branches below read
 # their wording from here rather than inlining a string, so the sentence-cap assertion in
@@ -100,7 +100,7 @@ class TurnOrchestrator:
         return cls(
             store,
             settings,
-            job1=Job1(GroqJob1Client(settings), store.localities),
+            job1=Job1(make_job1_client(settings), store.localities),
             job2=job2,
             availability=AvailabilityRegister(store),
             speaker_factory=lambda: NullSpeaker(),

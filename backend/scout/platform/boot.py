@@ -37,8 +37,23 @@ REQUIRED: dict[str, str] = {
 }
 
 
+def _job1_key(s: Settings) -> tuple[str, str]:
+    """The key Job 1 actually needs, which follows job1_provider."""
+    return (
+        ("GEMINI_API_KEY", "gemini_api_key")
+        if s.job1_provider == "gemini"
+        else ("GROQ_API_KEY", "groq_api_key")
+    )
+
+
 def check_secrets(s: Settings) -> None:
-    missing = [env for env, attr in REQUIRED.items() if not getattr(s, attr)]
+    required = dict(REQUIRED)
+    # Only the selected provider's key is required. Demanding both would refuse to boot
+    # over a key the process will never use.
+    required.pop("GROQ_API_KEY", None)
+    env_name, attr = _job1_key(s)
+    required[env_name] = attr
+    missing = [env for env, attr in required.items() if not getattr(s, attr)]
     if missing:
         # Name the file that was consulted. Without this, "secrets missing" reads the
         # same whether the operator forgot a value or put the file somewhere else.

@@ -13,7 +13,21 @@ from scout.platform.artefacts import ArtefactStore
 
 FIXTURES = Path(__file__).parent / "fixtures" / "bundle"
 
-_KEYS = {"GROQ_API_KEY": "groq_api_key", "ANTHROPIC_API_KEY": "anthropic_api_key"}
+
+def required_keys() -> dict[str, str]:
+    """Env name -> Settings attribute for the keys an eval run actually needs.
+
+    Job 1's key follows `job1_provider`: asking for a Groq key when Job 1 runs on Gemini
+    would fail a run over a credential nothing calls, and — worse — letting the Gemini key
+    go unset ran a whole suite against `?key=` and reported 20 assertion failures that were
+    really one 403 (2026-09-10).
+    """
+    job1 = (
+        ("GEMINI_API_KEY", "gemini_api_key")
+        if Settings().job1_provider == "gemini"
+        else ("GROQ_API_KEY", "groq_api_key")
+    )
+    return {job1[0]: job1[1], "ANTHROPIC_API_KEY": "anthropic_api_key"}
 
 
 @pytest.fixture(scope="session")
@@ -39,12 +53,13 @@ def provider_keys() -> dict[str, str]:
     from_env_file = Settings()
     return {
         env_name: getattr(from_env_file, attr) or os.getenv(env_name, "")
-        for env_name, attr in _KEYS.items()
+        for env_name, attr in required_keys().items()
     }
 
 
 def resolve_settings(bundle_dir: str, keys: dict[str, str], allow_skip: bool) -> Settings:
-    missing = [k for k in _KEYS if not keys.get(k)]
+    required = required_keys()
+    missing = [k for k in required if not keys.get(k)]
     if missing:
         # Fail, never skip: a skipped suite reports green, and sign-off claims "60/60 on
         # three consecutive CI runs" (spec §7.3). ALLOW_EVAL_SKIP=1 is for a local run
@@ -60,8 +75,7 @@ def resolve_settings(bundle_dir: str, keys: dict[str, str], allow_skip: bool) ->
         _env_file=None,
         cors_allowed_origins="http://localhost:3000",
         bundle_dir=bundle_dir,
-        groq_api_key=keys["GROQ_API_KEY"],
-        anthropic_api_key=keys["ANTHROPIC_API_KEY"],
+        **{attr: keys[env_name] for env_name, attr in required.items()},
     )
 
 

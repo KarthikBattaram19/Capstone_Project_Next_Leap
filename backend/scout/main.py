@@ -22,7 +22,7 @@ from scout.engines.availability import AvailabilityRegister
 from scout.platform import telemetry
 from scout.platform.artefacts import ArtefactStore
 from scout.platform.boot import BootError, check_bundle, check_secrets, run_boot_checks
-from scout.providers.groq_job1 import GroqJob1Client
+from scout.providers import make_job1_client
 
 EXPIRY_SWEEP_S = 60
 
@@ -36,7 +36,7 @@ def create_app(settings: Settings) -> FastAPI:
     orchestrator = TurnOrchestrator(
         store,
         settings,
-        job1=Job1(GroqJob1Client(settings), store.localities),
+        job1=Job1(make_job1_client(settings), store.localities),
         job2=_job2(settings),
         availability=AvailabilityRegister(store),
         speaker_factory=lambda: None,  # every live session supplies its own (Task 2.10)

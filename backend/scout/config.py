@@ -26,6 +26,7 @@ class Settings(BaseSettings):
     groq_api_key: str = ""
     anthropic_api_key: str = ""
     smallest_api_key: str = ""
+    gemini_api_key: str = ""
     google_oauth_credentials: str = ""
     google_tenant_calendar_id: str = ""
     google_owner_calendar_id: str = ""
@@ -44,6 +45,14 @@ class Settings(BaseSettings):
     # 1,147 to 886 tokens with no measured loss of accuracy (2026-09-09), which is what
     # makes a 60-case eval run fit inside the account's daily token allowance.
     job1_effort: str = "low"
+    # Which provider answers Job 1. Measured 2026-09-10 on the same probe set:
+    # gemini-3.5-flash-lite 6/6 correct at 0.99 s median and 399 tokens a call, against
+    # gpt-oss-120b 5/5 at 1.50 s and 886. Groq stays a one-line fallback (spec §5.1
+    # amendment, Docs/GATE_L.md) because it is known-good and needs no new code path.
+    job1_provider: str = "gemini"  # "gemini" | "groq"
+    job1_gemini_model: str = "gemini-3.5-flash-lite"
+    # gemini-3.8-flash rejects MINIMAL; on flash-lite it is what keeps the call at ~1 s.
+    job1_gemini_thinking: str = "MINIMAL"
     job2_model: str = "claude-sonnet-5"
     job2_effort: str = "low"  # P7
     job2_max_tokens: int = 2048

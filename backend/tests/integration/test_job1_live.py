@@ -9,19 +9,21 @@ import pytest
 from scout.config import ENV_FILE, Settings
 from scout.conversation.job1 import Job1
 from scout.domain.constraints import ConstraintSet
-from scout.providers.groq_job1 import GroqJob1Client
+from scout.providers import make_job1_client
 
 _S = Settings()
+_KEY_ENV = "GEMINI_API_KEY" if _S.job1_provider == "gemini" else "GROQ_API_KEY"
+_KEY = _S.gemini_api_key if _S.job1_provider == "gemini" else _S.groq_api_key
 pytestmark = pytest.mark.skipif(
-    not _S.groq_api_key,
-    reason=f"GROQ_API_KEY not set (looked in the environment and {ENV_FILE})",
+    not _KEY,
+    reason=f"{_KEY_ENV} not set (looked in the environment and {ENV_FILE})",
 )
 
 LOCALITIES = ["Koramangala", "HSR Layout"]
 
 
 def _job1() -> Job1:
-    return Job1(GroqJob1Client(Settings()), LOCALITIES)
+    return Job1(make_job1_client(Settings()), LOCALITIES)
 
 
 async def test_a_full_preference_sentence_extracts_and_normalises():

@@ -7,10 +7,14 @@ from scout.platform.boot import REQUIRED, BootError, check_secrets, run_boot_che
 
 
 def settings(**over):
-    # Every field is passed explicitly: keyword arguments beat the env file, so a
-    # developer's real backend/.env can never leak into a test run.
+    # _env_file=None, not just explicit keywords: keywords only beat the env file for the
+    # fields listed here, so the day a new secret was added (gemini_api_key) the
+    # developer's real backend/.env leaked into the run and these tests stopped failing
+    # when they should have.
     base = {
+        "_env_file": None,
         "deepgram_api_key": "d",
+        "gemini_api_key": "gem",
         "groq_api_key": "g",
         "anthropic_api_key": "a",
         "smallest_api_key": "s",
@@ -28,9 +32,10 @@ def settings(**over):
 
 
 def test_missing_secret_fails_boot_and_names_it():
+    # The key for whichever provider Job 1 is configured to use — Gemini by default.
     with pytest.raises(BootError) as e:
-        run_boot_checks(settings(groq_api_key=""), [check_secrets])
-    assert "GROQ_API_KEY" in str(e.value)
+        run_boot_checks(settings(gemini_api_key=""), [check_secrets])
+    assert "GEMINI_API_KEY" in str(e.value)
 
 
 def test_all_failures_are_reported_at_once():
@@ -39,8 +44,8 @@ def test_all_failures_are_reported_at_once():
         raise BootError("dataset did not load")
 
     with pytest.raises(BootError) as e:
-        run_boot_checks(settings(groq_api_key=""), [check_secrets, always_fails])
-    assert "GROQ_API_KEY" in str(e.value)
+        run_boot_checks(settings(gemini_api_key=""), [check_secrets, always_fails])
+    assert "GEMINI_API_KEY" in str(e.value)
     assert "dataset did not load" in str(e.value)
 
 
@@ -81,3 +86,16 @@ def test_relative_bundle_dir_is_resolved_against_backend_dir():
     got = Path(Settings(_env_file=None, bundle_dir="../data/bundle").bundle_dir)
     assert got.is_absolute(), got
     assert got == (BACKEND_DIR.parent / "data" / "bundle").resolve()
+
+
+def test_only_the_selected_job1_providers_key_is_required():
+    # Refusing to boot over a key the process will never call is a false alarm.
+    check_secrets(settings(job1_provider="gemini", gemini_api_key="k", groq_api_key=""))
+    check_secrets(settings(job1_provider="groq", groq_api_key="k", gemini_api_key=""))
+
+
+def test_the_selected_job1_provider_key_is_named_when_it_is_missing():
+    with pytest.raises(BootError, match="GEMINI_API_KEY"):
+        check_secrets(settings(job1_provider="gemini", gemini_api_key="", groq_api_key="k"))
+    with pytest.raises(BootError, match="GROQ_API_KEY"):
+        check_secrets(settings(job1_provider="groq", groq_api_key="", gemini_api_key="k"))
