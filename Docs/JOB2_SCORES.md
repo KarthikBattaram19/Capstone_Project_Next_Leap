@@ -68,6 +68,29 @@ which absorbs the per-minute limit (8,000 TPM) but cannot absorb a daily one.
 allowance covers at least one suite run (three for sign-off), or a Job 1 model whose
 per-call cost is materially lower. This is an account decision, not a code change.
 
+## Job 1 moved to Gemini (2026-09-10)
+
+Job 1 runs on `gemini-3.5-flash-lite` (`JOB1_PROVIDER=gemini`), not Groq. Measured on the
+same probe set: 6/6 correct, 0.99 s median against Groq's 1.50 s, 399 tokens a call against
+886. Job 2 is unchanged — `claude-sonnet-5` on Anthropic — so the two jobs remain different
+models on different providers.
+
+**Gemini free-tier limits, read off the 429 bodies:**
+
+| | |
+|---|---|
+| Requests per minute | **15** (`GenerateRequestsPerMinutePerProjectPerModel-FreeTier`) |
+| Requests per day | **500** (`GenerateRequestsPerDayPerProjectPerModel-FreeTier`) |
+| Job 1 calls in one 60-case pass | **151** |
+| Passes affordable per day | **3** (453 calls), with ~47 calls of headroom |
+
+The client paces under the per-minute cap rather than retrying into it, because a rejected
+request still counts against both quotas. This is why the three sign-off passes must be run
+on a clean day: debugging runs spend the same 500.
+
+For comparison, Groq's free tier afforded 1.3 passes a day (200,000 tokens at ~1,020 a
+call). Gemini affords 3.
+
 ## The hybrid-retrieval trigger (arch §9.1, not fired)
 
 Dense retrieval is in use. The documented trigger to graduate to hybrid retrieval is a Suite
