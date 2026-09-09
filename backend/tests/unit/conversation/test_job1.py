@@ -70,3 +70,42 @@ async def test_bare_number_is_reported_ambiguous():
     )
     assert not any(e.field == "rent_max" for e in res.edits)
     assert any(a.field == "rent_max" and "35,000" in a.question for a in res.ambiguities)
+
+
+async def test_a_compound_locality_becomes_one_edit_per_locality():
+    """ "Koramangala or HSR Layout" arrives as a single value about half the time.
+
+    Matched whole against the covered list it resolves to nothing, so the turn asked
+    "Koramangala, HSR Layout isn't covered" — a question the renter cannot answer, since
+    both places they named ARE covered (observed against the live model, 2026-09-10).
+    """
+    bad = dict(
+        GOOD, edits=[{"field": "localities", "op": "set", "value": "Koramangala or HSR Layout"}]
+    )
+    res = await Job1(FakeGroq([bad]), localities=["Koramangala", "HSR Layout"]).extract(
+        "anything in Koramangala or HSR Layout", ConstraintSet()
+    )
+    assert not res.ambiguities, res.ambiguities
+    assert [(e.field, e.op, e.value) for e in res.edits] == [
+        ("localities", "set", "Koramangala"),
+        ("localities", "add", "HSR Layout"),
+    ], "the first keeps 'set' so it still replaces; the rest add, or only the last survives"
+
+
+async def test_a_locality_whose_name_contains_and_is_not_split():
+    covered = ["Sarjapur and Attibele Road", "Koramangala"]
+    bad = dict(
+        GOOD, edits=[{"field": "localities", "op": "add", "value": "Sarjapur and Attibele Road"}]
+    )
+    res = await Job1(FakeGroq([bad]), localities=covered).extract("there", ConstraintSet())
+    assert not res.ambiguities
+    assert [e.value for e in res.edits] == ["Sarjapur and Attibele Road"]
+
+
+async def test_a_compound_naming_one_uncovered_locality_still_asks():
+    bad = dict(GOOD, edits=[{"field": "localities", "op": "add", "value": "Koramangala or Mysore"}])
+    res = await Job1(FakeGroq([bad]), localities=["Koramangala", "HSR Layout"]).extract(
+        "there", ConstraintSet()
+    )
+    assert not any(e.field == "localities" for e in res.edits)
+    assert res.ambiguities and "Mysore" in res.ambiguities[0].question

@@ -5,6 +5,7 @@ published structured-output page describes a different, newer surface). These te
 shape so a refactor cannot quietly change it back to something that only looks right.
 """
 
+import asyncio
 import json
 
 import httpx
@@ -27,7 +28,10 @@ SCHEMA = {
 
 
 def _client(monkeypatch, handler) -> GeminiJob1Client:
-    c = GeminiJob1Client(Settings(_env_file=None, gemini_api_key="k-test"))
+    # rpm=0 turns the pacer off: these tests exercise the request shape against a mock
+    # transport, and real pacing would make each one sleep four seconds. The pacer has its
+    # own test below.
+    c = GeminiJob1Client(Settings(_env_file=None, gemini_api_key="k-test", job1_gemini_rpm=0))
     monkeypatch.setattr(c, "_http", httpx.AsyncClient(transport=httpx.MockTransport(handler)))
     return c
 
@@ -108,7 +112,9 @@ async def test_a_failure_never_carries_the_api_key(monkeypatch):
     def handler(request: httpx.Request) -> httpx.Response:
         return httpx.Response(403, json={"error": {"message": "denied"}})
 
-    c = GeminiJob1Client(Settings(_env_file=None, gemini_api_key="SUPERSECRET-do-not-log"))
+    c = GeminiJob1Client(
+        Settings(_env_file=None, gemini_api_key="SUPERSECRET-do-not-log", job1_gemini_rpm=0)
+    )
     c._http = httpx.AsyncClient(transport=httpx.MockTransport(handler))
     with pytest.raises(GeminiError) as e:
         await c.complete_json("s", "u", "job1", SCHEMA)
@@ -148,6 +154,48 @@ def test_the_factory_follows_the_configured_provider():
 def test_an_unknown_provider_is_refused_by_name():
     with pytest.raises(ValueError, match="openai"):
         make_job1_client(Settings(_env_file=None, job1_provider="openai"))
+
+
+async def test_the_pacer_spaces_calls_under_the_per_minute_cap():
+    # The free tier allows 15 requests a minute per model and a REJECTED request still
+    # counts against it, so retrying into the limit makes it worse. 60 rpm = 1s apart.
+    from scout.providers.gemini_job1 import _Pacer
+
+    pacer = _Pacer(60)
+    loop = asyncio.get_running_loop()
+    t0 = loop.time()
+    for _ in range(3):
+        await pacer.wait()
+    assert loop.time() - t0 >= 2.0, "three calls at 60 rpm must span at least two seconds"
+
+
+async def test_the_pacer_is_off_when_rpm_is_zero():
+    from scout.providers.gemini_job1 import _Pacer
+
+    pacer = _Pacer(0)
+    loop = asyncio.get_running_loop()
+    t0 = loop.time()
+    for _ in range(5):
+        await pacer.wait()
+    assert loop.time() - t0 < 0.1
+
+
+def test_the_retry_delay_is_read_from_the_body_not_a_header():
+    # Gemini sends RetryInfo in the body ("retryDelay": "48s"); there is no Retry-After
+    # header. Backing off on the header alone waited 16s when the API asked for 48.
+    from scout.providers.gemini_job1 import _retry_after
+
+    resp = httpx.Response(
+        429,
+        json={
+            "error": {
+                "details": [
+                    {"@type": "type.googleapis.com/google.rpc.RetryInfo", "retryDelay": "48s"}
+                ]
+            }
+        },
+    )
+    assert 48.0 <= _retry_after(resp, attempt=0) <= 60.0
 
 
 def test_the_default_provider_is_gemini():

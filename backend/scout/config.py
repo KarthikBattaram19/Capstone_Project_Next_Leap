@@ -53,6 +53,9 @@ class Settings(BaseSettings):
     job1_gemini_model: str = "gemini-3.5-flash-lite"
     # gemini-3.8-flash rejects MINIMAL; on flash-lite it is what keeps the call at ~1 s.
     job1_gemini_thinking: str = "MINIMAL"
+    # Free tier: 15 requests per minute per model, and a REJECTED request still counts,
+    # so pacing under the cap beats retrying into it. 0 disables pacing (paid tiers).
+    job1_gemini_rpm: int = 15
     job2_model: str = "claude-sonnet-5"
     job2_effort: str = "low"  # P7
     job2_max_tokens: int = 2048

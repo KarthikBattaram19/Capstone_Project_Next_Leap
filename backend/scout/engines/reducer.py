@@ -98,7 +98,9 @@ def _coerce(field: str, value) -> object:
         return None
     if field in _ENUMS:
         cls = _ENUMS[field]
-        token = str(value).strip().lower().replace(" ", "_")
+        # Hyphen as well as space: the model says "semi-furnished" as often as "semi
+        # furnished", and only one of them used to resolve.
+        token = str(value).strip().lower().replace(" ", "_").replace("-", "_")
         bare = token.replace("_", "")  # "2 BHK" -> "2bhk"
         for m in cls:
             if token in (m.value.lower(), m.name.lower()) or bare == m.value.lower().replace(

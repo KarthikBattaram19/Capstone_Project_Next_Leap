@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import re
 import sys
 from dataclasses import dataclass
 from typing import Literal
@@ -113,7 +114,8 @@ count, a budget and a feature produces four edits, not two; never restate unchan
 locality or a number that was not said; copy amounts exactly as heard (e.g. "35k", "thirty five", "1.2 lakh") — do
 not convert.
 "2BHK apartment" is TWO facts: bhk_type "2BHK" and property_type "apartment" — the same for villa, independent
-house and builder floor.
+house and builder floor. One locality per edit: "Koramangala or HSR Layout" is two localities edits, never one
+value naming both.
 "drop anything above 40k" → rent_max set "40k". "only metro-adjacent" → amenities_required add "metro". "the second
 one" → reference 2. A yes/no answer to a readback → confirm_yes / confirm_no. Requests to buy, PG, roommates,
 commercial space, or another city → out_of_scope. Asking for the owner's name/number → owner_contact.
@@ -165,6 +167,27 @@ class Job1Down(RuntimeError):
 
 AMOUNT_FIELDS = {"rent_max", "rent_min", "deposit_max"}
 
+# "Koramangala or HSR Layout" is two localities, and the model sometimes hands them back as
+# one value. Matched against the covered list it resolves to nothing, so the turn asked
+# "Koramangala, HSR Layout isn't covered" — a question the renter cannot answer, because
+# both of the places they named ARE covered (observed 2026-09-10). The prompt asks for one
+# per edit; this is what makes it true regardless.
+_LOCALITY_SEPARATORS = re.compile(
+    r"\s*(?:,|/|(?<![A-Za-z])(?:or|and)(?![A-Za-z])|\+)\s*", re.IGNORECASE
+)
+
+
+def split_localities(value: str, covered: list[str]) -> list[str]:
+    """The localities a single extracted value names.
+
+    A value that IS a covered locality is never split, so a real name containing "and" or
+    "or" survives intact; only an unmatchable value is taken apart.
+    """
+    whole = value.strip()
+    if any(loc.lower() == whole.lower() for loc in covered):
+        return [whole]
+    return [part.strip() for part in _LOCALITY_SEPARATORS.split(whole) if part.strip()]
+
 
 class Job1:
     def __init__(self, client, localities: list[str]) -> None:
@@ -214,23 +237,29 @@ class Job1:
                     )
                 continue
             if e.field == "localities" and e.op in ("add", "set") and e.value is not None:
-                match = next(
-                    (loc for loc in self._localities if loc.lower() == e.value.lower()), None
-                )
-                if match is None:
+                named = split_localities(e.value, self._localities)
+                matched = [
+                    next((loc for loc in self._localities if loc.lower() == part.lower()), None)
+                    for part in named
+                ]
+                unknown = [part for part, m in zip(named, matched, strict=True) if m is None]
+                if unknown:
                     covered = ", ".join(self._localities)
                     ambiguities.append(
                         Ambiguity(
                             field="locality",
-                            heard=e.value,
+                            heard=", ".join(unknown),
                             question=(
-                                f"{e.value} isn't covered. I have listings in {covered} — "
-                                "which would you like?"
+                                f"{', '.join(unknown)} isn't covered. I have listings in "
+                                f"{covered} — which would you like?"
                             ),
                         )
                     )
                     continue
-                edits.append(ConstraintEdit("localities", e.op, match))
+                # The first keeps the model's op so a "set" still replaces; the rest add, or
+                # a compound "only A or B" would keep just B.
+                for i, loc in enumerate(matched):
+                    edits.append(ConstraintEdit("localities", e.op if i == 0 else "add", loc))
                 continue
             edits.append(ConstraintEdit(e.field, e.op, e.value))
         return Job1Result(
