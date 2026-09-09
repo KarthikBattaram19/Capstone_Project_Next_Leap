@@ -143,10 +143,13 @@ def category_expression(category: str) -> str:
 #   The whole city is one query, and every listing is then answered from memory. Stations
 #   mapped as areas become visible in the bargain.
 #
-# `school` and `hospital` are area-mapped too (692 and 74 nulls). They are left on the MCP path
-# in this pass because the task at hand was metro and parks; moving them is adding the name
-# here and re-running, and the cache makes every unchanged query free on that re-run.
-AREA_CAPABLE: frozenset[str] = frozenset({"park", "subway_station"})
+# `school` and `hospital` joined on 2026-09-09 for the same reason as `park`: both are commonly
+# mapped as areas, and both carried nulls the node-only path could never fill (692 and 74).
+#
+# `bus_stop`, `supermarket`, `pharmacy` and `restaurant` stay on the MCP path. They are point
+# features by nature — a bus stop IS a node — so `out center` would buy nothing, and moving them
+# would churn facts that have no gap to close.
+AREA_CAPABLE: frozenset[str] = frozenset({"park", "subway_station", "school", "hospital"})
 
 # Overpass, asked directly. `around:` is a true circle, so unlike the MCP's bbox there is no
 # corner to filter away; `out center` gives ways and relations a representative point.
@@ -154,7 +157,10 @@ OVERPASS_URL = os.environ.get("OVERPASS_URL", "https://overpass-api.de/api/inter
 # overpass-api.de answers 406 to anything that mentions "aiohttp" (the reason the MCP needs the
 # sitecustomize shim). A plain, honest User-Agent is all it wants.
 OVERPASS_USER_AGENT = "scout-capstone/1.0 (build-time OSM precompute)"
-OVERPASS_TIMEOUT_S = 90.0
+# Must exceed the `[timeout:...]` inside the query itself (180 s on the city-wide prefetch), or
+# we hang up before Overpass can answer and a slow-but-fine query looks like an outage. A
+# city-wide `amenity=school` is the one that gets close.
+OVERPASS_TIMEOUT_S = 240.0
 
 
 def overpass_around_query(category: str, lat: float, lng: float, radius_m: int) -> str:

@@ -122,20 +122,23 @@ def test_category_expression_is_the_key_value_form_the_server_interpolates():
 
 
 async def test_find_nearby_sends_the_expression_and_a_bbox_and_filters_to_the_circle():
-    # 12.935/77.62 -> a point 1.9 km due north is inside the 2 km bbox but the corner is not.
+    # Pharmacy, not hospital: hospitals moved to the direct-Overpass path on 2026-09-09
+    # (AREA_CAPABLE). This test is about what the MCP path still does for the point features
+    # left on it. 12.935/77.62 -> a point 1.9 km due north is inside the 2 km bbox, the corner
+    # is not.
     reply = {
         "results": [
-            _place("Near", 12.9521, 77.62, amenity="hospital"),  # ~1.9 km north
-            _place("Corner", 12.9521, 77.6375, amenity="hospital"),  # ~2.7 km, inside bbox
-            _place(None, 12.936, 77.621, amenity="hospital"),  # Unnamed
+            _place("Near", 12.9521, 77.62, amenity="pharmacy"),  # ~1.9 km north
+            _place("Corner", 12.9521, 77.6375, amenity="pharmacy"),  # ~2.7 km, inside bbox
+            _place(None, 12.936, 77.621, amenity="pharmacy"),  # Unnamed
             _place("Wrong value", 12.936, 77.62, amenity="clinic"),
         ]
     }
     m = _mcp([_Result(json.dumps(reply))])
-    got = await m.find_nearby(12.935, 77.62, "hospital", 2000)
+    got = await m.find_nearby(12.935, 77.62, "pharmacy", 2000)
     name, args = m._session.calls[0]
     assert name == "search_category"
-    assert args["category"] == 'amenity"="hospital'
+    assert args["category"] == 'amenity"="pharmacy'
     assert "subcategories" not in args
     assert args["min_latitude"] < 12.935 < args["max_latitude"]
     assert args["min_longitude"] < 77.62 < args["max_longitude"]
@@ -212,7 +215,7 @@ async def test_retries_then_raises_osm_unavailable_never_an_empty_answer():
         ]
     )
     with pytest.raises(OsmUnavailable):
-        await m.find_nearby(12.935, 77.62, "hospital", 2000)
+        await m.find_nearby(12.935, 77.62, "pharmacy", 2000)  # a category still on the MCP path
     assert len(m._session.calls) == 3  # one try per wait, plus the last
     assert m.network_calls == 0
 
