@@ -1,0 +1,12 @@
+{
+ "id": "a-018",
+ "turns": [
+  "budget thirty five"
+ ],
+ "expect": {
+  "kind": "needs_input",
+  "readback_contains": [
+   "35,000"
+  ]
+ }
+}

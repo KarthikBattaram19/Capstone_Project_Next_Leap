@@ -1,0 +1,20 @@
+{
+ "id": "a-019",
+ "turns": [
+  "2BHK in Koramangala budget 35k",
+  "yes"
+ ],
+ "expect": {
+  "kind": "answered",
+  "extracted": {
+   "rent_max": 35000
+  },
+  "matched_ids": [
+   "koramangala-06651"
+  ],
+  "all_matched_satisfy": {
+   "bhk_type": "2BHK",
+   "rent_max": 35000
+  }
+ }
+}

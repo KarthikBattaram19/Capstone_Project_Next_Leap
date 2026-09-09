@@ -1,0 +1,22 @@
+{
+ "id": "b-018",
+ "before_turns": [
+  "anything in Koramangala under 60,000",
+  "yes",
+  "only 2BHK"
+ ],
+ "edit_turn": "no, make it 3BHK",
+ "expect": {
+  "kind": "answered",
+  "extracted": {
+   "bhk_type": "3BHK"
+  },
+  "matched_ids": [
+   "koramangala-06658"
+  ],
+  "excluded_ids": [
+   "koramangala-06651",
+   "koramangala-06662"
+  ]
+ }
+}

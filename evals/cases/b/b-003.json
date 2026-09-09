@@ -1,0 +1,23 @@
+{
+ "id": "b-003",
+ "before_turns": [
+  "2BHK in Koramangala or HSR Layout under 45,000",
+  "yes"
+ ],
+ "edit_turn": "only above 35,000",
+ "expect": {
+  "kind": "answered",
+  "extracted": {
+   "rent_min": 35000
+  },
+  "matched_ids": [
+   "hsr-layout-08114",
+   "koramangala-06662",
+   "koramangala-06655"
+  ],
+  "excluded_ids": [
+   "koramangala-06651",
+   "hsr-layout-08220"
+  ]
+ }
+}

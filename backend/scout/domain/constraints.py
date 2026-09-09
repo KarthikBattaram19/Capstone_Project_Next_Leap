@@ -7,6 +7,7 @@ from datetime import date
 from typing import ClassVar, Literal
 
 from scout.domain.listing import BhkType, Furnishing, Parking, PropertyType
+from scout.domain.money import rupees
 
 
 @dataclass(frozen=True)
@@ -73,11 +74,11 @@ class ConstraintSet:
         if self.bhk_type:
             out.append(f"a {_text(self.bhk_type)}")
         if self.rent_max is not None:
-            out.append(f"rent up to ₹{self.rent_max:,}")
+            out.append(f"rent up to {rupees(self.rent_max)}")
         if self.rent_min is not None:
-            out.append(f"rent at least ₹{self.rent_min:,}")
+            out.append(f"rent at least {rupees(self.rent_min)}")
         if self.deposit_max is not None:
-            out.append(f"deposit up to ₹{self.deposit_max:,}")
+            out.append(f"deposit up to {rupees(self.deposit_max)}")
         if self.furnishing:
             out.append(_text(self.furnishing).replace("_", " "))
         if self.property_type:

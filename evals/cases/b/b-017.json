@@ -1,0 +1,22 @@
+{
+ "id": "b-017",
+ "before_turns": [
+  "2BHK in Koramangala or HSR Layout under 45,000",
+  "yes",
+  "drop above 35,000"
+ ],
+ "edit_turn": "actually make it 38,000",
+ "expect": {
+  "kind": "answered",
+  "extracted": {
+   "rent_max": 38000
+  },
+  "matched_ids": [
+   "koramangala-06651",
+   "hsr-layout-08220"
+  ],
+  "appended_after": [
+   "hsr-layout-08114"
+  ]
+ }
+}

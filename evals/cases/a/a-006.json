@@ -1,0 +1,25 @@
+{
+ "id": "a-006",
+ "turns": [
+  "fully furnished 2BHK apartment in Koramangala under 30,000",
+  "yes"
+ ],
+ "expect": {
+  "kind": "answered",
+  "extracted": {
+   "bhk_type": "2BHK",
+   "property_type": "apartment",
+   "furnishing": "fully_furnished",
+   "rent_max": 30000
+  },
+  "matched_ids": [
+   "koramangala-06651"
+  ],
+  "all_matched_satisfy": {
+   "bhk_type": "2BHK",
+   "property_type": "apartment",
+   "furnishing": "fully_furnished",
+   "rent_max": 30000
+  }
+ }
+}

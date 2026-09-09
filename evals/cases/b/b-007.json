@@ -1,0 +1,26 @@
+{
+ "id": "b-007",
+ "before_turns": [
+  "anything in Koramangala under 45,000",
+  "yes"
+ ],
+ "edit_turn": "add HSR Layout",
+ "expect": {
+  "kind": "answered",
+  "extracted": {
+   "localities": [
+    "HSR Layout",
+    "Koramangala"
+   ]
+  },
+  "matched_ids": [
+   "koramangala-06656",
+   "koramangala-06651"
+  ],
+  "appended_after": [
+   "hsr-layout-08134",
+   "hsr-layout-08220",
+   "hsr-layout-08114"
+  ]
+ }
+}

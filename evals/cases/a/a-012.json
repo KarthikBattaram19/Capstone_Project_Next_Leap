@@ -1,0 +1,17 @@
+{
+ "id": "a-012",
+ "turns": [
+  "2BHK in Koramangala under 25,999",
+  "yes"
+ ],
+ "expect": {
+  "kind": "empty",
+  "extracted": {
+   "rent_max": 25999
+  },
+  "unmet_field": "rent_max",
+  "suggestions_contain": [
+   "try"
+  ]
+ }
+}

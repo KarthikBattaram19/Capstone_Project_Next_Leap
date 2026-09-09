@@ -1,0 +1,17 @@
+{
+ "id": "b-015",
+ "before_turns": [
+  "anything in Koramangala or HSR Layout under 45,000",
+  "yes"
+ ],
+ "edit_turn": "only ones with a lift",
+ "expect": {
+  "kind": "empty",
+  "extracted": {
+   "lift_required": true
+  },
+  "suggestions_contain": [
+   "not stated"
+  ]
+ }
+}

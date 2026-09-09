@@ -14,6 +14,7 @@ from scout.conversation.router import classify_turn
 from scout.conversation.session import ConfirmConstraints, Session
 from scout.conversation.speaker import Speaker, split_sentences
 from scout.domain.constraints import ConstraintEdit
+from scout.domain.money import rupees
 from scout.domain.shortlist import Shortlist
 from scout.engines import shortlist as engine
 from scout.engines.availability import AvailabilityRegister
@@ -21,7 +22,7 @@ from scout.engines.commute import CommuteService
 from scout.engines.reducer import Contradiction, apply_edits, confirm_all
 from scout.platform import telemetry
 from scout.platform.artefacts import ArtefactStore
-from scout.presentation.viewmodel import ViewModelBuilder, rupees
+from scout.presentation.viewmodel import ViewModelBuilder
 from scout.providers.groq_job1 import GroqJob1Client
 
 # Every fixed conversational line this file speaks, in one place. The branches below read

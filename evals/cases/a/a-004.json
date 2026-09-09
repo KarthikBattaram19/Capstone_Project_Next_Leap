@@ -1,0 +1,32 @@
+{
+ "id": "a-004",
+ "turns": [
+  "anything in Whitefield with a deposit under 1 lakh",
+  "yes"
+ ],
+ "expect": {
+  "kind": "answered",
+  "readback_contains": [
+   "Whitefield",
+   "1,00,000"
+  ],
+  "extracted": {
+   "deposit_max": 100000,
+   "localities": [
+    "Whitefield"
+   ]
+  },
+  "matched_ids": [
+   "whitefield-05165"
+  ],
+  "excluded_ids": [
+   "whitefield-05019"
+  ],
+  "all_matched_satisfy": {
+   "deposit_max": 100000,
+   "localities": [
+    "Whitefield"
+   ]
+  }
+ }
+}

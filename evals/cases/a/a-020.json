@@ -1,0 +1,16 @@
+{
+ "id": "a-020",
+ "turns": [
+  "2BHK in Koramangala with four wheeler parking",
+  "yes"
+ ],
+ "expect": {
+  "kind": "empty",
+  "extracted": {
+   "parking_required": "four_wheeler"
+  },
+  "suggestions_contain": [
+   "not stated"
+  ]
+ }
+}

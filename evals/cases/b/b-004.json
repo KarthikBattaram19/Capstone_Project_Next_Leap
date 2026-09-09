@@ -1,0 +1,22 @@
+{
+ "id": "b-004",
+ "before_turns": [
+  "2BHK in Koramangala or HSR Layout under 45,000",
+  "yes"
+ ],
+ "edit_turn": "deposit under 1.6 lakh",
+ "expect": {
+  "kind": "answered",
+  "extracted": {
+   "deposit_max": 160000
+  },
+  "matched_ids": [
+   "hsr-layout-08114",
+   "koramangala-06655"
+  ],
+  "excluded_ids": [
+   "koramangala-06651",
+   "koramangala-06662"
+  ]
+ }
+}

@@ -1,0 +1,25 @@
+{
+ "id": "a-017",
+ "turns": [
+  "2BHK in Koramangala under 60,000",
+  "yes",
+  "actually make it 3BHK"
+ ],
+ "expect": {
+  "kind": "answered",
+  "extracted": {
+   "bhk_type": "3BHK",
+   "rent_max": 60000
+  },
+  "matched_ids": [
+   "koramangala-06658"
+  ],
+  "excluded_ids": [
+   "koramangala-06651"
+  ],
+  "all_matched_satisfy": {
+   "bhk_type": "3BHK",
+   "rent_max": 60000
+  }
+ }
+}

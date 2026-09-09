@@ -1,0 +1,28 @@
+{
+ "id": "a-010",
+ "turns": [
+  "3BHK in HSR Layout under 70,000, fully furnished, at least 1500 sq ft",
+  "yes"
+ ],
+ "expect": {
+  "kind": "answered",
+  "extracted": {
+   "bhk_type": "3BHK",
+   "rent_max": 70000,
+   "furnishing": "fully_furnished",
+   "square_footage_min": 1500,
+   "localities": [
+    "HSR Layout"
+   ]
+  },
+  "matched_ids": [
+   "hsr-layout-08145"
+  ],
+  "all_matched_satisfy": {
+   "bhk_type": "3BHK",
+   "rent_max": 70000,
+   "furnishing": "fully_furnished",
+   "square_footage_min": 1500
+  }
+ }
+}

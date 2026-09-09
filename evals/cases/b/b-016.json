@@ -1,0 +1,24 @@
+{
+ "id": "b-016",
+ "before_turns": [
+  "anything in Koramangala or HSR Layout under 50,000",
+  "yes",
+  "drop anything above 40,000"
+ ],
+ "edit_turn": "only apartments",
+ "expect": {
+  "kind": "answered",
+  "extracted": {
+   "rent_max": 40000,
+   "property_type": "apartment"
+  },
+  "matched_ids": [
+   "hsr-layout-08134",
+   "koramangala-06656",
+   "koramangala-06651"
+  ],
+  "excluded_ids": [
+   "koramangala-06662"
+  ]
+ }
+}

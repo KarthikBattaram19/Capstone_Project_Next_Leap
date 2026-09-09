@@ -1,0 +1,27 @@
+{
+ "id": "a-005",
+ "turns": [
+  "apartment in HSR Layout at least 900 sq ft under 40k",
+  "yes"
+ ],
+ "expect": {
+  "kind": "answered",
+  "extracted": {
+   "property_type": "apartment",
+   "square_footage_min": 900,
+   "rent_max": 40000
+  },
+  "matched_ids": [
+   "hsr-layout-08114"
+  ],
+  "excluded_ids": [
+   "hsr-layout-08220",
+   "hsr-layout-08134"
+  ],
+  "all_matched_satisfy": {
+   "property_type": "apartment",
+   "square_footage_min": 900,
+   "rent_max": 40000
+  }
+ }
+}

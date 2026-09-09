@@ -1,0 +1,28 @@
+{
+ "id": "a-013",
+ "turns": [
+  "anything in HSR Layout with a deposit at most 1,75,000",
+  "yes"
+ ],
+ "expect": {
+  "kind": "answered",
+  "extracted": {
+   "deposit_max": 175000
+  },
+  "matched_ids": [
+   "hsr-layout-08220",
+   "hsr-layout-08114",
+   "hsr-layout-08134"
+  ],
+  "excluded_ids": [
+   "hsr-layout-08145",
+   "hsr-layout-08112"
+  ],
+  "all_matched_satisfy": {
+   "deposit_max": 175000,
+   "localities": [
+    "HSR Layout"
+   ]
+  }
+ }
+}

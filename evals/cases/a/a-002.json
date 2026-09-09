@@ -1,0 +1,22 @@
+{
+ "id": "a-002",
+ "turns": [
+  "1BHK in HSR Layout under 20,000 with a lift",
+  "yes"
+ ],
+ "expect": {
+  "kind": "empty",
+  "readback_contains": [
+   "HSR Layout",
+   "20,000"
+  ],
+  "extracted": {
+   "bhk_type": "1BHK",
+   "rent_max": 20000,
+   "lift_required": true
+  },
+  "suggestions_contain": [
+   "not stated"
+  ]
+ }
+}

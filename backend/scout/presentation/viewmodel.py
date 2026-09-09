@@ -15,25 +15,9 @@ from scout.contract.viewmodels import (
 )
 from scout.domain.commute_format import render_commute
 from scout.domain.constraints import CommutePoint
+from scout.domain.money import rupees
 from scout.domain.provenance import Provenanced, Source
 from scout.domain.shortlist import Shortlist
-
-
-def rupees(n: int | None) -> str:
-    """Indian grouping: the last three digits, then pairs. ₹2,00,000, never ₹200,000."""
-    if n is None:
-        return NOT_STATED
-    s = str(n)
-    if len(s) <= 3:
-        return f"₹{s}"
-    head, tail = s[:-3], s[-3:]
-    parts: list[str] = []
-    while len(head) > 2:
-        parts.insert(0, head[-2:])
-        head = head[:-2]
-    if head:
-        parts.insert(0, head)
-    return "₹" + ",".join([*parts, tail])
 
 
 def _txt(v) -> str:

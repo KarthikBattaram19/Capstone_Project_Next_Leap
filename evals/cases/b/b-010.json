@@ -1,0 +1,23 @@
+{
+ "id": "b-010",
+ "before_turns": [
+  "anything in Koramangala or Whitefield under 45,000",
+  "yes"
+ ],
+ "edit_turn": "not Whitefield",
+ "expect": {
+  "kind": "answered",
+  "extracted": {
+   "localities": [
+    "Koramangala"
+   ]
+  },
+  "excluded_ids": [
+   "whitefield-05165"
+  ],
+  "matched_ids": [
+   "koramangala-06656",
+   "koramangala-06651"
+  ]
+ }
+}

@@ -1,0 +1,11 @@
+{
+ "id": "b-020",
+ "before_turns": [
+  "2BHK in Koramangala under 45,000",
+  "yes"
+ ],
+ "edit_turn": "only above 60,000",
+ "expect": {
+  "kind": "needs_input"
+ }
+}

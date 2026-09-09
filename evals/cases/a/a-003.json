@@ -1,0 +1,26 @@
+{
+ "id": "a-003",
+ "turns": [
+  "3BHK in HSR Layout under 70,000 fully furnished",
+  "yes"
+ ],
+ "expect": {
+  "kind": "answered",
+  "extracted": {
+   "bhk_type": "3BHK",
+   "furnishing": "fully_furnished",
+   "rent_max": 70000
+  },
+  "matched_ids": [
+   "hsr-layout-08145"
+  ],
+  "excluded_ids": [
+   "hsr-layout-08112"
+  ],
+  "all_matched_satisfy": {
+   "bhk_type": "3BHK",
+   "furnishing": "fully_furnished",
+   "rent_max": 70000
+  }
+ }
+}

@@ -1,0 +1,20 @@
+{
+ "id": "a-011",
+ "turns": [
+  "2BHK in Koramangala with rent at most 26,000",
+  "yes"
+ ],
+ "expect": {
+  "kind": "answered",
+  "extracted": {
+   "rent_max": 26000
+  },
+  "matched_ids": [
+   "koramangala-06651"
+  ],
+  "all_matched_satisfy": {
+   "bhk_type": "2BHK",
+   "rent_max": 26000
+  }
+ }
+}

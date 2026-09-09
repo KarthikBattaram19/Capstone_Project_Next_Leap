@@ -1,0 +1,23 @@
+{
+ "id": "b-019",
+ "before_turns": [
+  "anything in HSR Layout under 70,000",
+  "yes",
+  "only semi furnished"
+ ],
+ "edit_turn": "never mind the furnishing",
+ "expect": {
+  "kind": "answered",
+  "extracted": {
+   "furnishing": null
+  },
+  "matched_ids": [
+   "hsr-layout-08134",
+   "hsr-layout-08220"
+  ],
+  "appended_after": [
+   "hsr-layout-08114",
+   "hsr-layout-08145"
+  ]
+ }
+}

@@ -1,0 +1,21 @@
+{
+ "id": "b-009",
+ "before_turns": [
+  "anything in Koramangala or HSR Layout under 45,000",
+  "yes"
+ ],
+ "edit_turn": "add Whitefield as well",
+ "expect": {
+  "kind": "answered",
+  "extracted": {
+   "localities": [
+    "HSR Layout",
+    "Koramangala",
+    "Whitefield"
+   ]
+  },
+  "appended_after": [
+   "whitefield-05165"
+  ]
+ }
+}

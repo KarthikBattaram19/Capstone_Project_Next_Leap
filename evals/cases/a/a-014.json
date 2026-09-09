@@ -1,0 +1,26 @@
+{
+ "id": "a-014",
+ "turns": [
+  "anything in Koramangala at least 1274 sq ft",
+  "yes"
+ ],
+ "expect": {
+  "kind": "answered",
+  "extracted": {
+   "square_footage_min": 1274
+  },
+  "matched_ids": [
+   "koramangala-06651",
+   "koramangala-06658"
+  ],
+  "excluded_ids": [
+   "koramangala-06662"
+  ],
+  "all_matched_satisfy": {
+   "square_footage_min": 1274,
+   "localities": [
+    "Koramangala"
+   ]
+  }
+ }
+}

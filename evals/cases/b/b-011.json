@@ -1,0 +1,23 @@
+{
+ "id": "b-011",
+ "before_turns": [
+  "anything in Koramangala or HSR Layout under 45,000",
+  "yes"
+ ],
+ "edit_turn": "only unfurnished ones",
+ "expect": {
+  "kind": "answered",
+  "extracted": {
+   "furnishing": "unfurnished"
+  },
+  "matched_ids": [
+   "koramangala-06656",
+   "hsr-layout-08114",
+   "koramangala-06662"
+  ],
+  "excluded_ids": [
+   "koramangala-06651",
+   "hsr-layout-08134"
+  ]
+ }
+}

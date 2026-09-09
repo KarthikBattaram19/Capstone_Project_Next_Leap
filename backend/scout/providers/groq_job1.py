@@ -16,11 +16,20 @@ from groq import AsyncGroq
 from scout.config import Settings
 from scout.platform import telemetry
 
+# gpt-oss-120b is a reasoning model: it spends completion tokens thinking before it writes
+# the JSON. Capping max_completion_tokens at 512 to shrink the rate-limit reservation cut
+# the reply off mid-object and Groq rejected its own generation against the strict schema
+# (measured 2026-09-09). The completion is left uncapped for that reason.
+
 
 class GroqJob1Client:
     def __init__(self, settings: Settings) -> None:
+        # A 429 on the on-demand tier asks for a wait of a few hundred milliseconds; the SDK
+        # honours Retry-After, so a handful of retries turns a transient rate limit into a
+        # slower turn instead of "I didn't catch that". A schema violation is still retried
+        # exactly once, by Job1 itself (spec §6.32) — this is the transport, not the schema.
         self._client = AsyncGroq(
-            api_key=settings.groq_api_key, max_retries=1
+            api_key=settings.groq_api_key, max_retries=4
         )  # keep-alive pool (P2)
         self._model = settings.job1_model
 

@@ -2,12 +2,9 @@
 
 from __future__ import annotations
 
-from importlib.util import find_spec
-
 import pytest
 
 from evals.conftest import resolve_settings
-from evals.harness.driver import Driver
 
 KEYS = {"GROQ_API_KEY": "gsk_test", "ANTHROPIC_API_KEY": "sk-ant-test"}
 
@@ -30,15 +27,3 @@ def test_present_keys_reach_the_settings_without_reading_env(tmp_path):
     s = resolve_settings(str(tmp_path), KEYS, allow_skip=False)
     assert (s.groq_api_key, s.anthropic_api_key) == ("gsk_test", "sk-ant-test")
     assert s.bundle_dir == str(tmp_path) and s.origins == ["http://localhost:3000"]
-
-
-@pytest.mark.skipif(
-    find_spec("scout.conversation.orchestrator") is not None,
-    reason="the orchestrator exists (Task 2.10): delete this test",
-)
-async def test_driver_needs_the_orchestrator(store, settings):
-    # Until Task 2.10 the import inside run() fails: the suite exists before the feature.
-    d = Driver(store, settings)
-    assert (d.store, d.settings) == (store, settings)
-    with pytest.raises(ImportError):
-        await d.run(["hello"])

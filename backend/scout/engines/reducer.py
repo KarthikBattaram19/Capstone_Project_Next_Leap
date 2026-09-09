@@ -10,6 +10,7 @@ from dateutil import parser as dateparser
 
 from scout.domain.constraints import CommutePoint, ConstraintEdit, ConstraintSet
 from scout.domain.listing import BhkType, Furnishing, Parking, PropertyType
+from scout.domain.money import rupees
 
 IST = ZoneInfo("Asia/Kolkata")
 
@@ -30,15 +31,61 @@ _ENUMS = {
 }
 
 
+# What renters actually say, mapped to the dataset's vocabulary. A voice system hears
+# "semi", "car parking" and "flat"; the sheet says "semi_furnished", "four_wheeler" and
+# "apartment". Job 1 is told to copy the words it heard rather than invent a value, so the
+# mapping belongs here — and a word that is not in this table is still a question, never a
+# guess.
+_SYNONYMS: dict[str, dict[str, str]] = {
+    "furnishing": {
+        "semi": "SEMI_FURNISHED",
+        "semifurnished": "SEMI_FURNISHED",
+        "part_furnished": "SEMI_FURNISHED",
+        "fully": "FULLY_FURNISHED",
+        "full": "FULLY_FURNISHED",
+        "furnished": "FULLY_FURNISHED",
+        "bare": "UNFURNISHED",
+        "empty": "UNFURNISHED",
+        "none": "UNFURNISHED",
+    },
+    "parking_required": {
+        "car": "FOUR_WHEELER",
+        "car_parking": "FOUR_WHEELER",
+        "four_wheeler_parking": "FOUR_WHEELER",
+        "bike": "TWO_WHEELER",
+        "scooter": "TWO_WHEELER",
+        "two_wheeler_parking": "TWO_WHEELER",
+        "car_and_bike": "BOTH",
+        "any": "BOTH",
+    },
+    "property_type": {
+        "flat": "APARTMENT",
+        "apartments": "APARTMENT",
+        "house": "INDEPENDENT_HOUSE",
+        "independent": "INDEPENDENT_HOUSE",
+        "independent_house_or_villa": "INDEPENDENT_HOUSE",
+        "villas": "VILLA",
+        "builder": "BUILDER_FLOOR",
+    },
+    "bhk_type": {"studio": "RK1", "rk": "RK1"},
+}
+
+
 def _coerce(field: str, value) -> object:
     if value is None:
         return None
     if field in _ENUMS:
         cls = _ENUMS[field]
         token = str(value).strip().lower().replace(" ", "_")
+        bare = token.replace("_", "")  # "2 BHK" -> "2bhk"
         for m in cls:
-            if token in (m.value.lower(), m.name.lower()):
+            if token in (m.value.lower(), m.name.lower()) or bare == m.value.lower().replace(
+                "_", ""
+            ):
                 return m
+        name = _SYNONYMS.get(field, {}).get(token)
+        if name is not None:
+            return cls[name]
         raise ValueError(f"{field}: {value!r} is not one of {[m.value for m in cls]}")
     if field in ("rent_max", "rent_min", "deposit_max", "square_footage_min"):
         return int(value)
@@ -64,7 +111,8 @@ def _check(c: ConstraintSet, field: str) -> Contradiction | None:
     if c.rent_min is not None and c.rent_max is not None and c.rent_max < c.rent_min:
         return Contradiction(
             field,
-            f"You asked for rent at least ₹{c.rent_min:,} but at most ₹{c.rent_max:,}. "
+            f"You asked for rent at least {rupees(c.rent_min)} but at most "
+            f"{rupees(c.rent_max)}. "
             "Which should I keep?",
         )
     if c.deposit_max is not None and c.deposit_max <= 0:

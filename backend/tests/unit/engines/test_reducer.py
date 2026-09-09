@@ -1,5 +1,5 @@
 from scout.domain.constraints import ConstraintEdit, ConstraintSet
-from scout.domain.listing import BhkType, Parking
+from scout.domain.listing import BhkType, Furnishing, Parking, PropertyType
 from scout.engines.reducer import Contradiction, apply_edit, apply_edits, confirm_all
 
 
@@ -53,6 +53,29 @@ def test_set_unconfirms_only_that_field():
     )
     c2 = apply_edit(c, ConstraintEdit("rent_max", "set", 35000))
     assert "bhk_type" in c2.confirmed and "rent_max" not in c2.confirmed
+
+
+def test_the_words_renters_actually_say_map_to_the_datasets_vocabulary():
+    # Job 1 copies what it heard; the sheet says "semi_furnished", "four_wheeler",
+    # "apartment". A voice system hears "semi", "car parking", "flat", "2 BHK".
+    c = apply_edits(
+        ConstraintSet(),
+        [
+            ConstraintEdit("furnishing", "set", "semi"),
+            ConstraintEdit("parking_required", "set", "car parking"),
+            ConstraintEdit("property_type", "set", "flat"),
+            ConstraintEdit("bhk_type", "set", "2 BHK"),
+        ],
+    )
+    assert c.furnishing is Furnishing.SEMI_FURNISHED
+    assert c.parking_required is Parking.FOUR_WHEELER
+    assert c.property_type is PropertyType.APARTMENT
+    assert c.bhk_type is BhkType.BHK2
+
+
+def test_a_word_outside_the_vocabulary_is_still_a_question_not_a_guess():
+    r = apply_edit(ConstraintSet(), ConstraintEdit("furnishing", "set", "luxurious"))
+    assert isinstance(r, Contradiction) and r.field == "furnishing"
 
 
 def test_an_unparseable_value_becomes_a_question_not_a_stack_trace():

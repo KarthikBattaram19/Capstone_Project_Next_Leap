@@ -8,6 +8,7 @@ from dataclasses import dataclass
 from scout.contract.outcome import UnmetConstraint
 from scout.domain.constraints import ConstraintSet
 from scout.domain.listing import Listing, Parking
+from scout.domain.money import rupees
 from scout.domain.shortlist import Exclusion, Shortlist, ShortlistEntry
 
 Available = Callable[[str], bool]
@@ -202,7 +203,7 @@ def binding_constraints(s: Shortlist, c: ConstraintSet) -> list[UnmetConstraint]
 def suggest_relaxations(s: Shortlist, c: ConstraintSet, localities: list[str]) -> list[str]:
     tips: list[str] = []
     if any(x.field == "rent_max" for x in s.excluded) and c.rent_max:
-        tips.append(f"try ₹{int(c.rent_max * 1.2 // 1000 * 1000):,}")
+        tips.append(f"try {rupees(int(c.rent_max * 1.2 // 1000 * 1000))}")
     if any(x.field == "localities" for x in s.excluded):
         others = [loc for loc in localities if loc not in c.localities][:2]
         if others:

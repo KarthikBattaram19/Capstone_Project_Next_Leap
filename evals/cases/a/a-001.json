@@ -1,0 +1,35 @@
+{
+ "id": "a-001",
+ "turns": [
+  "2BHK in Koramangala under 30,000",
+  "yes"
+ ],
+ "expect": {
+  "kind": "answered",
+  "readback_contains": [
+   "Koramangala",
+   "30,000"
+  ],
+  "extracted": {
+   "bhk_type": "2BHK",
+   "rent_max": 30000,
+   "localities": [
+    "Koramangala"
+   ]
+  },
+  "matched_ids": [
+   "koramangala-06651"
+  ],
+  "excluded_ids": [
+   "koramangala-06655",
+   "hsr-layout-08220"
+  ],
+  "all_matched_satisfy": {
+   "bhk_type": "2BHK",
+   "rent_max": 30000,
+   "localities": [
+    "Koramangala"
+   ]
+  }
+ }
+}

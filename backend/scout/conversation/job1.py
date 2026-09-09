@@ -2,12 +2,14 @@
 
 from __future__ import annotations
 
+import sys
 from dataclasses import dataclass
 from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, ValidationError
 
 from scout.domain.constraints import ConstraintEdit, ConstraintSet
+from scout.domain.money import rupees
 from scout.engines.amounts import Ambiguous, Amount, normalise_amount
 
 FIELDS = [
@@ -106,8 +108,12 @@ JOB1_SCHEMA: dict = {
 }
 
 SYSTEM = """You turn one spoken sentence from a Bengaluru renter into structured edits to their requirements.
-Rules: report only what THIS sentence changes; never restate unchanged requirements; never guess a locality or a
-number that was not said; copy amounts exactly as heard (e.g. "35k", "thirty five", "1.2 lakh") — do not convert.
+Rules: report only what THIS sentence changes, but report ALL of it — a sentence that names a locality, a bedroom
+count, a budget and a feature produces four edits, not two; never restate unchanged requirements; never guess a
+locality or a number that was not said; copy amounts exactly as heard (e.g. "35k", "thirty five", "1.2 lakh") — do
+not convert.
+"2BHK apartment" is TWO facts: bhk_type "2BHK" and property_type "apartment" — the same for villa, independent
+house and builder floor.
 "drop anything above 40k" → rent_max set "40k". "only metro-adjacent" → amenities_required add "metro". "the second
 one" → reference 2. A yes/no answer to a readback → confirm_yes / confirm_no. Requests to buy, PG, roommates,
 commercial space, or another city → out_of_scope. Asking for the owner's name/number → owner_contact.
@@ -179,8 +185,13 @@ class Job1:
             except (ValidationError, ValueError, KeyError, TypeError):
                 continue
             except Exception as e:  # provider down / 429 after the SDK's own retry
+                # The provider's own words, never the renter's: an operator seeing
+                # "understanding unavailable" needs to know whether it was a rate limit, a
+                # bad key or an outage (spec §3.2, §5.3 — no transcript text in logs).
+                print(f"job1 provider error: {type(e).__name__}: {e}", file=sys.stderr)
                 raise Job1Down(str(e)) from e
         if raw is None:
+            print("job1 schema violation twice", file=sys.stderr)
             raise Job1Down("schema violation twice")  # never partially parse
         return self._post_process(raw)
 
@@ -193,7 +204,7 @@ class Job1:
                 if isinstance(r, Amount):
                     edits.append(ConstraintEdit(e.field, "set", r.rupees))
                 elif isinstance(r, Ambiguous):
-                    opts = " or ".join(f"₹{c:,}" for c in r.candidates[1:])
+                    opts = " or ".join(rupees(c) for c in r.candidates[1:])
                     ambiguities.append(
                         Ambiguity(
                             field=e.field,

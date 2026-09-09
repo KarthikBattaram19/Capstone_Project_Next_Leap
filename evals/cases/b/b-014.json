@@ -1,0 +1,22 @@
+{
+ "id": "b-014",
+ "before_turns": [
+  "anything in Koramangala or HSR Layout under 45,000",
+  "yes"
+ ],
+ "edit_turn": "at least 1000 square feet",
+ "expect": {
+  "kind": "answered",
+  "extracted": {
+   "square_footage_min": 1000
+  },
+  "matched_ids": [
+   "koramangala-06651",
+   "koramangala-06662"
+  ],
+  "excluded_ids": [
+   "hsr-layout-08134",
+   "koramangala-06656"
+  ]
+ }
+}

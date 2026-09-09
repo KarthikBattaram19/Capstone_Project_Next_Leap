@@ -1,0 +1,14 @@
+{
+ "id": "a-016",
+ "turns": [
+  "only above 30,000",
+  "under 25,000"
+ ],
+ "expect": {
+  "kind": "needs_input",
+  "extracted": {
+   "rent_min": 30000,
+   "rent_max": null
+  }
+ }
+}

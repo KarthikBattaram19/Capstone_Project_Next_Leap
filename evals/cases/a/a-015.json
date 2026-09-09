@@ -1,0 +1,16 @@
+{
+ "id": "a-015",
+ "turns": [
+  "anything in Koramangala available by 31 December 2026",
+  "yes"
+ ],
+ "expect": {
+  "kind": "empty",
+  "extracted": {
+   "available_by": "2026-12-31"
+  },
+  "suggestions_contain": [
+   "not stated"
+  ]
+ }
+}

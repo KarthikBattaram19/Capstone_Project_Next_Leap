@@ -1,0 +1,28 @@
+{
+ "id": "a-008",
+ "turns": [
+  "villa in Koramangala under 60,000",
+  "yes"
+ ],
+ "expect": {
+  "kind": "answered",
+  "extracted": {
+   "property_type": "villa",
+   "rent_max": 60000
+  },
+  "matched_ids": [
+   "koramangala-06655",
+   "koramangala-06658"
+  ],
+  "excluded_ids": [
+   "koramangala-06662"
+  ],
+  "all_matched_satisfy": {
+   "property_type": "villa",
+   "rent_max": 60000,
+   "localities": [
+    "Koramangala"
+   ]
+  }
+ }
+}

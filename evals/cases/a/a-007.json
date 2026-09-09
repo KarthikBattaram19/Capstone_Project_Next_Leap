@@ -1,0 +1,26 @@
+{
+ "id": "a-007",
+ "turns": [
+  "semi furnished 2BHK in HSR Layout under 40,000",
+  "yes"
+ ],
+ "expect": {
+  "kind": "answered",
+  "extracted": {
+   "furnishing": "semi_furnished",
+   "bhk_type": "2BHK",
+   "rent_max": 40000
+  },
+  "matched_ids": [
+   "hsr-layout-08220"
+  ],
+  "excluded_ids": [
+   "hsr-layout-08114"
+  ],
+  "all_matched_satisfy": {
+   "furnishing": "semi_furnished",
+   "bhk_type": "2BHK",
+   "rent_max": 40000
+  }
+ }
+}

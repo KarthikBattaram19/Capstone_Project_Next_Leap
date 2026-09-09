@@ -18,6 +18,11 @@ from scout.engines.amounts import Ambiguous, Amount, NoAmount, normalise_amount
         # The spoken tens whose first syllable is also a smaller number word.
         ("sixty thousand", 60000),
         ("ninety thousand", 90000),
+        # Indian grouping — what this system itself prints, so it must read back.
+        ("deposit at most 1,75,000", 175000),
+        ("deposit 2,00,000", 200000),
+        ("under 1,20,000", 120000),
+        ("under 175,000", 175000),
     ],
 )
 def test_unambiguous_amounts(text, rupees):

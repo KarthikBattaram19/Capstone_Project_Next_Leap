@@ -1,0 +1,23 @@
+{
+ "id": "b-013",
+ "before_turns": [
+  "anything in Koramangala or HSR Layout under 45,000",
+  "yes"
+ ],
+ "edit_turn": "only apartments",
+ "expect": {
+  "kind": "answered",
+  "extracted": {
+   "property_type": "apartment"
+  },
+  "matched_ids": [
+   "hsr-layout-08134",
+   "koramangala-06656",
+   "koramangala-06651"
+  ],
+  "excluded_ids": [
+   "koramangala-06662",
+   "koramangala-06655"
+  ]
+ }
+}
