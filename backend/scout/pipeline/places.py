@@ -4,11 +4,14 @@ There is no geocoding inside a turn (A3): "I work in Whitefield" is resolved aga
 table, and a name that is not in it makes the assistant ask rather than guess.
 
 Two kinds of entry:
-- every locality in the bundle, at the mean of its listings' coordinates — derived from the
-  data, so it moves with the dataset rather than being typed;
-- a handful of work hubs nobody's listings sit in, typed once with their coordinates and a
-  source link. A locality of the same name wins: a centroid computed from the data beats a
-  hand-typed point.
+- every locality in the bundle, at the MEDIAN of its listings' coordinates. The median, not
+  the mean: the sheet's coordinates are not always right, and one listing in the wrong place
+  drags a mean with it.
+- a handful of well-known work hubs, typed once from OpenStreetMap with a source link. A
+  typed hub WINS over a locality of the same name. Measured on 2026-09-09: "Whitefield" has
+  two listings in this dataset and one of them sits at 12.9101, 77.5425 — about 22 km west
+  of Whitefield — so its computed centre landed in the middle of the city. A sourced
+  coordinate for a named place beats a two-point average of unreliable ones.
 
 Run from the repo root after the bundle's listings.json exists:
 
@@ -20,13 +23,14 @@ from __future__ import annotations
 import json
 import sys
 from pathlib import Path
+from statistics import median
 
 from scout.domain.listing import ListingRecord
 
 OSM_SEARCH = "https://www.openstreetmap.org/search?query="
 
-# Typed once, from OpenStreetMap. These are the places renters name as "work" that no
-# listing in the dataset sits inside, so no centroid exists for them.
+# Typed once, from OpenStreetMap. These are the places renters name as "work"; each one
+# overrides any computed centre of the same name.
 WORK_HUBS: dict[str, tuple[float, float]] = {
     "Whitefield": (12.9698, 77.7500),
     "Electronic City": (12.8452, 77.6602),
@@ -44,13 +48,11 @@ def build_places(records: list[ListingRecord]) -> dict[str, dict]:
     places: dict[str, dict] = {}
     for locality, points in sorted(by_locality.items()):
         places[locality] = {
-            "lat": round(sum(p[0] for p in points) / len(points), 6),
-            "lng": round(sum(p[1] for p in points) / len(points), 6),
-            "source": "computed: mean of this locality's listing coordinates in the bundle",
+            "lat": round(median(p[0] for p in points), 6),
+            "lng": round(median(p[1] for p in points), 6),
+            "source": "computed: median of this locality's listing coordinates in the bundle",
         }
-    for name, (lat, lng) in WORK_HUBS.items():
-        if name in places:  # a locality centroid beats a hand-typed hub
-            continue
+    for name, (lat, lng) in WORK_HUBS.items():  # a sourced hub overrides a computed centre
         places[name] = {
             "lat": lat,
             "lng": lng,

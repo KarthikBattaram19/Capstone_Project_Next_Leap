@@ -7,12 +7,12 @@
  "HSR Layout": {
   "lat": 12.9116,
   "lng": 77.6389,
-  "source": "computed: mean of this locality's listing coordinates in the bundle"
+  "source": "computed: median of this locality's listing coordinates in the bundle"
  },
  "Koramangala": {
   "lat": 12.93155,
   "lng": 77.6258,
-  "source": "computed: mean of this locality's listing coordinates in the bundle"
+  "source": "computed: median of this locality's listing coordinates in the bundle"
  },
  "MG Road": {
   "lat": 12.9756,
