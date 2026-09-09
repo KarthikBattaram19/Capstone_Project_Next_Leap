@@ -33,7 +33,13 @@ class OsmQuerySpec:
 
 
 OSM_QUERY_SET: tuple[OsmQuerySpec, ...] = (
-    OsmQuerySpec(OsmQuery.NEAREST_METRO, "Metro", "subway_station", 3000, "nearest"),
+    # 10 km, widened from 3 km on 2026-09-09. At 3 km the metro row was null on 1,411 of
+    # 2,370 listings (60%): Namma Metro covers the core, and most of the outer localities in
+    # this dataset are simply further out than 3 km. A wider radius is a strict superset — the
+    # station nearest within 3 km is still the nearest within 10 km — so widening only turns
+    # nulls into facts and never changes a fact already stated. Beyond 10 km "nearest metro"
+    # stops describing an amenity, and the null says "no metro nearby" more honestly.
+    OsmQuerySpec(OsmQuery.NEAREST_METRO, "Metro", "subway_station", 10000, "nearest"),
     OsmQuerySpec(OsmQuery.NEAREST_BUS_STOP, "Bus stop", "bus_stop", 1500, "nearest"),
     OsmQuerySpec(OsmQuery.NEAREST_SUPERMARKET, "Supermarket", "supermarket", 2000, "nearest"),
     OsmQuerySpec(OsmQuery.NEAREST_HOSPITAL, "Hospital", "hospital", 5000, "nearest"),

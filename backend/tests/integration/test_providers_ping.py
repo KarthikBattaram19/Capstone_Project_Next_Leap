@@ -4,6 +4,8 @@ Run with a populated backend/.env:  python -m pytest backend/tests/integration -
 CI never runs these — its pytest target is backend/tests/unit.
 """
 
+import json
+
 import pytest
 
 from scout.config import ENV_FILE, Settings
@@ -56,3 +58,80 @@ async def test_tts_yields_bytes():
     chunks = [c async for c in SmallestTts(Settings()).stream("Hello.")]
     assert chunks
     assert all(isinstance(c, bytes) for c in chunks)
+
+
+# --- Google (Task 3.2's credentials, checked before Phase 3 is built on them) ------------------
+#
+# Read-only on purpose. The two writes that actually prove booking will work — inserting and
+# deleting a calendar event, and sending one mail — were run by hand on 2026-09-09 and both
+# passed; see the Task 3.2 status bullet in Docs/Implementation_Plan.md. They are deliberately
+# NOT automated here: a test suite that books and emails on every run is a test suite nobody
+# can run twice in a day.
+
+_GOOGLE_MISSING = [
+    name
+    for name, value in (
+        ("GOOGLE_OAUTH_CREDENTIALS", _S.google_oauth_credentials),
+        ("GOOGLE_TENANT_CALENDAR_ID", _S.google_tenant_calendar_id),
+        ("GOOGLE_OWNER_CALENDAR_ID", _S.google_owner_calendar_id),
+    )
+    if not value
+]
+google = pytest.mark.skipif(
+    bool(_GOOGLE_MISSING), reason=f"Google config not set: {', '.join(_GOOGLE_MISSING)}"
+)
+
+REQUIRED_SCOPES = {
+    "https://www.googleapis.com/auth/calendar",
+    "https://www.googleapis.com/auth/gmail.send",
+}
+
+
+async def _google_access_token(s: Settings) -> str:
+    import httpx
+
+    c = json.loads(s.google_oauth_credentials)
+    async with httpx.AsyncClient() as client:
+        r = await client.post(
+            "https://oauth2.googleapis.com/token",
+            data={
+                "client_id": c["client_id"],
+                "client_secret": c["client_secret"],
+                "refresh_token": c["refresh_token"],
+                "grant_type": "refresh_token",
+            },
+            timeout=20,
+        )
+    assert r.status_code == 200, f"refresh token rejected: {r.text[:200]}"
+    return r.json()
+
+
+@google
+async def test_the_refresh_token_still_works_and_carries_both_scopes():
+    tok = await _google_access_token(Settings())
+    granted = set(tok.get("scope", "").split())
+    # A missing gmail.send is invisible until the confirmation PDF fails to send, which is
+    # the last step of a booking — exactly where a failure is most expensive (spec 6).
+    assert REQUIRED_SCOPES <= granted, f"missing scopes: {REQUIRED_SCOPES - granted}"
+
+
+@google
+async def test_both_calendars_exist_are_writable_and_are_on_ist():
+    import httpx
+
+    s = Settings()
+    tok = await _google_access_token(s)
+    h = {"Authorization": f"Bearer {tok['access_token']}"}
+    async with httpx.AsyncClient(headers=h, timeout=20) as client:
+        for cal in (s.google_tenant_calendar_id, s.google_owner_calendar_id):
+            meta = await client.get(f"https://www.googleapis.com/calendar/v3/calendars/{cal}")
+            assert meta.status_code == 200, f"{cal}: {meta.text[:200]}"
+            # Every slot this service offers is stated in IST (spec 2.4); a calendar in
+            # another zone would silently shift every visit it writes.
+            assert meta.json().get("timeZone") == "Asia/Kolkata"
+
+            entry = await client.get(
+                f"https://www.googleapis.com/calendar/v3/users/me/calendarList/{cal}"
+            )
+            assert entry.status_code == 200, f"{cal}: {entry.text[:200]}"
+            assert entry.json().get("accessRole") in ("owner", "writer")

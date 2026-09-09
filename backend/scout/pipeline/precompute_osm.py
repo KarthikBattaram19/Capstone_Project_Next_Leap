@@ -31,6 +31,7 @@ from __future__ import annotations
 import asyncio
 import json
 import logging
+import math
 import sys
 from datetime import date, datetime
 from pathlib import Path
@@ -126,6 +127,38 @@ async def resolve_query(
     )
 
 
+def listings_bbox(
+    listings: list[ListingRecord], margin_m: int
+) -> tuple[float, float, float, float]:
+    """(south, west, north, east) covering every listing, plus ``margin_m`` on each side."""
+    pts = [x.coordinates for x in listings if x.coordinates is not None]
+    if not pts:
+        raise ValueError("no listing has coordinates")
+    lats = [p.lat for p in pts]
+    lngs = [p.lng for p in pts]
+    dlat = margin_m / 111_000
+    # Widen longitude at the highest latitude in the set, so the margin holds everywhere.
+    dlng = margin_m / (111_000 * math.cos(math.radians(max(abs(min(lats)), abs(max(lats))))))
+    return (min(lats) - dlat, min(lngs) - dlng, max(lats) + dlat, max(lngs) + dlng)
+
+
+async def prefetch_area_categories(mcp: Any, listings: list[ListingRecord]) -> None:
+    """One Overpass query per area-capable category, covering every listing at once."""
+    from scout.pipeline.osm_mcp import AREA_CAPABLE
+
+    specs = [s for s in OSM_QUERY_SET if s.category in AREA_CAPABLE]
+    if not specs:
+        return
+    bbox = listings_bbox(listings, margin_m=max(s.radius_m for s in specs))
+    for spec in specs:
+        places = await mcp.prefetch_area(spec.category, bbox)
+        log.info(
+            "prefetched %d %s places for the whole listing area in one query",
+            len(places),
+            spec.category,
+        )
+
+
 def _setup_logging() -> None:
     LOG.parent.mkdir(parents=True, exist_ok=True)
     fmt = logging.Formatter("%(asctime)s %(levelname)s %(name)s: %(message)s")
@@ -175,6 +208,7 @@ async def main() -> None:
     rows: list[OsmFactRecord] = []
     try:
         async with OsmMcp(cache=cache) as mcp:
+            await prefetch_area_categories(mcp, listings)
             for i, lst in enumerate(listings, 1):
                 for spec in OSM_QUERY_SET:
                     rows.append(await resolve_query(mcp, lst, spec, today))

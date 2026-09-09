@@ -53,7 +53,9 @@ search_category   (the tool every nearest / count query uses)
   is checked again client-side from ``tags`` so a surprise in the interpolation cannot pass.
   The server keeps only elements that have coordinates and never asks for ``out center``, so
   ways and relations are dropped — results are NODES ONLY (parks, schools and hospitals mapped
-  as areas are invisible; a limitation of the server, recorded in the plan). Output:
+  as areas are invisible; a limitation of the server, recorded in the plan). **Categories in
+  ``AREA_CAPABLE`` therefore bypass this tool entirely and ask Overpass directly** — see that
+  constant and ``_overpass_around``. Output:
   {"query": {...}, "results": [{"id", "type", "name" ("Unnamed" when untagged),
   "coordinates": {"latitude", "longitude"}, "category", "subcategory", "tags": {...}}, ...]}
 
@@ -82,6 +84,7 @@ from collections.abc import MutableMapping
 from pathlib import Path
 from typing import Any, Self
 
+import httpx
 from mcp import ClientSession, StdioServerParameters
 from mcp.client.stdio import stdio_client
 
@@ -122,6 +125,56 @@ def category_expression(category: str) -> str:
     """The ``category`` argument that makes search_category emit ``node["key"="value"]``."""
     key, value = CATEGORY_TABLE[category]
     return f'{key}"="{value}'
+
+
+# Categories that bypass the MCP server and ask Overpass directly, prefetched for the whole
+# listing area in ONE query each (see prefetch_area). Two independent reasons put a category
+# here, and on 2026-09-09 one category arrived by each road:
+#
+# `park` — AREAS. The MCP emits `node[...]` and never asks for `out center`, so ways and
+#   relations are dropped before they reach us (see the module docstring). Measured against six
+#   listings whose park row was null: Overpass found 0 nodes but 3-6 ways within the ORIGINAL
+#   2 km radius on five of the six, the nearest 584 m away. The park gap was never a radius
+#   problem; widening alone would have added 5-8 km "parks" while still missing that one.
+#
+# `subway_station` — VOLUME. Widening metro to 10 km makes each per-listing MCP query a 20 km
+#   box, and 2,370 of those (on top of the park queries) had one public Overpass instance
+#   answering 429s and 504s: under 100 rows in eight minutes, which is days for the full set.
+#   The whole city is one query, and every listing is then answered from memory. Stations
+#   mapped as areas become visible in the bargain.
+#
+# `school` and `hospital` are area-mapped too (692 and 74 nulls). They are left on the MCP path
+# in this pass because the task at hand was metro and parks; moving them is adding the name
+# here and re-running, and the cache makes every unchanged query free on that re-run.
+AREA_CAPABLE: frozenset[str] = frozenset({"park", "subway_station"})
+
+# Overpass, asked directly. `around:` is a true circle, so unlike the MCP's bbox there is no
+# corner to filter away; `out center` gives ways and relations a representative point.
+OVERPASS_URL = os.environ.get("OVERPASS_URL", "https://overpass-api.de/api/interpreter")
+# overpass-api.de answers 406 to anything that mentions "aiohttp" (the reason the MCP needs the
+# sitecustomize shim). A plain, honest User-Agent is all it wants.
+OVERPASS_USER_AGENT = "scout-capstone/1.0 (build-time OSM precompute)"
+OVERPASS_TIMEOUT_S = 90.0
+
+
+def overpass_around_query(category: str, lat: float, lng: float, radius_m: int) -> str:
+    """node + way + relation within a true circle, each reduced to one point by ``out center``."""
+    key, value = CATEGORY_TABLE[category]
+    parts = "\n  ".join(
+        f'{kind}["{key}"="{value}"](around:{radius_m},{lat},{lng});'
+        for kind in ("node", "way", "relation")
+    )
+    return f"[out:json][timeout:60];\n(\n  {parts}\n);\nout center;"
+
+
+def overpass_bbox_query(category: str, bbox: tuple[float, float, float, float]) -> str:
+    """Every matching element in one box — the whole city asked for once (see prefetch_area)."""
+    key, value = CATEGORY_TABLE[category]
+    s, w, n, e = bbox
+    parts = "\n  ".join(
+        f'{kind}["{key}"="{value}"]({s},{w},{n},{e});' for kind in ("node", "way", "relation")
+    )
+    return f"[out:json][timeout:180];\n(\n  {parts}\n);\nout center;"
 
 
 _MISSING = object()
@@ -182,8 +235,14 @@ class OsmMcp:
         self._retry_waits_s = retry_waits_s
         self.cache_hits = 0
         self.network_calls = 0
+        # Replaced by a real client in __aenter__; a test that only exercises the MCP path
+        # never touches it, and one that exercises the Overpass path injects its own.
+        self._http: Any = None
+        # category -> every place of that category in the prefetched box (see prefetch_area).
+        self._area_index: dict[str, list[dict[str, Any]]] = {}
 
     async def __aenter__(self) -> Self:
+        self._http = httpx.AsyncClient()
         env = dict(os.environ)
         existing = env.get("PYTHONPATH")
         env["PYTHONPATH"] = str(SHIM_DIR) + (os.pathsep + existing if existing else "")
@@ -205,7 +264,11 @@ class OsmMcp:
         try:
             await self._session_cm.__aexit__(None, None, None)
         finally:
-            await self._cm.__aexit__(None, None, None)
+            try:
+                await self._cm.__aexit__(None, None, None)
+            finally:
+                if self._http is not None:
+                    await self._http.aclose()
 
     async def _call_once(self, tool: str, args: dict[str, Any]) -> Any:
         result = await self._session.call_tool(tool, args, read_timeout_seconds=CALL_TIMEOUT_S)
@@ -241,6 +304,107 @@ class OsmMcp:
             await asyncio.sleep(wait)
         raise OsmUnavailable(f"{tool} failed after {len(self._retry_waits_s) + 1} attempts: {last}")
 
+    async def _overpass_once(self, query: str) -> dict[str, Any]:
+        r = await self._http.post(
+            OVERPASS_URL,
+            data={"data": query},
+            headers={"User-Agent": OVERPASS_USER_AGENT},
+            timeout=OVERPASS_TIMEOUT_S,
+        )
+        # 429 (rate limit) and 504 (the query took too long) are the two Overpass answers that
+        # are worth waiting out; both must retry rather than become "OSM has nothing".
+        if r.status_code != 200:
+            raise _ToolError(f"overpass HTTP {r.status_code}: {r.text[:200]}")
+        return r.json()
+
+    def _places_from_elements(self, elements: list[dict[str, Any]], category: str) -> list[dict]:
+        key_, value = CATEGORY_TABLE[category]
+        places: list[dict[str, Any]] = []
+        for e in elements:
+            centre = e.get("center") or e  # a node is its own centre
+            plat, plng = centre.get("lat"), centre.get("lon")
+            if plat is None or plng is None:
+                continue
+            tags = e.get("tags") or {}
+            if tags.get(key_) != value or not _keep_place(category, tags):
+                continue
+            name = tags.get("name")
+            places.append({"name": name if name else None, "lat": float(plat), "lng": float(plng)})
+        return places
+
+    async def prefetch_area(
+        self, category: str, bbox: tuple[float, float, float, float]
+    ) -> list[dict[str, Any]]:
+        """Ask Overpass ONCE for every place of ``category`` in ``bbox``; answer locally after.
+
+        Asking per listing meant 2,370 queries at one public Overpass instance, on top of the
+        ones the MCP already sends there for the other categories. Measured 2026-09-09: both
+        paths together were throttled into 429s and 504s and managed under 100 rows in eight
+        minutes. The whole city is one query, and every listing is then answered from memory,
+        which is both far faster and much kinder to a shared service.
+        """
+        key = cache_key("overpass_bbox", {"_category": category, "bbox": list(bbox)})
+        hit = self._cache.get(key, _MISSING)
+        if hit is not _MISSING:
+            self.cache_hits += 1
+            self._area_index[category] = list(hit)
+            return self._area_index[category]
+        out = await self._overpass_with_retries(overpass_bbox_query(category, bbox))
+        places = self._places_from_elements(out.get("elements", []), category)
+        self._cache[key] = places
+        self._area_index[category] = places
+        return places
+
+    async def _overpass_with_retries(self, query: str) -> dict[str, Any]:
+        last: BaseException | None = None
+        out: dict[str, Any] | None = None
+        for attempt, wait in enumerate((*self._retry_waits_s, None)):
+            try:
+                out = await self._overpass_once(query)
+            except Exception as e:  # noqa: BLE001 - every transport failure is retried
+                last = e
+            else:
+                self.network_calls += 1
+                await asyncio.sleep(self._pause_s)
+                return out
+            if wait is None:
+                break
+            log.warning(
+                "overpass failed (attempt %d): %s — retrying in %ss", attempt + 1, last, wait
+            )
+            await asyncio.sleep(wait)
+        raise OsmUnavailable(
+            f"overpass failed after {len(self._retry_waits_s) + 1} attempts: {last}"
+        )
+
+    async def _overpass_around(
+        self, lat: float, lng: float, category: str, radius_m: int
+    ) -> list[dict[str, Any]]:
+        """The area-aware path: same return shape, same cache, same retry rules as the MCP path."""
+        # Prefetched: the answer is already in memory, so no network call at all.
+        index = self._area_index.get(category)
+        if index is not None:
+            return [p for p in index if haversine_m(lat, lng, p["lat"], p["lng"]) <= radius_m]
+
+        args = {"_category": category, "_radius_m": radius_m, "lat": lat, "lng": lng}
+        key = cache_key("overpass_around", args)
+        hit = self._cache.get(key, _MISSING)
+        if hit is not _MISSING:
+            self.cache_hits += 1
+            return list(hit)
+
+        out = await self._overpass_with_retries(overpass_around_query(category, lat, lng, radius_m))
+        # Measured against the point we will actually name and route to, so the distance we
+        # state is the distance to that point. `around:` keeps a park whose EDGE is in range;
+        # if its centre is not, we would be routing somewhere we never measured.
+        places = [
+            p
+            for p in self._places_from_elements(out.get("elements", []), category)
+            if haversine_m(lat, lng, p["lat"], p["lng"]) <= radius_m
+        ]
+        self._cache[key] = places
+        return places
+
     async def find_nearby(
         self, lat: float, lng: float, category: str, radius_m: int
     ) -> list[dict[str, Any]]:
@@ -248,6 +412,8 @@ class OsmMcp:
 
         Returns ``[{"name": str | None, "lat": float, "lng": float}, ...]``; "Unnamed" is None.
         """
+        if category in AREA_CAPABLE:
+            return await self._overpass_around(lat, lng, category, radius_m)
         key_, value = CATEGORY_TABLE[category]
         args = {"category": category_expression(category), **_bbox(lat, lng, radius_m)}
         # The two "_" entries are not sent; they make the key specific to the client-side

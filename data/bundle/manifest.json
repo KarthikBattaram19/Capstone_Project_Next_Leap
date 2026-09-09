@@ -638,7 +638,7 @@
     "nearest_park",
     "restaurants_within_500m"
   ],
-  "osm_index_date": "2026-09-07",
+  "osm_index_date": "2026-09-09",
   "embedding_model": "all-MiniLM-L6-v2",
   "embedding_model_version": "onnx:sha256:4f148ba8ae9c2c7f",
   "chunk_count_per_locality": {
