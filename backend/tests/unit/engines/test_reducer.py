@@ -85,3 +85,17 @@ def test_an_unparseable_value_becomes_a_question_not_a_stack_trace():
     assert isinstance(r, Contradiction) and r.field == "bhk_type"
     r2 = apply_edit(ConstraintSet(), ConstraintEdit("available_by", "set", "whenever"))
     assert isinstance(r2, Contradiction) and r2.field == "available_by"
+
+
+def test_a_size_keeps_its_unit_and_is_still_read():
+    # Job 1 copies what it heard: "at least 1274 sq ft" arrives as "1274 sq ft".
+    for said in ("1274", "1274 sq ft", "1,274 square feet", " 1274 sqft ", "1274 ft"):
+        c = apply_edit(ConstraintSet(), ConstraintEdit("square_footage_min", "set", said))
+        assert isinstance(c, ConstraintSet), f"{said!r} became {c}"
+        assert c.square_footage_min == 1274, said
+
+
+def test_a_number_in_the_wrong_field_is_a_question_not_a_guess():
+    # "3BHK" landing in a size field is a mis-extraction; 3 sq ft would be worse than asking.
+    r = apply_edit(ConstraintSet(), ConstraintEdit("square_footage_min", "set", "3BHK"))
+    assert isinstance(r, Contradiction) and r.field == "square_footage_min"

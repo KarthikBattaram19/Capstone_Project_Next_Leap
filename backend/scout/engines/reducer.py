@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import re
 from dataclasses import dataclass
 from datetime import date, datetime
 from zoneinfo import ZoneInfo
@@ -71,6 +72,27 @@ _SYNONYMS: dict[str, dict[str, str]] = {
 }
 
 
+# A figure with the unit the renter said still attached: "1274 sq ft", "1,274 square feet".
+# Job 1 is told to copy what it heard rather than invent a value, so the unit arrives with
+# it. The unit must be one we recognise — "3BHK" in a size field is a mis-extraction and
+# stays a question rather than quietly becoming 3.
+_NUMBER_WITH_UNIT = re.compile(
+    r"^\s*(\d[\d,]*)\s*(?:sq\.?\s?ft\.?|sqft|square\s?f(?:ee|oo)t|feet|ft)?\s*$",
+    re.IGNORECASE,
+)
+
+
+def _number(field: str, value) -> int:
+    # bool is an int subclass, and a flag is not a figure: True falls through to the regex,
+    # which does not match "True", and comes back as a question.
+    if isinstance(value, int) and not isinstance(value, bool):
+        return value
+    m = _NUMBER_WITH_UNIT.match(str(value))
+    if m is None:
+        raise ValueError(f"{field}: {value!r} is not a number")
+    return int(m.group(1).replace(",", ""))
+
+
 def _coerce(field: str, value) -> object:
     if value is None:
         return None
@@ -88,7 +110,7 @@ def _coerce(field: str, value) -> object:
             return cls[name]
         raise ValueError(f"{field}: {value!r} is not one of {[m.value for m in cls]}")
     if field in ("rent_max", "rent_min", "deposit_max", "square_footage_min"):
-        return int(value)
+        return _number(field, value)
     if field == "lift_required":
         return str(value).strip().lower() in ("true", "yes", "1")
     if field == "available_by":
