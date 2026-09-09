@@ -266,24 +266,28 @@ Both gates have cleared. 1.1–1.3 (the knowledge layer) and 1.4–1.6 (store, c
 ## Phase 2 — The conversation
 
 ### Task 2.1 — Constraints, session manager, and the turn state machine
+- **Status: done, 2026-09-09.** 38 tests. Every active state has an edge back to `CAPTURING`, so a renter who interrupts while the assistant is still *thinking* is heard, not discarded.
 - **Delivers:** the immutable preference set (localities, BHK, rent range, deposit cap, furnishing, property type, parking, lift, amenities, minimum size, move-in date, commute point, and which of these have been confirmed); the shortlist shape (matched / unknown / excluded); the in-memory session (with its lock, its pending action, its count of clarifying questions asked, and what the tenant last heard); sessions expire on a timer; a second browser tab is a second session. The turn state machine with exactly the architecture's allowed transitions, including barge-in.
 - **Why now:** every later task reads or writes these.
 - **Done when:** unit tests pass.
 - Detail: addendum → Task 2.1.
 
 ### Task 2.2 — Content-aware hold and the Type A / Type B router
+- **Status: done, 2026-09-09.** 35 tests. `parse_ordinal` lives here too, because lane B never calls Job 1 and still has to know which listing "the second one" is.
 - **Delivers:** the rule that says an interim transcript "looks unfinished" (ends in under / above / near / with / and / about / around / to / below / over / between / or, or a bare number) so the gateway waits up to 400 ms more; and the router that sends a turn to Type B only when it matches an explanation pattern *and* there is a shortlist to explain.
 - **Why now:** the router is pattern matching in code — a deliberate decision that no model call sits in front of Job 1.
 - **Done when:** unit tests pass.
 - Detail: addendum → Task 2.2.
 
 ### Task 2.3 — Deepgram keyterms from the dataset, and Indian-English amount normalisation
+- **Status: done, 2026-09-09,** with two corrections found by test. The number-word alternation is ordered longest-first (otherwise "sixty/seventy/eighty/ninety thousand" each parsed as a bare single digit, since every one of those tens has a smaller number word as its prefix), and a number word followed by a room unit ("two BHK") is a room count, not an amount. A third correction came later from the live suites: **"1,75,000" parsed as 75,000** — the grouped-number pattern matched the Western group inside the Indian one. It now accepts both.
 - **Delivers:** the list of words the STT should favour, generated from the manifest's locality names plus a fixed handful (BHK, lakh, deposit, …) — never hand-typed; and the amount parser that understands "35k", "35,000", "thirty five thousand", "1.2 lakh", "one point two lakh", and treats a bare "thirty five" as ambiguous (35 / 35,000 / 3,50,000) so the assistant asks rather than guesses.
 - **Why now:** Suite A asserts on normalised amounts; the STT must know the locality names before Gate-L-grade speech tests mean anything.
 - **Done when:** unit tests pass.
 - Detail: addendum → Task 2.3.
 
 ### Task 2.4 — Job 1: extraction and edit routing on Groq
+- **Status: done, 2026-09-09.** 5 unit tests plus 3 live utterances against `openai/gpt-oss-120b`, which held strict JSON mode, so the Gate L fallback to a lighter Groq tier is **not** triggered. The system prompt was strengthened twice after watching real extractions: report ALL of what a sentence changes (it was dropping a stated budget), and "2BHK apartment" is two facts, not one.
 - **Delivers:** the strict output schema for Job 1 (intent, a list of one-field edits, ambiguities with the question to ask, a reference like "the second one", email, code, slot choice); the system prompt; retry once on a schema violation, then treat Job 1 as down; amounts normalised here; a locality outside the dataset becomes a question ("not covered; nearest covered is …"), never a silent substitution.
 - **Why now:** it is the first real model call in the pipeline.
 - **Done when:** unit tests pass with a faked Groq; three live utterances pass against the real client.
@@ -291,54 +295,63 @@ Both gates have cleared. 1.1–1.3 (the knowledge layer) and 1.4–1.6 (store, c
 - Detail: addendum → Task 2.4.
 
 ### Task 2.5 — The constraint reducer: one field at a time, contradictions become questions
+- **Status: done, 2026-09-09.** 12 tests. Beyond the addendum: the coercion catches `AttributeError` as well, and a synonym table maps what renters say to what the sheet stores ("semi" → `semi_furnished`, "car parking" → `four_wheeler`, "flat" → `apartment`, "2 BHK" → `2BHK`). Job 1 copies the words it heard; a word outside that table is still a question, never a guess.
 - **Delivers:** a pure function that applies one edit to the preference set, changing exactly one field and marking it unconfirmed; the contradiction rules (max below min, min above max, non-positive deposit or size, a move-in date in the past) each yielding a question; edits stop at the first contradiction.
 - **Why now:** this is where "contradictory edits ask, never silently break" is made true.
 - **Done when:** unit tests pass.
 - Detail: addendum → Task 2.5.
 
 ### Task 2.6 — Shortlist engine and the availability overlay
+- **Status: done, 2026-09-09.** 6 tests. The addendum's fixture gave every listing the same deposit, which makes the "deposit within three months' rent" soft check fire for some rents and not others, so its own order assertions could not hold; the fixture deposit was changed so soft hits tie and rent decides, and a new case covers soft hits outranking a lower rent.
 - **Delivers:** the matcher (hard fields evaluated in a fixed order; a null on a required field is *unknown*, never a match, never dropped); the ranking (most soft matches first, then rent ascending with unknown rent last, then id); refinement that keeps still-matching listings in their previous relative order and appends newcomers after; the empty-state helpers that name which field excluded the most listings and suggest relaxations (suggest only — nothing is relaxed automatically); and the in-memory availability overlay an operator can flip, which dies with the process.
 - **Why now:** the shortlist is plain code by design — no model decides what is shown.
 - **Done when:** unit tests pass.
 - Detail: addendum → Task 2.6.
 
 ### Task 2.7 — Commute service: precomputed OSM reads and live straight-line arithmetic
+- **Status: done, 2026-09-09.** 3 commute tests, 4 places tests. `data/bundle/places.json` holds 466 entries — 462 locality centres plus four typed work hubs — and the artefact store refuses to boot without it. Booting the real bundle caught a data problem: "Whitefield" has two listings and one sits 22 km west, so its computed centre landed in the middle of the city. Centres are now the **median**, and a sourced hub overrides a computed centre of the same name.
 - **Delivers:** reads of the precomputed transit facts (with source, method, date, citation reference), and the straight-line distance from a listing to the tenant's stated commute point computed live with no network. Commute points are resolved from a small build-time table of named Bengaluru places (locality centroids plus a few work hubs such as Whitefield, Electronic City, Manyata Tech Park, MG Road); an unknown place makes the assistant ask "Where do you commute to? I know …".
 - **Why now:** Type A results already show transit; Suite C's commute assertions depend on this.
 - **Done when:** unit tests pass; the places table is in the bundle.
 - Detail: addendum → Task 2.7.
 
 ### Task 2.8 — View-model builder: cards, locality groups, "not stated", badges, sources
+- **Status: done, 2026-09-09.** 5 tests. The rupee formatter moved to `scout/domain/money.py` after the live suite showed the readback speaking "₹100,000" while the card printed "₹1,00,000" one breath later; the readback, the contradiction question, Job 1's ambiguity question, the empty-state suggestion and the cards now share one formatter.
 - **Delivers:** the code that turns listings and shortlists into what the browser draws — rupee formatting with Indian grouping, "not stated" for every null, the size label with its carpet/built-up basis, the transit row with its method badge, the tenant-commute row only when a commute point exists, cards grouped by locality in ranked order, and citation labels (dataset / OSM / guide) so a bare "[OSM]" can never appear.
 - **Why now:** the frontend must be "dumb" — it draws finished view-models and computes nothing.
 - **Done when:** unit tests pass.
 - Detail: addendum → Task 2.8.
 
 ### Task 2.9 — Speaking: sentence splitting and streaming TTS that starts on the first sentence
+- **Status: done, 2026-09-09.** 4 speaker tests, 5 persona tests. `persona.py` was built here; the sentence cap is enforced against `CONVERSATIONAL_REPLIES`, so a new reply cannot slip past it by being written somewhere else.
 - **Delivers:** a sentence splitter that never breaks after "₹35,000." decimals, "Rs.", "sq." or a lone number; and the speaker that streams audio sentence by sentence, supports barge-in (stop and tell the browser), and treats a TTS failure as "finish the turn in text" rather than an error.
 - **Why now:** precondition P4 (audio starts on the first sentence) lives here.
 - **Done when:** unit tests pass.
 - Detail: addendum → Task 2.9.
 
 ### Task 2.10 — The turn orchestrator (Type A), the live session, and Suites A + B green
+- **Status: code done and unit-tested, 2026-09-09; Suites A and B NOT green — blocked on the Groq daily token quota (see the Phase 2 exit note below).** 16 tests (7 orchestrator, 6 live session, 3 persona/parser). `stub_turn.py` is deleted; the two guarantees its tests carried — a turn that raises tells the browser instead of going silent, and a new utterance cancels the one still speaking — moved into `test_live_hold.py` with the code. Suite A's best complete run was **19/20**; the twentieth failed on a furnishing value the reducer has since learned to read, and the quota ran out before it could be re-run. Suite B has never completed a run.
 - **Delivers:** the one component that knows the whole turn: Job 1 → out-of-scope and owner-contact replies → booking hand-off → "the second one" resolution (with a check that the list has not changed since it was heard) → clarifying questions within the 5-question budget (then proceed provisionally and say so) → readback and confirmation before the first shortlist → refinement afterwards → the empty state that names the binding constraint. Speech starts as a background task so the result returns without waiting for audio. Also the WebSocket-side live session (STT stream, interim transcripts, the 400 ms hold, acknowledgement before any model, a 30 s runaway cap, barge-in, keepalive, one STT reconnect, typed-text fallback). The stub turn from 0.8 is deleted. The 20 Suite A and 20 Suite B cases are written (their content is tabulated in the addendum).
 - **Why now:** this is the first complete Type A conversation.
 - **Done when:** unit tests pass; Suites A and B pass 40/40, three times in a row. A flaky case is a Job 1 prompt problem or a case-wording problem — assertions are never loosened.
 - Detail: addendum → Task 2.10.
 
 ### Task 2.11 — Retrieval (partitioned) and the resolver registry
+- **Status: done, 2026-09-09.** 5 tests. A locality with an empty partition returns no chunks rather than raising — an expected state, not an error.
 - **Delivers:** retrieval that queries only the asked locality's collection; and the registry through which Job 2 reaches facts — the dataset resolver (rent, deposit, maintenance, BHK, furnishing, parking, lift, floor, size, move-in date, society), the OSM resolver (every precomputed query), the document resolver (that locality's chunks), and an "unavailable" resolver for anything else. Job 2 receives nothing except the resulting fact bundle.
 - **Why now:** the grounding boundary is a call graph, not a prompt instruction; this task builds the graph.
 - **Done when:** unit tests pass.
 - Detail: addendum → Task 2.11.
 
 ### Task 2.12 — Job 2: grounded explanation with streaming sentences, and the claim assembler
+- **Status: done, 2026-09-09.** 8 tests plus a live check against `claude-sonnet-5` that bound sentences and cited nothing outside the bundle. The stream parser guards its search on `_done`: without that, the delta closing the JSON object re-finds the array at position 0 and replays every sentence.
 - **Delivers:** Job 2's strict output (sentences, each with the fact references it relies on, plus declared gaps); a stream parser that releases each sentence as soon as it is complete; a prompt that lists facts as "reference: value (source, method, date)" and wraps guide chunks in untrusted-document delimiters; and the assembler that drops any sentence citing a reference not in the bundle, citing nothing, or asserting a value where every cited fact is a gap. Gap lines are humanised ("I don't have a deposit figure for this listing").
 - **Why now:** this is the only place a model writes prose the tenant hears, so it is fenced on both sides.
 - **Done when:** unit tests pass; a live check against the real client binds at least one sentence and cites nothing outside the bundle.
 - Detail: addendum → Task 2.12.
 
 ### Task 2.13 — The fact-led opener, lane B, Suite C to 20 — pin Job 2
+- **Status: code done and unit-tested, 2026-09-09; Suite C NOT run — same quota blocker.** 5 tests (2 opener, 3 lane B). Suite C is written to 20 cases. Two limits of the frozen slice are recorded in the case notes: it holds **no straight-line OSM transit row** (78 ROUTED, 18 null), so the straight-line method is exercised on the tenant's own commute point where it actually occurs; and every locality has guide chunks, so no case can produce an empty sources list — the partial-coverage cases probe structural gaps (lift, maintenance, park, move-in date) instead. `Docs/JOB2_SCORES.md` records the pin and the live check and states plainly that the suite score is not yet measured.
 - **Delivers:** the opener built by code only from resolved facts (rent, BHK, transit with method words, commute with method words and caveat) — spoken immediately, before Job 2 replies; lane B in the orchestrator (resolve → opener → stream Job 2 → bind each sentence → speak it as it binds → explanation and snapshot panels); Job 2 down yields a *degraded* result (shortlist and opener stay; explanation withheld and named as missing) — never a Job 1 substitute; Suite C extended to 20 cases (covered neighbourhoods, partial/no coverage, five commute cases covering both methods and the null row, safety/amenity, the injection probe, adjacent and distant contamination probes); `Docs/JOB2_SCORES.md`.
 - **Why now:** Job 2 must earn its role on the suite before it is pinned.
 - **Done when:** Suite C passes 20/20 three times; the scores document exists; the model decision is recorded.
@@ -346,6 +359,33 @@ Both gates have cleared. 1.1–1.3 (the knowledge layer) and 1.4–1.6 (store, c
 - Detail: addendum → Task 2.13.
 
 **Phase 2 exit:** all 60 cases pass locally three times; the deployed backend serves a full Type A and Type B conversation (the frontend still shows raw results until Phase 3).
+
+**Phase 2 exit status, 2026-09-09: NOT met, and blocked on one thing.** All thirteen tasks
+are implemented and their unit tests pass (318 offline tests green, ruff clean), and
+`create_app` boots against the real bundle — 2,370 listings, 464 localities, 466 places,
+Job 1 and Job 2 both wired, `/health` and `/contract` answering. What is missing is the
+evidence: **60 cases × 3 runs cannot be produced on the current Groq account.**
+
+The numbers, measured from the 429 bodies on 2026-09-09:
+
+| | |
+|---|---|
+| Groq tier | on-demand, `openai/gpt-oss-120b` |
+| Daily token limit | **200,000 (TPD)** |
+| Cost of one Job 1 call | 1,315–1,512 tokens (system prompt + strict schema + reasoning completion) |
+| Calls in one full suite run | ~150 (60 cases × ~2.5 turns) |
+| Tokens for one full run | **~210,000** |
+| Tokens for sign-off (3 runs) | **~630,000** |
+
+A single run does not fit inside a day, let alone three. Every Suite B case failed with
+`Failed(capability="understanding")` — Job 1 down on a 429 — not on anything the cases or
+the code assert. The transport already retries four times honouring `Retry-After`, which
+absorbs the per-minute limit (8,000 TPM) but cannot absorb a daily one.
+
+**The decision this needs is an account decision, not a code change:** a Groq tier whose
+daily allowance covers at least one suite run (three for sign-off), or a Job 1 model with a
+materially lower per-call cost. Until then Phase 2 cannot be signed off, and Phase 3 should
+not be built on an unverified Phase 2.
 
 ---
 

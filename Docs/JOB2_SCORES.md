@@ -35,6 +35,8 @@ score.
 | Suite C, run 1 | **not run** | see below |
 | Suite C, run 2 | **not run** | |
 | Suite C, run 3 | **not run** | |
+| Suite A, best complete run | **19 / 20** (2026-09-09) | the twentieth failed on a furnishing value the reducer has since learned to read; not re-run |
+| Suite B, any run | **0 / 20 completed** | every case failed with Job 1 down on a 429, not on anything it asserts |
 | Dropped sentences per case | **not logged** | the assembler drops silently today; the counter is added when the suite first runs |
 | L3 / L5 from traces | **not measured** | needs a suite run |
 | Groq-hosted alternative for Job 2 (spec §5.1) | **not run** | needs a Suite C baseline to compare against |
@@ -53,6 +55,12 @@ the strict schema and the reasoning completion). The three suites are 60 cases o
 turns each — roughly 150 calls, about **210,000 tokens per run**, and sign-off asks for
 three consecutive runs. On the current 200,000-tokens-per-day tier a single run does not
 fit, let alone three.
+
+Capping `max_completion_tokens` was tried as a way to shrink the reservation and rejected:
+`gpt-oss-120b` is a reasoning model that spends completion tokens before it writes the
+JSON, so a 512-token cap cut the reply off mid-object and Groq rejected its own generation
+against the strict schema. The transport now retries four times honouring `Retry-After`,
+which absorbs the per-minute limit (8,000 TPM) but cannot absorb a daily one.
 
 **What has to change before this document can be completed:** a Groq tier whose daily token
 allowance covers at least one suite run (three for sign-off), or a Job 1 model whose
