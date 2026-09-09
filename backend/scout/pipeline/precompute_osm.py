@@ -47,8 +47,16 @@ LISTINGS = Path("data/bundle/listings.json")
 OUT = Path("data/bundle/osm_facts.json")
 CACHE = Path("data/raw/osm_cache.json")
 LOG = Path("data/raw/osm_precompute.log")
+# Rows land here one line at a time while the run is in flight; see RowSink.
+ROWS_TMP = Path("data/raw/osm_rows.jsonl.tmp")
 CACHE_SAVE_EVERY = 50
 PROGRESS_EVERY_ROWS = 100
+# How many of the nearest candidates are routed before the shortest road distance is chosen.
+# See nearest_by_route for why 1 was wrong and what the cap does and does not guarantee.
+ROUTE_CANDIDATES = 3
+# Skip the extra candidates when the nearest already routes within this many metres of its own
+# straight-line distance. 0 = always consider ROUTE_CANDIDATES.
+RE_ROUTE_MIN_EXCESS_M = 0
 
 log = logging.getLogger("scout.pipeline.precompute_osm")
 
@@ -77,9 +85,74 @@ class JsonCache(dict[str, Any]):
     def save(self) -> None:
         self.path.parent.mkdir(parents=True, exist_ok=True)
         tmp = self.path.with_suffix(".json.tmp")
-        tmp.write_text(json.dumps(self, separators=(",", ":")), encoding="utf-8")
+        # Streamed, not `json.dumps(...)` into a string first. This runs every
+        # CACHE_SAVE_EVERY entries, and by the end the cache is ~16 MB, so building the whole
+        # document in memory each time is a repeated double-size spike. The run was killed for
+        # low memory at row 7,400 on 2026-09-09; this is one of the two places that caused it.
+        with tmp.open("w", encoding="utf-8") as fh:
+            json.dump(self, fh, separators=(",", ":"))
         tmp.replace(self.path)
         self._unsaved = 0
+
+
+async def nearest_by_route(
+    mcp: Any, lat: float, lng: float, places: list[dict[str, Any]]
+) -> tuple[dict[str, Any], dict[str, Any] | None, list[dict[str, Any]]]:
+    """The nearest place *to reach*, not the nearest as the crow flies.
+
+    Until 2026-09-09 this picked the place with the shortest straight-line distance and then
+    routed that one, whatever the road said. Measured consequence: `aecs-layout-05393` named a
+    hospital 583 m away in a straight line that is **5,663 m by road**, while another 618 m away
+    routed in 1,034 m. Adding area-mapped places (see AREA_CAPABLE) handed that rule many more
+    candidates, so it fired more often — 334 of 1,696 changed rows came out worse.
+
+    So the nearest few by straight line are routed and the shortest ROAD distance wins. Two
+    things keep the cost down, and neither can change the answer:
+
+    * A road route is never shorter than the straight line between the same two points, so once
+      some candidate has routed in R metres, any candidate whose straight-line distance is
+      already >= R cannot beat it and is never routed. This prune is exact.
+    * ``ROUTE_CANDIDATES`` caps how many are tried at all. This one is a genuine approximation:
+      the answer is the best of the nearest few, not of every place in the radius. It is
+      recorded in ``raw.considered`` on every row so the choice can be audited.
+
+    ``RE_ROUTE_MIN_EXCESS_M`` stops after the first candidate when that candidate already routes
+    well (road distance within this many metres of its straight line), on the grounds that a
+    well-connected nearest place is not worth two more route calls. 0 disables the shortcut.
+
+    Returns (chosen place, its route or None, the candidates considered).
+    """
+    ranked = sorted(places, key=lambda p: haversine_m(lat, lng, p["lat"], p["lng"]))
+    best_place: dict[str, Any] | None = None
+    best_route: dict[str, Any] | None = None
+    considered: list[dict[str, Any]] = []
+
+    for i, p in enumerate(ranked[:ROUTE_CANDIDATES]):
+        straight = haversine_m(lat, lng, p["lat"], p["lng"])
+        if best_route is not None and straight >= best_route["distance_m"]:
+            break  # exact prune: no road route can come in under its own straight line
+        routed = await mcp.route(lat, lng, p["lat"], p["lng"])
+        considered.append(
+            {
+                "name": p["name"],
+                "straight_m": int(straight),
+                "route_m": routed["distance_m"] if routed else None,
+            }
+        )
+        if routed and (best_route is None or routed["distance_m"] < best_route["distance_m"]):
+            best_place, best_route = p, routed
+        if (
+            i == 0
+            and routed
+            and RE_ROUTE_MIN_EXCESS_M
+            and routed["distance_m"] - straight <= RE_ROUTE_MIN_EXCESS_M
+        ):
+            break
+
+    if best_route is not None and best_place is not None:
+        return best_place, best_route, considered
+    # Nothing routed: fall back to the straight-line nearest, exactly as before.
+    return ranked[0], None, considered
 
 
 async def resolve_query(
@@ -100,30 +173,30 @@ async def resolve_query(
         )
     if not places:
         return null_row
-    nearest = min(places, key=lambda p: haversine_m(lat, lng, p["lat"], p["lng"]))
-    routed = await mcp.route(lat, lng, nearest["lat"], nearest["lng"])
+    chosen, routed, considered = await nearest_by_route(mcp, lat, lng, places)
     if routed:
         return OsmFactRecord(
             listing_id=listing.id,
             query=spec.query,
-            name=nearest["name"],
+            name=chosen["name"],
             distance_m=routed["distance_m"],
             duration_min=None,  # see the module docstring: OSRM's duration is a car time
             method=Method.ROUTED,
             retrieved_on=today,
             raw={
-                "nearest": nearest,
+                "nearest": chosen,
                 "route": {**routed, "mode_requested": "foot", "profile_honoured": False},
+                "considered": considered,
             },
         )
     return OsmFactRecord(
         listing_id=listing.id,
         query=spec.query,
-        name=nearest["name"],
-        distance_m=int(haversine_m(lat, lng, nearest["lat"], nearest["lng"])),
+        name=chosen["name"],
+        distance_m=int(haversine_m(lat, lng, chosen["lat"], chosen["lng"])),
         method=Method.STRAIGHT_LINE,
         retrieved_on=today,
-        raw={"nearest": nearest},
+        raw={"nearest": chosen, "considered": considered},
     )
 
 
@@ -159,6 +232,125 @@ async def prefetch_area_categories(mcp: Any, listings: list[ListingRecord]) -> N
         )
 
 
+class RowSink:
+    """Holds the tallies, not the rows.
+
+    The run used to keep all 18,960 ``OsmFactRecord`` objects in a list and then build a
+    SECOND full copy of them as dicts to dump. That peak is at the very end, which is why the
+    2026-09-09 runs were killed for low memory later and later as the cache warmed — 7,400,
+    then 8,000, then 16,500 of 18,960 — on a machine with 7.8 GB total and under 1 GB free.
+
+    Each row is written to a JSONL scratch file the moment it exists and then dropped, so peak
+    memory is flat in the number of rows. ``finalise`` streams that file into the real
+    ``osm_facts.json`` one row at a time, producing the same ``indent=2`` array as before.
+    """
+
+    def __init__(self, tmp_path: Path, rows_per_listing: int, resume: bool = True) -> None:
+        self.tmp_path = tmp_path
+        self.tmp_path.parent.mkdir(parents=True, exist_ok=True)
+        self.n = 0
+        self.routed = 0
+        self.straight = 0
+        self.null = 0
+        self.listings_done = 0
+        if resume and tmp_path.exists():
+            self._reopen_after_last_complete_listing(rows_per_listing)
+        else:
+            self._fh = tmp_path.open("w", encoding="utf-8")
+
+    def _reopen_after_last_complete_listing(self, rows_per_listing: int) -> None:
+        """Keep every row of every COMPLETE listing, drop a half-written one, append after it.
+
+        The response cache already means an interrupted run costs no network calls twice, but
+        it still had to re-derive every row from scratch, and on this machine the run kept being
+        killed at ~17,000 of 18,960 before it could write anything. Keeping the rows too means
+        each attempt only does listings nobody has done, so the work converges however often it
+        is interrupted. A listing's rows are written together and in order, so "complete" is
+        simply a whole multiple of the query-set size.
+        """
+        kept = self.tmp_path.with_suffix(".resume")
+        with self.tmp_path.open(encoding="utf-8") as src, kept.open("w", encoding="utf-8") as dst:
+            for line in src:
+                row = json.loads(line)
+                self.n += 1
+                if row.get("method") == Method.ROUTED.value:
+                    self.routed += 1
+                elif row.get("method") == Method.STRAIGHT_LINE.value:
+                    self.straight += 1
+                if row.get("distance_m") is None and row.get("count") is None:
+                    self.null += 1
+                dst.write(line if line.endswith("\n") else line + "\n")
+        complete = (self.n // rows_per_listing) * rows_per_listing
+        if complete != self.n:
+            # A partial listing is worse than none: re-derive it rather than reason about
+            # which of its queries made it to disk.
+            self._truncate(kept, complete, rows_per_listing)
+        kept.replace(self.tmp_path)
+        self.listings_done = self.n // rows_per_listing
+        self._fh = self.tmp_path.open("a", encoding="utf-8")
+        log.info("resuming: %d rows kept (%d complete listings)", self.n, self.listings_done)
+
+    def _truncate(self, path: Path, keep: int, rows_per_listing: int) -> None:
+        trimmed = path.with_suffix(".trim")
+        self.n = self.routed = self.straight = self.null = 0
+        with path.open(encoding="utf-8") as src, trimmed.open("w", encoding="utf-8") as dst:
+            for i, line in enumerate(src):
+                if i >= keep:
+                    break
+                row = json.loads(line)
+                self.n += 1
+                if row.get("method") == Method.ROUTED.value:
+                    self.routed += 1
+                elif row.get("method") == Method.STRAIGHT_LINE.value:
+                    self.straight += 1
+                if row.get("distance_m") is None and row.get("count") is None:
+                    self.null += 1
+                dst.write(line)
+        trimmed.replace(path)
+
+    def add(self, row: OsmFactRecord) -> None:
+        self.n += 1
+        if row.method is Method.ROUTED:
+            self.routed += 1
+        elif row.method is Method.STRAIGHT_LINE:
+            self.straight += 1
+        if row.distance_m is None and row.count is None:
+            self.null += 1
+        self._fh.write(json.dumps(row.model_dump(mode="json"), ensure_ascii=False) + "\n")
+
+    def close(self) -> None:
+        if not self._fh.closed:
+            self._fh.close()
+
+    def finalise(self, out: Path) -> None:
+        """JSONL scratch -> the committed indent=2 JSON array, one row in memory at a time."""
+        self.close()
+        with self.tmp_path.open(encoding="utf-8") as src, out.open("w", encoding="utf-8") as dst:
+            dst.write("[\n")
+            for i, line in enumerate(src):
+                if i:
+                    dst.write(",\n")
+                # Re-indent one row so the file matches json.dumps(list, indent=2) exactly.
+                body = json.dumps(json.loads(line), indent=2, ensure_ascii=False)
+                dst.write("\n".join("  " + ln for ln in body.splitlines()))
+            dst.write("\n]")
+        self.tmp_path.unlink(missing_ok=True)
+
+    def split_line(self) -> str:
+        return (
+            f"{self.n} rows; routed={self.routed}; straight-line={self.straight}; null={self.null}"
+        )
+
+    def routed_share_line(self) -> str:
+        """Of the listing-anchored 'nearest' rows where a place was found, how many were routed."""
+        found = self.routed + self.straight
+        pct = (100.0 * self.routed / found) if found else 0.0
+        return (
+            f"nearest rows with a place found: {found}; routed={self.routed}; "
+            f"straight-line={self.straight}; routed share={pct:.1f}%"
+        )
+
+
 def _setup_logging() -> None:
     LOG.parent.mkdir(parents=True, exist_ok=True)
     fmt = logging.Formatter("%(asctime)s %(levelname)s %(name)s: %(message)s")
@@ -167,24 +359,6 @@ def _setup_logging() -> None:
     for h in (logging.FileHandler(LOG, encoding="utf-8"), logging.StreamHandler(sys.stdout)):
         h.setFormatter(fmt)
         root.addHandler(h)
-
-
-def split_line(rows: list[OsmFactRecord]) -> str:
-    routed = sum(1 for r in rows if r.method is Method.ROUTED)
-    straight = sum(1 for r in rows if r.method is Method.STRAIGHT_LINE)
-    null = sum(1 for r in rows if r.distance_m is None and r.count is None)
-    return f"{len(rows)} rows; routed={routed}; straight-line={straight}; null={null}"
-
-
-def routed_share_line(rows: list[OsmFactRecord]) -> str:
-    """Of the listing-anchored 'nearest' rows where a place was found, how many were routed."""
-    found = [r for r in rows if r.method is not None]
-    routed = sum(1 for r in found if r.method is Method.ROUTED)
-    pct = (100.0 * routed / len(found)) if found else 0.0
-    return (
-        f"nearest rows with a place found: {len(found)}; routed={routed}; "
-        f"straight-line={len(found) - routed}; routed share={pct:.1f}%"
-    )
 
 
 async def main() -> None:
@@ -205,19 +379,21 @@ async def main() -> None:
         len(cache),
         today,
     )
-    rows: list[OsmFactRecord] = []
+    sink = RowSink(ROWS_TMP, rows_per_listing=len(OSM_QUERY_SET))
     try:
         async with OsmMcp(cache=cache) as mcp:
             await prefetch_area_categories(mcp, listings)
             for i, lst in enumerate(listings, 1):
+                if i <= sink.listings_done:
+                    continue  # already on disk from an interrupted run
                 for spec in OSM_QUERY_SET:
-                    rows.append(await resolve_query(mcp, lst, spec, today))
+                    sink.add(await resolve_query(mcp, lst, spec, today))
                     # The 0.5 s pause after every real network call lives in OsmMcp;
                     # cache hits do not sleep.
-                    if len(rows) % PROGRESS_EVERY_ROWS == 0:
+                    if sink.n % PROGRESS_EVERY_ROWS == 0:
                         log.info(
                             "rows %d/%d (listing %d/%d); cache hits=%d; network calls=%d",
-                            len(rows),
+                            sink.n,
                             total_rows,
                             i,
                             len(listings),
@@ -226,18 +402,18 @@ async def main() -> None:
                         )
     finally:
         cache.save()
+        sink.close()
         log.info("cache saved: %d entries", len(cache))
-    assert len(rows) == total_rows, (len(rows), total_rows)
-    OUT.write_text(
-        json.dumps([r.model_dump(mode="json") for r in rows], indent=2, ensure_ascii=False),
-        encoding="utf-8",
-    )
+    # Only a complete run may replace the bundle: a partial file would be a silent data loss,
+    # and the boot checks would refuse it anyway (every listing x query must have a row).
+    assert sink.n == total_rows, (sink.n, total_rows)
+    sink.finalise(OUT)
     from scout.pipeline.manifest import from_osm, save_manifest
 
     save_manifest(from_osm(today))
     log.info("wrote %s and updated the manifest", OUT)
-    print(split_line(rows))
-    print(routed_share_line(rows))
+    print(sink.split_line())
+    print(sink.routed_share_line())
 
 
 if __name__ == "__main__":

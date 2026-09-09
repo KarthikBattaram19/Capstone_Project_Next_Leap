@@ -7,7 +7,7 @@ from datetime import date
 import pytest
 
 from scout.domain.listing import Coordinates, ListingRecord
-from scout.domain.osm import OSM_QUERY_SET, OsmQuery
+from scout.domain.osm import OSM_QUERY_SET, OsmFactRecord, OsmQuery
 from scout.domain.provenance import Method
 from scout.pipeline import osm_mcp
 from scout.pipeline.osm_mcp import OsmMcp, OsmUnavailable, category_expression
@@ -66,6 +66,221 @@ async def test_nothing_found_is_a_null_row_not_a_missing_row():
     assert row.distance_m is None
     assert row.method is None
     assert row.name is None
+
+
+# --- choosing the nearest to REACH, not the nearest as the crow flies -------------------------
+
+
+class RouteTable:
+    """A FakeMcp whose route distance is looked up per destination, and which counts calls."""
+
+    def __init__(self, places, routes):
+        self._places = places
+        self._routes = routes  # name -> route distance in metres, or None for "no route"
+        self.routed_names = []
+
+    async def find_nearby(self, lat, lng, category, radius_m):
+        return self._places
+
+    async def route(self, lat1, lng1, lat2, lng2, mode="foot"):
+        name = next(p["name"] for p in self._places if (p["lat"], p["lng"]) == (lat2, lng2))
+        self.routed_names.append(name)
+        d = self._routes[name]
+        return None if d is None else {"distance_m": d, "duration_s": d}
+
+
+# Roughly 550 m, 610 m and 900 m north of LISTING, in that order.
+NEAR = {"name": "Near", "lat": 12.94, "lng": 77.62}
+MID = {"name": "Mid", "lat": 12.9405, "lng": 77.62}
+FAR = {"name": "Far", "lat": 12.943, "lng": 77.62}
+
+
+async def test_the_shortest_road_distance_wins_even_when_it_is_not_the_closest_in_a_line():
+    # The measured aecs-layout-05393 case: the straight-line winner is 5.7 km by road while
+    # the next candidate is 1 km. Before 2026-09-09 this row stated 5,663.
+    mcp = RouteTable([NEAR, MID, FAR], {"Near": 5663, "Mid": 1034, "Far": 1200})
+    row = await resolve_query(mcp, LISTING, METRO, date(2026, 9, 2))
+    assert row.name == "Mid"
+    assert row.distance_m == 1034
+    assert row.method is Method.ROUTED
+    # Every candidate that was routed is on the record, so the choice can be audited.
+    assert [c["name"] for c in row.raw["considered"]] == ["Near", "Mid", "Far"]
+    assert row.raw["nearest"]["name"] == "Mid"
+
+
+async def test_a_well_connected_nearest_is_still_chosen():
+    mcp = RouteTable([NEAR, MID, FAR], {"Near": 600, "Mid": 700, "Far": 1000})
+    row = await resolve_query(mcp, LISTING, METRO, date(2026, 9, 2))
+    assert row.name == "Near"
+    assert row.distance_m == 600
+
+
+async def test_a_candidate_further_in_a_line_than_the_best_route_is_never_routed():
+    # Near routes in 560 m. Mid is ~610 m away in a straight line, and a road route can never
+    # be shorter than that, so Mid cannot win and must not cost a call.
+    mcp = RouteTable([NEAR, MID, FAR], {"Near": 560, "Mid": 100, "Far": 100})
+    row = await resolve_query(mcp, LISTING, METRO, date(2026, 9, 2))
+    assert row.distance_m == 560
+    assert mcp.routed_names == ["Near"], "the prune must skip candidates that cannot win"
+
+
+async def test_only_the_nearest_few_are_routed():
+    many = [{"name": f"P{i}", "lat": 12.9355 + i * 0.0002, "lng": 77.62} for i in range(10)]
+    mcp = RouteTable(many, {p["name"]: 9000 - i for i, p in enumerate(many)})
+    await resolve_query(mcp, LISTING, METRO, date(2026, 9, 2))
+    from scout.pipeline.precompute_osm import ROUTE_CANDIDATES
+
+    assert len(mcp.routed_names) == ROUTE_CANDIDATES
+
+
+async def test_when_nothing_routes_the_straight_line_nearest_is_still_the_answer():
+    mcp = RouteTable([NEAR, MID, FAR], {"Near": None, "Mid": None, "Far": None})
+    row = await resolve_query(mcp, LISTING, METRO, date(2026, 9, 2))
+    assert row.method is Method.STRAIGHT_LINE
+    assert row.name == "Near"  # the closest in a straight line, as before
+    assert row.distance_m is not None
+
+
+# --- writing the rows without holding them all ------------------------------------------------
+
+
+def test_the_streamed_file_is_byte_identical_to_dumping_the_whole_list(tmp_path):
+    # RowSink exists only to keep peak memory flat (three runs were killed for low memory on
+    # 2026-09-09, the last at row 16,500 of 18,960). It must not change the committed file by
+    # so much as a space, or every future diff of osm_facts.json becomes unreadable.
+    from scout.pipeline.precompute_osm import RowSink
+
+    rows = [
+        OsmFactRecord(
+            listing_id="kor-001",
+            query=OsmQuery.NEAREST_METRO,
+            name="Trinity",
+            distance_m=1100,
+            method=Method.ROUTED,
+            retrieved_on=date(2026, 9, 9),
+            raw={"nearest": {"name": "Trinity"}, "considered": [{"name": "Trinity"}]},
+        ),
+        OsmFactRecord(
+            listing_id="kor-002",
+            query=OsmQuery.NEAREST_PARK,
+            retrieved_on=date(2026, 9, 9),
+        ),
+        # Non-ASCII survives the round trip: ensure_ascii=False on both paths.
+        OsmFactRecord(
+            listing_id="kor-003",
+            query=OsmQuery.NEAREST_SCHOOL,
+            name="Kēndriya Vidyālaya",
+            count=None,
+            distance_m=200,
+            method=Method.STRAIGHT_LINE,
+            retrieved_on=date(2026, 9, 9),
+        ),
+    ]
+
+    sink = RowSink(tmp_path / "rows.jsonl.tmp", rows_per_listing=1)
+    for r in rows:
+        sink.add(r)
+    out = tmp_path / "osm_facts.json"
+    sink.finalise(out)
+
+    expected = json.dumps([r.model_dump(mode="json") for r in rows], indent=2, ensure_ascii=False)
+    assert out.read_text(encoding="utf-8") == expected
+    assert not (tmp_path / "rows.jsonl.tmp").exists(), "the scratch file must not be left behind"
+
+
+def _row(lid, q=OsmQuery.NEAREST_METRO, **kw):
+    return OsmFactRecord(listing_id=lid, query=q, retrieved_on=date(2026, 9, 9), **kw)
+
+
+def test_an_interrupted_run_keeps_its_complete_listings_and_appends_after_them(tmp_path):
+    from scout.pipeline.precompute_osm import RowSink
+
+    p = tmp_path / "rows.jsonl.tmp"
+    first = RowSink(p, rows_per_listing=2)
+    for lid in ("a", "b"):
+        first.add(_row(lid, distance_m=100, method=Method.ROUTED))
+        first.add(_row(lid, OsmQuery.NEAREST_PARK))
+    first.close()  # a clean kill after two whole listings
+
+    second = RowSink(p, rows_per_listing=2)
+    assert second.listings_done == 2, "both complete listings must be skipped, not redone"
+    assert (second.n, second.routed, second.null) == (4, 2, 2), "tallies carry over"
+    second.add(_row("c", distance_m=300, method=Method.ROUTED))
+    second.add(_row("c", OsmQuery.NEAREST_PARK))
+    out = tmp_path / "facts.json"
+    second.finalise(out)
+
+    ids = [r["listing_id"] for r in json.loads(out.read_text(encoding="utf-8"))]
+    assert ids == ["a", "a", "b", "b", "c", "c"]
+
+
+def test_a_listing_cut_in_half_is_redone_rather_than_reasoned_about(tmp_path):
+    from scout.pipeline.precompute_osm import RowSink
+
+    p = tmp_path / "rows.jsonl.tmp"
+    first = RowSink(p, rows_per_listing=2)
+    first.add(_row("a", distance_m=100, method=Method.ROUTED))
+    first.add(_row("a", OsmQuery.NEAREST_PARK))
+    first.add(_row("b", distance_m=200, method=Method.ROUTED))  # killed mid-listing
+    first.close()
+
+    second = RowSink(p, rows_per_listing=2)
+    assert second.listings_done == 1, "the half-written listing must not count as done"
+    assert second.n == 2, "its partial row must be dropped, not left to be duplicated"
+    assert second.routed == 1
+
+
+def test_resume_can_be_turned_off(tmp_path):
+    from scout.pipeline.precompute_osm import RowSink
+
+    p = tmp_path / "rows.jsonl.tmp"
+    first = RowSink(p, rows_per_listing=2)
+    first.add(_row("a", distance_m=100, method=Method.ROUTED))
+    first.close()
+
+    fresh = RowSink(p, rows_per_listing=2, resume=False)
+    assert (fresh.n, fresh.listings_done) == (0, 0)
+
+
+def test_the_sink_tallies_without_keeping_the_rows(tmp_path):
+    from scout.pipeline.precompute_osm import RowSink
+
+    sink = RowSink(tmp_path / "rows.jsonl.tmp", rows_per_listing=1)
+    sink.add(
+        OsmFactRecord(
+            listing_id="a",
+            query=OsmQuery.NEAREST_METRO,
+            distance_m=100,
+            method=Method.ROUTED,
+            retrieved_on=date(2026, 9, 9),
+        )
+    )
+    sink.add(
+        OsmFactRecord(
+            listing_id="b",
+            query=OsmQuery.NEAREST_PARK,
+            distance_m=200,
+            method=Method.STRAIGHT_LINE,
+            retrieved_on=date(2026, 9, 9),
+        )
+    )
+    sink.add(
+        OsmFactRecord(listing_id="c", query=OsmQuery.NEAREST_PARK, retrieved_on=date(2026, 9, 9))
+    )
+    sink.add(
+        OsmFactRecord(
+            listing_id="d",
+            query=OsmQuery.RESTAURANTS_WITHIN_500M,
+            count=3,
+            retrieved_on=date(2026, 9, 9),
+        )
+    )
+    sink.close()
+
+    assert sink.n == 4
+    assert sink.split_line() == "4 rows; routed=1; straight-line=1; null=1"
+    assert "nearest rows with a place found: 2" in sink.routed_share_line()
+    assert "routed share=50.0%" in sink.routed_share_line()
 
 
 # --- the wrapper's own decisions, against a faked MCP session --------------------------------
