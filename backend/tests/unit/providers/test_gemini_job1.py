@@ -161,12 +161,12 @@ async def test_the_pacer_spaces_calls_under_the_per_minute_cap():
     # counts against it, so retrying into the limit makes it worse. 60 rpm = 1s apart.
     from scout.providers.gemini_job1 import _Pacer
 
-    pacer = _Pacer(60)
+    pacer = _Pacer(120)
     loop = asyncio.get_running_loop()
     t0 = loop.time()
     for _ in range(3):
         await pacer.wait()
-    assert loop.time() - t0 >= 2.0, "three calls at 60 rpm must span at least two seconds"
+    assert loop.time() - t0 >= 1.0, "three calls at 120 rpm must span at least one second"
 
 
 async def test_the_pacer_is_off_when_rpm_is_zero():
@@ -203,3 +203,29 @@ def test_the_default_provider_is_gemini():
     assert s.job1_provider == "gemini"
     assert s.job1_gemini_model == "gemini-3.5-flash-lite"
     assert s.job1_gemini_thinking == "MINIMAL"
+
+
+async def test_the_pacer_is_shared_across_clients():
+    """The quota belongs to the project, so the pacer cannot live on the client.
+
+    The eval driver builds a fresh client for every batch of turns. With a per-instance
+    pacer the real request rate ran well over the cap, and the run then stalled in 48-second
+    retry backoffs — a suite that had been passing hung for ten minutes on its seventh case
+    (2026-09-10).
+    """
+    # 120 rpm keeps the test quick; the sharing is what is under test, not the interval.
+    s = Settings(_env_file=None, gemini_api_key="k", job1_gemini_rpm=120)
+    first, second = GeminiJob1Client(s), GeminiJob1Client(s)
+    assert first._pacer is second._pacer
+
+    loop = asyncio.get_running_loop()
+    t0 = loop.time()
+    await first._pacer.wait()
+    await second._pacer.wait()
+    assert loop.time() - t0 >= 0.4, "a second client must wait its turn, not start fresh"
+
+
+def test_pacers_are_separated_by_model_and_rate():
+    a = Settings(_env_file=None, gemini_api_key="k", job1_gemini_model="gemini-3.5-flash-lite")
+    b = Settings(_env_file=None, gemini_api_key="k", job1_gemini_model="gemini-3.8-flash")
+    assert GeminiJob1Client(a)._pacer is not GeminiJob1Client(b)._pacer

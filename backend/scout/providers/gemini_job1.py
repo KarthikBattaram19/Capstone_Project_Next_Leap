@@ -16,6 +16,7 @@ from __future__ import annotations
 import asyncio
 import json
 import random
+from typing import ClassVar
 
 import httpx
 
@@ -78,18 +79,39 @@ class _Pacer:
     counts against that, so retrying into the limit makes it worse. Spacing calls costs the
     same wall-clock and wastes no quota. Set job1_gemini_rpm to 0 on a paid tier, where the
     cap is high enough that pacing only adds latency.
+
+    Shared per (model, rpm), not per client: the quota belongs to the PROJECT, so a pacer
+    living on the client instance resets every time something builds a new one. The eval
+    driver builds one per turn batch, which let the real rate run well over the cap and then
+    stall in 48-second retry backoffs — a suite that had been passing hung for ten minutes
+    on its seventh case (2026-09-10).
     """
+
+    _shared: ClassVar[dict[tuple[str, int], _Pacer]] = {}
+
+    @classmethod
+    def shared(cls, model: str, rpm: int) -> _Pacer:
+        key = (model, rpm)
+        if key not in cls._shared:
+            cls._shared[key] = cls(rpm)
+        return cls._shared[key]
 
     def __init__(self, rpm: int) -> None:
         self._interval = 60.0 / rpm if rpm > 0 else 0.0
         self._lock = asyncio.Lock()
+        self._loop: asyncio.AbstractEventLoop | None = None
         self._next_at = 0.0
 
     async def wait(self) -> None:
         if not self._interval:
             return
+        loop = asyncio.get_running_loop()
+        if self._loop is not loop:
+            # A fresh event loop (every pytest test gets one) needs its own lock: an
+            # asyncio.Lock binds to the loop it was first awaited on.
+            self._loop, self._lock = loop, asyncio.Lock()
         async with self._lock:
-            now = asyncio.get_running_loop().time()
+            now = loop.time()
             sleep_for = max(0.0, self._next_at - now)
             self._next_at = max(now, self._next_at) + self._interval
         if sleep_for:
@@ -103,13 +125,12 @@ class GeminiJob1Client:
         self._model = settings.job1_gemini_model
         self._thinking = settings.job1_gemini_thinking
         self._key = settings.gemini_api_key
-        self._pacer = _Pacer(settings.job1_gemini_rpm)
-        # One client, kept open: P2 wants connection reuse, and a fresh TLS handshake per
-        # turn measured ~0.45 s on top of a ~1.0 s call.
-        self._http = httpx.AsyncClient(
-            timeout=httpx.Timeout(30.0, connect=5.0),
-            limits=httpx.Limits(max_keepalive_connections=4, keepalive_expiry=300.0),
-        )
+        self._pacer = _Pacer.shared(self._model, settings.job1_gemini_rpm)
+        # Built on first use, not here: constructing one costs real time, and something
+        # builds a client per request batch (the eval driver) or per app (create_app) long
+        # before any call is made. Once built it is kept open — P2 wants connection reuse,
+        # and a fresh TLS handshake per turn measured ~0.45 s on top of a ~1.0 s call.
+        self._http: httpx.AsyncClient | None = None
 
     async def complete_json(self, system: str, user: str, schema_name: str, schema: dict) -> dict:
         body = {
@@ -133,6 +154,14 @@ class GeminiJob1Client:
         text = candidate["content"]["parts"][0]["text"]
         return _loads(text, schema_name)
 
+    def _session(self) -> httpx.AsyncClient:
+        if self._http is None:
+            self._http = httpx.AsyncClient(
+                timeout=httpx.Timeout(30.0, connect=5.0),
+                limits=httpx.Limits(max_keepalive_connections=4, keepalive_expiry=300.0),
+            )
+        return self._http
+
     async def _post_with_retries(self, body: dict) -> httpx.Response:
         """POST, retrying a rate limit the way the Groq client does (max_retries=4).
 
@@ -144,7 +173,7 @@ class GeminiJob1Client:
         for attempt in range(RETRIES + 1):
             await self._pacer.wait()
             with telemetry.span("external.gemini"):
-                resp = await self._http.post(url, params={"key": self._key}, json=body)
+                resp = await self._session().post(url, params={"key": self._key}, json=body)
             if resp.status_code < 400:
                 return resp
             if resp.status_code not in RETRYABLE or attempt == RETRIES:
@@ -154,7 +183,9 @@ class GeminiJob1Client:
         raise last  # unreachable; kept so the type is honest
 
     async def aclose(self) -> None:
-        await self._http.aclose()
+        if self._http is not None:
+            await self._http.aclose()
+            self._http = None
 
 
 def _loads(text: str, schema_name: str) -> dict:
