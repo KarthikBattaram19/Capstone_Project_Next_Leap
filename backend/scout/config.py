@@ -40,6 +40,10 @@ class Settings(BaseSettings):
 
     # Models — pinned by exact id, never an alias (spec §5.1)
     job1_model: str = "openai/gpt-oss-120b"
+    # Job 1 fills in a form; it does not need to deliberate. "low" cut the call from
+    # 1,147 to 886 tokens with no measured loss of accuracy (2026-09-09), which is what
+    # makes a 60-case eval run fit inside the account's daily token allowance.
+    job1_effort: str = "low"
     job2_model: str = "claude-sonnet-5"
     job2_effort: str = "low"  # P7
     job2_max_tokens: int = 2048
