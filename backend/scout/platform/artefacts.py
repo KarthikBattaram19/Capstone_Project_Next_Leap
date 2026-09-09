@@ -26,10 +26,25 @@ class ArtefactStore:
     _osm: dict[tuple[str, OsmQuery], OsmFactRecord]
     chunks: dict[str, GuideChunk]
     chroma: chromadb.ClientAPI
+    places: dict[str, dict]
 
     @property
     def localities(self) -> list[str]:
         return sorted(self.manifest.localities)
+
+    def place(self, name: str) -> "CommutePoint | None":  # noqa: F821, UP037 -- imported below
+        """Resolve a named place to coordinates. No live geocoding inside a turn (A3)."""
+        from scout.domain.constraints import CommutePoint
+
+        key = next((k for k in self.places if k.lower() == name.strip().lower()), None)
+        if key is None:
+            return None
+        return CommutePoint(
+            name=key, lat=float(self.places[key]["lat"]), lng=float(self.places[key]["lng"])
+        )
+
+    def place_names(self) -> list[str]:
+        return sorted(self.places)
 
     def osm(self, listing_id: str, query: OsmQuery) -> OsmFactRecord:
         # KeyError if absent, on purpose: load() proved every listing x query is present.
@@ -63,6 +78,9 @@ class ArtefactStore:
                 GuideChunk.model_validate(x)
                 for x in json.loads((d / "chunks.json").read_text(encoding="utf-8"))
             ]
+            # The build-time commute-point table (Task 2.7). Required: a bundle without it
+            # would make "I work in Whitefield" unanswerable mid-turn instead of at boot.
+            places = json.loads((d / "places.json").read_text(encoding="utf-8"))
             # PersistentClient(path=...) verified against chromadb 1.5.9 on 2026-09-07.
             chroma = chromadb.PersistentClient(path=str(d / "chroma"))
         except Exception as e:
@@ -117,4 +135,5 @@ class ArtefactStore:
             _osm=osm,
             chunks={c.id: c for c in chunks},
             chroma=chroma,
+            places=places,
         )

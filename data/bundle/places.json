@@ -1,0 +1,2332 @@
+{
+ "6th Block": {
+  "lat": 12.904371,
+  "lng": 77.438599,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "A Adugodi": {
+  "lat": 12.949198,
+  "lng": 77.603745,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "AECS Layout": {
+  "lat": 12.9623,
+  "lng": 77.710026,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Abbigere": {
+  "lat": 13.075555,
+  "lng": 77.521915,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Abdul Kalam Nagar": {
+  "lat": 12.923045,
+  "lng": 77.604412,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Adakamaranahalli": {
+  "lat": 13.070616,
+  "lng": 77.437904,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Adarsh Pinecourt": {
+  "lat": 13.08324,
+  "lng": 77.662468,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Adarsh Savana": {
+  "lat": 13.210186,
+  "lng": 77.600922,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Adarsh Tranqville": {
+  "lat": 13.082563,
+  "lng": 77.660299,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Aduru": {
+  "lat": 13.055478,
+  "lng": 77.705559,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Agara": {
+  "lat": 12.90431,
+  "lng": 77.645772,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Agaram": {
+  "lat": 12.927978,
+  "lng": 77.661354,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Agrahara Dasarahalli": {
+  "lat": 12.986133,
+  "lng": 77.539368,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Ajmera Infinity Apartments": {
+  "lat": 12.842028,
+  "lng": 77.647385,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Ajmera Stone Park": {
+  "lat": 12.837348,
+  "lng": 77.650703,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Amarthine": {
+  "lat": 12.917099,
+  "lng": 77.697655,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Amruthahalli": {
+  "lat": 13.068404,
+  "lng": 77.600584,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Anagalapura": {
+  "lat": 13.068519,
+  "lng": 77.688603,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Anantnagar": {
+  "lat": 12.834554,
+  "lng": 77.689558,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Andapura": {
+  "lat": 12.829696,
+  "lng": 77.692833,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Andrahalli": {
+  "lat": 13.0228,
+  "lng": 77.480914,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Anekal": {
+  "lat": 12.721562,
+  "lng": 77.696541,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Anjanapura": {
+  "lat": 12.861009,
+  "lng": 77.56358,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Anneshvara": {
+  "lat": 13.212352,
+  "lng": 77.702682,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Anugondanahalli": {
+  "lat": 12.954873,
+  "lng": 77.815287,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Aradeshanahalli": {
+  "lat": 13.222879,
+  "lng": 77.56602,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Arakere": {
+  "lat": 12.885119,
+  "lng": 77.59928,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Arishinakunte": {
+  "lat": 13.074917,
+  "lng": 77.412498,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Arkavathy Layout": {
+  "lat": 13.065879,
+  "lng": 77.604202,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Aryan Kasten Palm Groves": {
+  "lat": 12.774187,
+  "lng": 77.696167,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Ashoka Nagara": {
+  "lat": 12.934374,
+  "lng": 77.56065,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Ashokanagar": {
+  "lat": 12.971545,
+  "lng": 77.597112,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Ashwath Nagar": {
+  "lat": 12.960341,
+  "lng": 77.701214,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Assetz Earth & Essence": {
+  "lat": 13.148114,
+  "lng": 77.641441,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Assetz Soul & Soil": {
+  "lat": 13.078019,
+  "lng": 77.661919,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Attibele": {
+  "lat": 12.778904,
+  "lng": 77.770901,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Attigupe": {
+  "lat": 12.959257,
+  "lng": 77.527412,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Attur": {
+  "lat": 13.098428,
+  "lng": 77.560315,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Austin Town": {
+  "lat": 12.96137,
+  "lng": 77.615028,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Avadadenahalli": {
+  "lat": 12.742887,
+  "lng": 77.706922,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Avalahalli": {
+  "lat": 12.975138,
+  "lng": 77.60866,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Avalapalli": {
+  "lat": 12.74402,
+  "lng": 77.830269,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "BDA Chandragiri Apartments": {
+  "lat": 13.029901,
+  "lng": 77.750748,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "BTM Layout": {
+  "lat": 12.913441,
+  "lng": 77.615073,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "BTM Layout 2nd Stage": {
+  "lat": 12.91048,
+  "lng": 77.607819,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Babusab Palya": {
+  "lat": 13.024569,
+  "lng": 77.654341,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Bagalur": {
+  "lat": 12.82817,
+  "lng": 77.859122,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Bagaluru": {
+  "lat": 13.133108,
+  "lng": 77.667878,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Baguru": {
+  "lat": 12.894406,
+  "lng": 77.858955,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Baiyyappanahalli": {
+  "lat": 12.996576,
+  "lng": 77.658051,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Balagere": {
+  "lat": 12.938735,
+  "lng": 77.72368,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Banashankari": {
+  "lat": 12.93162,
+  "lng": 77.551848,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Banashankari 2nd Stage": {
+  "lat": 12.923938,
+  "lng": 77.564527,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Banashankari 6th Stage": {
+  "lat": 12.880169,
+  "lng": 77.503357,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Banashankari Temple Ward": {
+  "lat": 12.911603,
+  "lng": 77.571342,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Banaswadi": {
+  "lat": 13.009481,
+  "lng": 77.65224,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Bandapura": {
+  "lat": 13.043019,
+  "lng": 77.746569,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Bande Bommasandra": {
+  "lat": 13.076863,
+  "lng": 77.687683,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Bandenallasandra": {
+  "lat": 12.787738,
+  "lng": 77.657791,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Bandepalya": {
+  "lat": 12.895794,
+  "lng": 77.636024,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Bangarappa Nagara": {
+  "lat": 12.922692,
+  "lng": 77.535487,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Bannerughatta": {
+  "lat": 12.806149,
+  "lng": 77.578993,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Bapuji Nagar": {
+  "lat": 12.956443,
+  "lng": 77.540382,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Bapuji Nagara": {
+  "lat": 12.956465,
+  "lng": 77.544601,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Basavanagudi": {
+  "lat": 12.950541,
+  "lng": 77.57025,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Basavanapura": {
+  "lat": 13.010326,
+  "lng": 77.717812,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Basaveshwara Nagara": {
+  "lat": 12.990729,
+  "lng": 77.539458,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Begihalli": {
+  "lat": 12.79584,
+  "lng": 77.620274,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Beguru": {
+  "lat": 12.866663,
+  "lng": 77.616281,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Belathur": {
+  "lat": 13.003044,
+  "lng": 77.754424,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Bellandur": {
+  "lat": 12.926304,
+  "lng": 77.670467,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Bellanduru": {
+  "lat": 12.929142,
+  "lng": 77.677682,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Bendiganahalli": {
+  "lat": 13.064127,
+  "lng": 77.752319,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Bennamangala": {
+  "lat": 13.249126,
+  "lng": 77.729286,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Betta Halasuru": {
+  "lat": 13.164156,
+  "lng": 77.609314,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Bettadasanpura": {
+  "lat": 12.840872,
+  "lng": 77.630222,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Bhattarahalli": {
+  "lat": 13.022038,
+  "lng": 77.702983,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Bhuvanahalli": {
+  "lat": 13.213208,
+  "lng": 77.692223,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Bidadi": {
+  "lat": 12.793467,
+  "lng": 77.38561,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Bidaraguppe": {
+  "lat": 12.80738,
+  "lng": 77.773743,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Bidarahalli": {
+  "lat": 13.059654,
+  "lng": 77.716301,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Bidarakuppe": {
+  "lat": 12.804178,
+  "lng": 77.792525,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Bidare Agrahara": {
+  "lat": 13.032887,
+  "lng": 77.744843,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Bilekahalli": {
+  "lat": 12.903197,
+  "lng": 77.605068,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Billapura": {
+  "lat": 12.838939,
+  "lng": 77.787231,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Binnypete": {
+  "lat": 12.966292,
+  "lng": 77.560197,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Bommanahalli": {
+  "lat": 12.902745,
+  "lng": 77.622492,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Bommasandra": {
+  "lat": 12.811787,
+  "lng": 77.691848,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Bommenahalli": {
+  "lat": 13.067573,
+  "lng": 77.74235,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Brigade El Dorado": {
+  "lat": 13.144464,
+  "lng": 77.68271,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Brigade Oasis": {
+  "lat": 13.270382,
+  "lng": 77.665253,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Brigade Orchards": {
+  "lat": 13.236132,
+  "lng": 77.72398,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Budigere": {
+  "lat": 13.134478,
+  "lng": 77.746522,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Byadarahalli": {
+  "lat": 12.978362,
+  "lng": 77.482823,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Byagadadenahalli": {
+  "lat": 12.738304,
+  "lng": 77.704853,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Byappanahalli": {
+  "lat": 13.07302,
+  "lng": 77.724411,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Byatarayanapura": {
+  "lat": 13.054783,
+  "lng": 77.595545,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Byrathi": {
+  "lat": 13.068688,
+  "lng": 77.657671,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "C V Raman Nagar": {
+  "lat": 12.988424,
+  "lng": 77.663248,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Carmelaram": {
+  "lat": 12.914368,
+  "lng": 77.704882,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Century Artizan": {
+  "lat": 13.124288,
+  "lng": 77.59198,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Century Sports Village": {
+  "lat": 13.225565,
+  "lng": 77.684372,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Chagalatti": {
+  "lat": 13.120834,
+  "lng": 77.673325,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Chamarajapete": {
+  "lat": 12.95701,
+  "lng": 77.563438,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Chandapura": {
+  "lat": 12.79889,
+  "lng": 77.710654,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Chandra Layout": {
+  "lat": 12.953649,
+  "lng": 77.522911,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Channasandra": {
+  "lat": 12.979731,
+  "lng": 77.763347,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Chatekere Palya": {
+  "lat": 12.827433,
+  "lng": 77.599954,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Chellakere": {
+  "lat": 13.033568,
+  "lng": 77.646033,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Chikka Banavara": {
+  "lat": 13.078429,
+  "lng": 77.508957,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Chikkaballapura": {
+  "lat": 13.429907,
+  "lng": 77.731201,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Chikkagubbi": {
+  "lat": 13.078872,
+  "lng": 77.658597,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Chikkajala": {
+  "lat": 13.169189,
+  "lng": 77.635424,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Chikkalasandra": {
+  "lat": 12.921066,
+  "lng": 77.544006,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Chikkanagamangala": {
+  "lat": 12.846568,
+  "lng": 77.685346,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Chikkanayakanahalli": {
+  "lat": 12.88553,
+  "lng": 77.690931,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Chikkapete": {
+  "lat": 12.970923,
+  "lng": 77.576317,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Chikkasanni": {
+  "lat": 13.234036,
+  "lng": 77.695843,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Chikkathoguru": {
+  "lat": 12.864815,
+  "lng": 77.64978,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Chikkatirupati": {
+  "lat": 12.898557,
+  "lng": 77.865234,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Chimasandra": {
+  "lat": 13.059079,
+  "lng": 77.734322,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Chokkanahalli": {
+  "lat": 13.122276,
+  "lng": 77.684273,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Chokkasandra": {
+  "lat": 13.043677,
+  "lng": 77.508101,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Chokkenahalli": {
+  "lat": 13.175657,
+  "lng": 77.547989,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Choodasandra": {
+  "lat": 12.885721,
+  "lng": 77.681392,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Chunchanakuppe": {
+  "lat": 12.903477,
+  "lng": 77.38736,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Church Street": {
+  "lat": 13.153123,
+  "lng": 77.639977,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Concorde Cuppertino Villas": {
+  "lat": 12.841578,
+  "lng": 77.653633,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Concorde Manhattans Apartments": {
+  "lat": 12.842442,
+  "lng": 77.651802,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Concorde Silicon Valley": {
+  "lat": 12.839321,
+  "lng": 77.652092,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Cox Town": {
+  "lat": 12.993441,
+  "lng": 77.621941,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "DSR Highland Greens": {
+  "lat": 12.897327,
+  "lng": 77.695549,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Dabaspete": {
+  "lat": 13.230595,
+  "lng": 77.243942,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Darga Mohalla": {
+  "lat": 13.00052,
+  "lng": 77.673055,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Dargajogihalli": {
+  "lat": 13.296826,
+  "lng": 77.530611,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Dasanapura": {
+  "lat": 13.069182,
+  "lng": 77.435205,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Dasarahalli": {
+  "lat": 13.043427,
+  "lng": 77.518562,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Deepanjali Nagara": {
+  "lat": 12.93942,
+  "lng": 77.536354,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Devanagondi": {
+  "lat": 12.973947,
+  "lng": 77.840302,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Devanahalli": {
+  "lat": 13.24577,
+  "lng": 77.706761,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Devarabeesanahalli": {
+  "lat": 12.923318,
+  "lng": 77.688677,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Devarachikkanahalli": {
+  "lat": 12.893568,
+  "lng": 77.618259,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Devaraj Urs Ward": {
+  "lat": 12.950252,
+  "lng": 77.565736,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Devasandra": {
+  "lat": 12.763974,
+  "lng": 77.653229,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Devenahalli": {
+  "lat": 13.282682,
+  "lng": 77.70253,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Dharmagiri Ward": {
+  "lat": 12.921793,
+  "lng": 77.568344,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Dodda Cheemanahalli": {
+  "lat": 13.247688,
+  "lng": 77.613136,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Dodda Dunnasandra": {
+  "lat": 12.975794,
+  "lng": 77.820992,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Dodda Gubbi": {
+  "lat": 13.073205,
+  "lng": 77.670914,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Dodda Hosahalli": {
+  "lat": 13.200313,
+  "lng": 77.751411,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Dodda Nekkundi": {
+  "lat": 12.974899,
+  "lng": 77.701148,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Doddabanahalli": {
+  "lat": 13.031401,
+  "lng": 77.731277,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Doddabettahalli": {
+  "lat": 13.116424,
+  "lng": 77.569977,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Doddabommasandra": {
+  "lat": 13.058805,
+  "lng": 77.562172,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Doddajala": {
+  "lat": 13.181559,
+  "lng": 77.652481,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Doddakammanahalli": {
+  "lat": 12.852268,
+  "lng": 77.592234,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Doddakannalli": {
+  "lat": 12.90725,
+  "lng": 77.695052,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Doddasanne": {
+  "lat": 13.211575,
+  "lng": 77.698017,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Doddathoguru": {
+  "lat": 12.849426,
+  "lng": 77.654448,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Domlur": {
+  "lat": 12.946894,
+  "lng": 77.672966,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Domluru": {
+  "lat": 12.958434,
+  "lng": 77.639376,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Dommasandra": {
+  "lat": 12.882151,
+  "lng": 77.74005,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Dooravaninagar": {
+  "lat": 13.005404,
+  "lng": 77.664745,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Doresanipalya": {
+  "lat": 12.873551,
+  "lng": 77.594025,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Dr. Shivaram Karanth Layout": {
+  "lat": 13.105665,
+  "lng": 77.514084,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "EPIP Zone": {
+  "lat": 12.979732,
+  "lng": 77.71302,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Eagleton Golf Village": {
+  "lat": 12.800033,
+  "lng": 77.400566,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Electronic City": {
+  "lat": 12.85145,
+  "lng": 77.659621,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Electronics City Phase 1": {
+  "lat": 12.851208,
+  "lng": 77.667036,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Electronics City Phase 2 (East)": {
+  "lat": 12.846569,
+  "lng": 77.675304,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Electronics City Phase 2 (West)": {
+  "lat": 12.836814,
+  "lng": 77.671144,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Embassy Boulevard": {
+  "lat": 13.149847,
+  "lng": 77.639806,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Ferrar Nagar": {
+  "lat": 13.118657,
+  "lng": 77.568146,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Fortius Under the Sun": {
+  "lat": 13.236575,
+  "lng": 77.680161,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Frazer Town": {
+  "lat": 12.997135,
+  "lng": 77.614404,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "G.M Palya": {
+  "lat": 12.974984,
+  "lng": 77.668877,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "GM Infinite E-City": {
+  "lat": 12.820503,
+  "lng": 77.663802,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "GM Townsville": {
+  "lat": 12.821717,
+  "lng": 77.656166,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Ganga Vertica Apartments": {
+  "lat": 12.841785,
+  "lng": 77.648365,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Ganganagar": {
+  "lat": 13.026661,
+  "lng": 77.59079,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Ganganamidde": {
+  "lat": 13.435476,
+  "lng": 77.719467,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Gangapura": {
+  "lat": 13.131059,
+  "lng": 77.960365,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Gangenahalli": {
+  "lat": 13.01996,
+  "lng": 77.586015,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Gangodanahalli": {
+  "lat": 13.019233,
+  "lng": 77.468689,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Garvebavi Palya": {
+  "lat": 12.89403,
+  "lng": 77.635143,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Gattahalli": {
+  "lat": 12.867828,
+  "lng": 77.697177,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Geddalahalli": {
+  "lat": 13.030861,
+  "lng": 77.577484,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Girinagar": {
+  "lat": 12.937139,
+  "lng": 77.542956,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Godrej Ananda": {
+  "lat": 13.146309,
+  "lng": 77.675018,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Godrej E-City": {
+  "lat": 12.852053,
+  "lng": 77.653425,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Godrej Nurture": {
+  "lat": 12.833355,
+  "lng": 77.660255,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Godrej Reserve": {
+  "lat": 13.268972,
+  "lng": 77.669617,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Gollahalli": {
+  "lat": 12.872209,
+  "lng": 77.636787,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Gopalapura": {
+  "lat": 13.156537,
+  "lng": 77.429413,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Gopalpura": {
+  "lat": 12.975445,
+  "lng": 77.560012,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Gottigere": {
+  "lat": 12.861751,
+  "lng": 77.590044,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Gowrenahalli": {
+  "lat": 12.72284,
+  "lng": 77.679672,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Guddahatti": {
+  "lat": 12.808037,
+  "lng": 77.739418,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Guddanahalli": {
+  "lat": 12.692429,
+  "lng": 77.716537,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Gummanahalli": {
+  "lat": 13.418208,
+  "lng": 77.386993,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Gunjur": {
+  "lat": 12.92043,
+  "lng": 77.731141,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "HBR Layout": {
+  "lat": 13.028702,
+  "lng": 77.628826,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "HSR": {
+  "lat": 13.019813,
+  "lng": 77.641273,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "HSR Layout": {
+  "lat": 12.912955,
+  "lng": 77.643519,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Hadosiddapura": {
+  "lat": 12.897367,
+  "lng": 77.702637,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Halanayakanahalli": {
+  "lat": 12.896292,
+  "lng": 77.682625,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Hamam": {
+  "lat": 13.296938,
+  "lng": 77.558784,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Hancharahalli": {
+  "lat": 13.093301,
+  "lng": 77.74741,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Hanumanthanagar": {
+  "lat": 12.945142,
+  "lng": 77.553642,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Haragadde": {
+  "lat": 12.764976,
+  "lng": 77.653419,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Haralur": {
+  "lat": 12.904589,
+  "lng": 77.665977,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Hebbagodi": {
+  "lat": 12.833592,
+  "lng": 77.68059,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Hebbal": {
+  "lat": 13.037121,
+  "lng": 77.5914,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Hebron Avenue": {
+  "lat": 13.033173,
+  "lng": 77.70015,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Heelalige": {
+  "lat": 12.821313,
+  "lng": 77.706033,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Heggondahalli": {
+  "lat": 12.897855,
+  "lng": 77.753654,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Hemmigepura": {
+  "lat": 12.893209,
+  "lng": 77.49246,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Hemmigepura Gollahalli": {
+  "lat": 12.874864,
+  "lng": 77.470467,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Hennagara": {
+  "lat": 12.803496,
+  "lng": 77.666097,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Hennur": {
+  "lat": 13.036337,
+  "lng": 77.634482,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Hindiganala Cross": {
+  "lat": 13.25011,
+  "lng": 77.913742,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Hirandahalli": {
+  "lat": 13.049634,
+  "lng": 77.724314,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Hongasandra": {
+  "lat": 12.901385,
+  "lng": 77.626503,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Hoodi": {
+  "lat": 12.994403,
+  "lng": 77.716026,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Horamavu": {
+  "lat": 13.04077,
+  "lng": 77.658753,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Hosahalli": {
+  "lat": 13.146313,
+  "lng": 77.641396,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Hosahudya": {
+  "lat": 13.230839,
+  "lng": 77.551025,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Hosapalya": {
+  "lat": 12.891124,
+  "lng": 77.617781,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Hoskote": {
+  "lat": 13.077472,
+  "lng": 77.802086,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Hosur Road": {
+  "lat": 13.064769,
+  "lng": 77.738709,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "House of Hiranandani": {
+  "lat": 13.232135,
+  "lng": 77.698499,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Hoysala Nagara East": {
+  "lat": 13.024055,
+  "lng": 77.663549,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Hulimangala": {
+  "lat": 12.831631,
+  "lng": 77.653335,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Hulimavu": {
+  "lat": 12.873942,
+  "lng": 77.594566,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Hurali Chikkanahalli": {
+  "lat": 13.121974,
+  "lng": 77.474297,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Hurulagurki": {
+  "lat": 13.352786,
+  "lng": 77.720856,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Huskur": {
+  "lat": 12.859066,
+  "lng": 77.707024,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Huvinayakanahalli": {
+  "lat": 13.146213,
+  "lng": 77.685473,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "IPD Salappa Ward": {
+  "lat": 12.967075,
+  "lng": 77.565468,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Iblur": {
+  "lat": 12.922185,
+  "lng": 77.66822,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Iconest 3": {
+  "lat": 12.801141,
+  "lng": 77.679604,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Iggaluru": {
+  "lat": 12.785437,
+  "lng": 77.706248,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Indiranagar": {
+  "lat": 12.97255,
+  "lng": 77.625328,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Indlabele": {
+  "lat": 12.788947,
+  "lng": 77.775632,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Ittamadu": {
+  "lat": 12.920654,
+  "lng": 77.541173,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Ittina Neela Apartments": {
+  "lat": 12.831829,
+  "lng": 77.700508,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "J.P Nagar": {
+  "lat": 12.917244,
+  "lng": 77.606265,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "JP Nagar": {
+  "lat": 13.027884,
+  "lng": 77.614536,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Jadalatimmanahalli": {
+  "lat": 13.403592,
+  "lng": 77.717295,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Jade Garden": {
+  "lat": 13.204044,
+  "lng": 77.645439,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Jakkasandra": {
+  "lat": 12.924381,
+  "lng": 77.635788,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Jakkur": {
+  "lat": 13.064451,
+  "lng": 77.619001,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Jayamahal": {
+  "lat": 12.998589,
+  "lng": 77.602755,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Jayanagar 7th Block": {
+  "lat": 12.926973,
+  "lng": 77.57663,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Jayanagar East": {
+  "lat": 12.922344,
+  "lng": 77.608353,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Jeevanahalli": {
+  "lat": 12.999498,
+  "lng": 77.625793,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Jigani": {
+  "lat": 12.799359,
+  "lng": 77.651478,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Jnana Bharathi": {
+  "lat": 12.941239,
+  "lng": 77.503095,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "K Chennasandra": {
+  "lat": 13.01729,
+  "lng": 77.681534,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "K Dommasandra": {
+  "lat": 13.01084,
+  "lng": 77.740479,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "K Narayanapura": {
+  "lat": 13.043742,
+  "lng": 77.640457,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "K.P Agrahara": {
+  "lat": 12.973463,
+  "lng": 77.548882,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "KR Puram": {
+  "lat": 13.008896,
+  "lng": 77.694827,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Kaadubeesanahalli": {
+  "lat": 12.929809,
+  "lng": 77.695389,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Kacharakanahalli": {
+  "lat": 13.025285,
+  "lng": 77.630561,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Kadaagrahara": {
+  "lat": 13.078239,
+  "lng": 77.692436,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Kadagrahara": {
+  "lat": 12.860631,
+  "lng": 77.766369,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Kadirenahalli": {
+  "lat": 13.394686,
+  "lng": 77.694885,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Kadugodi": {
+  "lat": 12.983839,
+  "lng": 77.757202,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Kaggadasapura": {
+  "lat": 12.971322,
+  "lng": 77.667661,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Kaggalahalli": {
+  "lat": 13.164388,
+  "lng": 77.755203,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Kalkere": {
+  "lat": 13.014454,
+  "lng": 77.712651,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Kalyan Nagar": {
+  "lat": 12.958915,
+  "lng": 77.70855,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Kalyanagar": {
+  "lat": 13.01899,
+  "lng": 77.643533,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Kamakshipalya": {
+  "lat": 12.98388,
+  "lng": 77.529633,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Kamakya Layout": {
+  "lat": 12.922011,
+  "lng": 77.551838,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Kammagondanahalli": {
+  "lat": 13.07552,
+  "lng": 77.526108,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Kammanahalli": {
+  "lat": 12.853062,
+  "lng": 77.678391,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Kanamanapalli": {
+  "lat": 12.681875,
+  "lng": 77.713547,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Kannamangala": {
+  "lat": 13.210278,
+  "lng": 77.671143,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Kannamangala Palya": {
+  "lat": 13.22162,
+  "lng": 77.676125,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Kannuru": {
+  "lat": 13.084107,
+  "lng": 77.65419,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Kasavanahalli": {
+  "lat": 12.90024,
+  "lng": 77.679491,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Kasturbha Nagar": {
+  "lat": 12.954199,
+  "lng": 77.554321,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Kasturi Nagar": {
+  "lat": 13.006186,
+  "lng": 77.656358,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Kaval Byrasandra": {
+  "lat": 13.023299,
+  "lng": 77.609787,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Kaveri Nagara": {
+  "lat": 12.984723,
+  "lng": 77.717867,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Kempapura": {
+  "lat": 13.045286,
+  "lng": 77.603822,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Ketohalli": {
+  "lat": 12.7637,
+  "lng": 77.335899,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Keya The Green Terraces": {
+  "lat": 12.821116,
+  "lng": 77.655952,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Kittaganahalli": {
+  "lat": 12.797234,
+  "lng": 77.691066,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Kittaganuru": {
+  "lat": 13.02949,
+  "lng": 77.703896,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Kodagalahatti": {
+  "lat": 13.154935,
+  "lng": 77.631432,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Kodappanahalli": {
+  "lat": 13.057648,
+  "lng": 77.382523,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Kodati": {
+  "lat": 12.887865,
+  "lng": 77.705746,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Kodi Chikkanahalli": {
+  "lat": 12.903571,
+  "lng": 77.618343,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Kodigehalli": {
+  "lat": 13.055549,
+  "lng": 77.572662,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Kogilu": {
+  "lat": 13.120158,
+  "lng": 77.622386,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Kommasandra": {
+  "lat": 12.858252,
+  "lng": 77.721741,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Konadasapura": {
+  "lat": 13.048921,
+  "lng": 77.753689,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Koramangala": {
+  "lat": 12.940191,
+  "lng": 77.629108,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Koramangala 5th Block": {
+  "lat": 13.042601,
+  "lng": 77.518661,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Kormangala East": {
+  "lat": 12.935798,
+  "lng": 77.634209,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Kormangala West": {
+  "lat": 12.92,
+  "lng": 77.629997,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Kothnur": {
+  "lat": 12.86497,
+  "lng": 77.582273,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Kudlu": {
+  "lat": 12.890219,
+  "lng": 77.662643,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Kumaraswamy Layout": {
+  "lat": 12.913745,
+  "lng": 77.568512,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Kundalahalli": {
+  "lat": 12.96357,
+  "lng": 77.722457,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Kurubarakunte": {
+  "lat": 13.266377,
+  "lng": 77.738937,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Lakkasandra": {
+  "lat": 12.93807,
+  "lng": 77.60834,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Lakkenahalli": {
+  "lat": 13.060674,
+  "lng": 77.390656,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Lakshmisagara": {
+  "lat": 12.811077,
+  "lng": 77.730965,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Lavelle Road": {
+  "lat": 12.912333,
+  "lng": 77.571609,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Lingarajpura": {
+  "lat": 13.013146,
+  "lng": 77.626243,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "MG Road": {
+  "lat": 12.9756,
+  "lng": 77.6068,
+  "source": "https://www.openstreetmap.org/search?query=MG%20Road%2C%20Bengaluru"
+ },
+ "Madeena Nagar": {
+  "lat": 12.910999,
+  "lng": 77.608177,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Madhavara": {
+  "lat": 13.054185,
+  "lng": 77.487067,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Mahadevapura": {
+  "lat": 12.991714,
+  "lng": 77.678665,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Mahaveer Orchids": {
+  "lat": 12.87989,
+  "lng": 77.678833,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Mahendra Aarya": {
+  "lat": 12.827051,
+  "lng": 77.705101,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Mallathahalli": {
+  "lat": 12.973399,
+  "lng": 77.49876,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Malleshwaram": {
+  "lat": 13.019813,
+  "lng": 77.641273,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Manchanahalli": {
+  "lat": 12.772446,
+  "lng": 77.757587,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Mandur": {
+  "lat": 13.078535,
+  "lng": 77.737129,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Manjunath Nagara": {
+  "lat": 12.99483,
+  "lng": 77.545601,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Manjunatha Nagar": {
+  "lat": 13.053954,
+  "lng": 77.497343,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Mantanakurchi": {
+  "lat": 13.052475,
+  "lng": 77.388382,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Manyata Tech Park": {
+  "lat": 13.0447,
+  "lng": 77.6205,
+  "source": "https://www.openstreetmap.org/search?query=Manyata%20Tech%20Park%2C%20Bengaluru"
+ },
+ "Maragondanahalli": {
+  "lat": 12.907161,
+  "lng": 77.642023,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Marasandra": {
+  "lat": 13.230288,
+  "lng": 77.547763,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Marathahalli": {
+  "lat": 12.839161,
+  "lng": 77.666773,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Maruthi Seva Nagara": {
+  "lat": 13.002484,
+  "lng": 77.622726,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Mathikere": {
+  "lat": 13.03775,
+  "lng": 77.56337,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Mattanahalli": {
+  "lat": 12.863374,
+  "lng": 77.808105,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Mayasandra": {
+  "lat": 13.28534,
+  "lng": 77.65551,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Medahalli": {
+  "lat": 13.017529,
+  "lng": 77.71077,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Misiganahalli": {
+  "lat": 13.156485,
+  "lng": 77.669751,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Mookandapalli": {
+  "lat": 12.741817,
+  "lng": 77.788399,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Mulluru": {
+  "lat": 12.90693,
+  "lng": 77.713005,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Muneshwara Block": {
+  "lat": 12.949791,
+  "lng": 77.546257,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Munnenkolalu": {
+  "lat": 12.94797,
+  "lng": 77.709427,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Muttanalluru": {
+  "lat": 12.85071,
+  "lng": 77.73246,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "N.R Colony": {
+  "lat": 12.939308,
+  "lng": 77.570246,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "N.S Palya": {
+  "lat": 12.908467,
+  "lng": 77.60743,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "NTY Layout": {
+  "lat": 12.95054,
+  "lng": 77.543495,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Nada prabhu Kempegowda Nagara": {
+  "lat": 12.990317,
+  "lng": 77.477257,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Naganathapura": {
+  "lat": 12.880691,
+  "lng": 77.67601,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Nagasandra": {
+  "lat": 13.046123,
+  "lng": 77.502144,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Nagavara": {
+  "lat": 13.040755,
+  "lng": 77.614422,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Nandi": {
+  "lat": 13.381776,
+  "lng": 77.698112,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Nanjapura": {
+  "lat": 12.827797,
+  "lng": 77.65546,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Navrathna Agrahara": {
+  "lat": 13.202217,
+  "lng": 77.626131,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Nettigere": {
+  "lat": 12.769907,
+  "lng": 77.491058,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "New Tavarekere": {
+  "lat": 12.917926,
+  "lng": 77.610679,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "New Thippasandra": {
+  "lat": 12.980484,
+  "lng": 77.662796,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Orchid Greens": {
+  "lat": 13.088204,
+  "lng": 77.65567,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Ozone Urbana": {
+  "lat": 13.210016,
+  "lng": 77.661201,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Panathur": {
+  "lat": 12.930335,
+  "lng": 77.699574,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Parkway Homes": {
+  "lat": 12.867523,
+  "lng": 77.684929,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Pattanduru Agrahara": {
+  "lat": 12.976985,
+  "lng": 77.737518,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Peddhanapalya": {
+  "lat": 12.942167,
+  "lng": 77.378944,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Prestige Finsbury Park": {
+  "lat": 13.141784,
+  "lng": 77.684334,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Prestige Finsbury Park - Hyde": {
+  "lat": 13.143184,
+  "lng": 77.684238,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Prestige Golfshire": {
+  "lat": 13.311576,
+  "lng": 77.692513,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Prestige Sunrise Park": {
+  "lat": 12.834293,
+  "lng": 77.663745,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Prestige Tranquility Apartments": {
+  "lat": 13.063514,
+  "lng": 77.744801,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Prime City Apartments": {
+  "lat": 12.849005,
+  "lng": 77.649635,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Provident Welworth City": {
+  "lat": 13.227752,
+  "lng": 77.547375,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Pulakeshi Nagar": {
+  "lat": 12.995194,
+  "lng": 77.612152,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Purnima Elite": {
+  "lat": 12.831805,
+  "lng": 77.691795,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "R.T Nagar": {
+  "lat": 13.034187,
+  "lng": 77.599383,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "RBI Layout": {
+  "lat": 12.885164,
+  "lng": 77.585599,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "RK Township": {
+  "lat": 12.80452,
+  "lng": 77.668274,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "RT Nagar": {
+  "lat": 13.033347,
+  "lng": 77.603333,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Radhadari Nilayam": {
+  "lat": 13.050755,
+  "lng": 77.758034,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Raghunathapura": {
+  "lat": 13.297757,
+  "lng": 77.558127,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Raja Kempegowda Ward": {
+  "lat": 13.135921,
+  "lng": 77.581963,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Rajajinagar": {
+  "lat": 12.837674,
+  "lng": 77.694221,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Rajiv Gandhi Nagar": {
+  "lat": 13.050424,
+  "lng": 77.576988,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Ramky One Karnival": {
+  "lat": 12.828106,
+  "lng": 77.661606,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Reliable Gardenia": {
+  "lat": 12.866521,
+  "lng": 77.684692,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "S.G Palya": {
+  "lat": 12.924726,
+  "lng": 77.608101,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "S.K Garden": {
+  "lat": 12.999498,
+  "lng": 77.605777,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Sadashivanagar": {
+  "lat": 13.010863,
+  "lng": 77.579662,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Sagayapuram": {
+  "lat": 13.003024,
+  "lng": 77.614586,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Salarpuria East Crest": {
+  "lat": 13.043223,
+  "lng": 77.748238,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Salarpuria Sattva Aspire": {
+  "lat": 13.083444,
+  "lng": 77.654421,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Sampangirama Nagar": {
+  "lat": 12.983502,
+  "lng": 77.580143,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Sampige Nagara": {
+  "lat": 12.834054,
+  "lng": 77.69457,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Sampigehalli": {
+  "lat": 13.094276,
+  "lng": 77.626976,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Sarjapur Road": {
+  "lat": 12.852232,
+  "lng": 77.678391,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Sarjapura": {
+  "lat": 12.855312,
+  "lng": 77.789047,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Saroj Dynasty": {
+  "lat": 12.916345,
+  "lng": 77.691643,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Sarvabhouma Nagar": {
+  "lat": 12.913909,
+  "lng": 77.545535,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Sattva Park Cubix": {
+  "lat": 13.24164,
+  "lng": 77.721092,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Shampura": {
+  "lat": 13.024755,
+  "lng": 77.603752,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Shanti Nagar": {
+  "lat": 13.064769,
+  "lng": 77.738709,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Shapoorji Pallonji Parkwest": {
+  "lat": 12.965339,
+  "lng": 77.560405,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Sheshagirihalli": {
+  "lat": 12.829833,
+  "lng": 77.408943,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Shettigere Chikkajala": {
+  "lat": 13.183472,
+  "lng": 77.66143,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Shettihalli": {
+  "lat": 13.070134,
+  "lng": 77.522964,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Shivanasamudra Ward": {
+  "lat": 12.917197,
+  "lng": 77.675774,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Shriram Greenfield": {
+  "lat": 13.071006,
+  "lng": 77.751194,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Shriram Luxor": {
+  "lat": 13.08525,
+  "lng": 77.654915,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Shriram Signiaa": {
+  "lat": 12.839386,
+  "lng": 77.656113,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Shriram Smrithi": {
+  "lat": 12.811858,
+  "lng": 77.781347,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Singasandra": {
+  "lat": 12.875895,
+  "lng": 77.64279,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Singena Agrahara": {
+  "lat": 12.83935,
+  "lng": 77.714043,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Sir MV Layout": {
+  "lat": 12.969041,
+  "lng": 77.489083,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Smondo 2.0": {
+  "lat": 12.821199,
+  "lng": 77.660934,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Smondo 3.0": {
+  "lat": 12.821861,
+  "lng": 77.65947,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Smondoville": {
+  "lat": 12.821174,
+  "lng": 77.65757,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Sobha Lifestyle Legacy": {
+  "lat": 13.23251,
+  "lng": 77.674828,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Southe Gowdanahalli": {
+  "lat": 13.234108,
+  "lng": 77.731607,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Sri Banashankri Layout": {
+  "lat": 13.182682,
+  "lng": 77.557184,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Srinagar": {
+  "lat": 12.949634,
+  "lng": 77.551666,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Srinivasa Nagara": {
+  "lat": 12.934278,
+  "lng": 77.552681,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Subramanyapura": {
+  "lat": 12.912401,
+  "lng": 77.542171,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Sulthanpalya": {
+  "lat": 13.032137,
+  "lng": 77.603773,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Suryanagar Phase 1": {
+  "lat": 12.7958,
+  "lng": 77.700747,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Suryanagar Phase 2": {
+  "lat": 12.785091,
+  "lng": 77.682236,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Suryanagar Phase 3": {
+  "lat": 12.792582,
+  "lng": 77.756165,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Swiss Town": {
+  "lat": 13.209223,
+  "lng": 77.627602,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "T.C Palya": {
+  "lat": 13.022227,
+  "lng": 77.693525,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "TC Palya": {
+  "lat": 13.021348,
+  "lng": 77.702448,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Talagattapura": {
+  "lat": 12.869589,
+  "lng": 77.542811,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Tata Value Housing New Haven": {
+  "lat": 13.075403,
+  "lng": 77.449989,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Tatnahalli": {
+  "lat": 12.737526,
+  "lng": 77.726095,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Thanisandra": {
+  "lat": 13.04508,
+  "lng": 77.635647,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Thataparti": {
+  "lat": 13.275967,
+  "lng": 77.903038,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "The Belvedere - Airport District": {
+  "lat": 13.199,
+  "lng": 77.637032,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "The Commune": {
+  "lat": 12.76486,
+  "lng": 77.699989,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "The Lake View Address": {
+  "lat": 12.833143,
+  "lng": 77.671004,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Thippasandra": {
+  "lat": 13.064769,
+  "lng": 77.738709,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Thore Nagasandra": {
+  "lat": 13.119915,
+  "lng": 77.475769,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Thyagarajnagar": {
+  "lat": 12.933063,
+  "lng": 77.561073,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Tirumagondahalli": {
+  "lat": 12.788179,
+  "lng": 77.714178,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Ullal": {
+  "lat": 12.970153,
+  "lng": 77.492302,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Ullalu": {
+  "lat": 12.961007,
+  "lng": 77.488319,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Uttanahalli": {
+  "lat": 13.158022,
+  "lng": 77.650856,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "V.V Puram": {
+  "lat": 12.949426,
+  "lng": 77.576576,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "VBHC Vaibhava": {
+  "lat": 12.756534,
+  "lng": 77.703423,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Vakil EnCasa": {
+  "lat": 12.795176,
+  "lng": 77.666931,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Varalakshmi Nagar": {
+  "lat": 13.02582,
+  "lng": 77.602613,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Vars Parkwood": {
+  "lat": 12.916397,
+  "lng": 77.691109,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Vasanthapura": {
+  "lat": 12.887848,
+  "lng": 77.554738,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Venkatala": {
+  "lat": 13.116222,
+  "lng": 77.606102,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Vibhootipura": {
+  "lat": 12.955923,
+  "lng": 77.668709,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Vidyaranyanagara": {
+  "lat": 12.971886,
+  "lng": 77.549614,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Vignananagar": {
+  "lat": 12.979878,
+  "lng": 77.681358,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Vignananagara": {
+  "lat": 12.970565,
+  "lng": 77.679781,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Vijaya Bank Layout": {
+  "lat": 12.881429,
+  "lng": 77.611002,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Vijinapura": {
+  "lat": 13.002551,
+  "lng": 77.676201,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Virgonagar": {
+  "lat": 13.0351,
+  "lng": 77.734984,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Vishwanatha Nagenahalli": {
+  "lat": 13.037132,
+  "lng": 77.607463,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Vishwapriya Nagara": {
+  "lat": 12.877243,
+  "lng": 77.633562,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Vishweshwaraiah Enclave": {
+  "lat": 13.230179,
+  "lng": 77.640671,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Vittasandra": {
+  "lat": 12.847176,
+  "lng": 77.64583,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Whitefield": {
+  "lat": 12.939974,
+  "lng": 77.646244,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Wilson Garden": {
+  "lat": 12.837674,
+  "lng": 77.694221,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Woods Enclave": {
+  "lat": 13.151958,
+  "lng": 77.637192,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Yamalur": {
+  "lat": 12.945465,
+  "lng": 77.664793,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Yarappana Bande": {
+  "lat": 13.092761,
+  "lng": 77.682823,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Yartiganahalli": {
+  "lat": 13.186063,
+  "lng": 77.661147,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Yelenahalli": {
+  "lat": 12.866527,
+  "lng": 77.597664,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Yerrappanahalli": {
+  "lat": 13.216193,
+  "lng": 77.698799,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ }
+}

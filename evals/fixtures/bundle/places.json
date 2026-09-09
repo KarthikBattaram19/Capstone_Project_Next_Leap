@@ -1,0 +1,32 @@
+{
+ "Electronic City": {
+  "lat": 12.8452,
+  "lng": 77.6602,
+  "source": "https://www.openstreetmap.org/search?query=Electronic%20City%2C%20Bengaluru"
+ },
+ "HSR Layout": {
+  "lat": 12.914216,
+  "lng": 77.641861,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "Koramangala": {
+  "lat": 12.939885,
+  "lng": 77.6293,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ },
+ "MG Road": {
+  "lat": 12.9756,
+  "lng": 77.6068,
+  "source": "https://www.openstreetmap.org/search?query=MG%20Road%2C%20Bengaluru"
+ },
+ "Manyata Tech Park": {
+  "lat": 13.0447,
+  "lng": 77.6205,
+  "source": "https://www.openstreetmap.org/search?query=Manyata%20Tech%20Park%2C%20Bengaluru"
+ },
+ "Whitefield": {
+  "lat": 12.939974,
+  "lng": 77.646244,
+  "source": "computed: mean of this locality's listing coordinates in the bundle"
+ }
+}

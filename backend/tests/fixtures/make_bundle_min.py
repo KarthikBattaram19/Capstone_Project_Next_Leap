@@ -50,6 +50,7 @@ from scout.domain.osm import OSM_QUERY_SET, OsmFactRecord, OsmQuery
 from scout.domain.provenance import Method
 from scout.pipeline.build_index import build_index
 from scout.pipeline.embedding import EMBEDDING_MODEL, model_fingerprint
+from scout.pipeline.places import build_places
 
 OUT = HERE / "bundle_min"
 SCRAPED_ON = date(2026, 9, 5)
@@ -256,6 +257,7 @@ def main() -> None:
     (OUT / "chunks.json").write_text(
         json.dumps([c.model_dump(mode="json") for c in CHUNKS], indent=1), encoding="utf-8"
     )
+    (OUT / "places.json").write_text(json.dumps(build_places(LISTINGS), indent=1), encoding="utf-8")
     counts = build_index(CHUNKS, str(OUT / "chroma"), localities=LOCALITIES)
 
     by_loc: dict[str, int] = {}

@@ -32,6 +32,7 @@ from scout.domain.listing import ListingRecord
 from scout.domain.manifest import DatasetManifest
 from scout.domain.osm import OsmFactRecord
 from scout.pipeline.build_index import build_index
+from scout.pipeline.places import build_places
 
 SRC = REPO / "data" / "bundle"
 OUT = HERE / "bundle"
@@ -119,6 +120,7 @@ def main() -> None:
     (OUT / "chunks.json").write_text(
         json.dumps([c.model_dump(mode="json") for c in chunks], indent=1), encoding="utf-8"
     )
+    (OUT / "places.json").write_text(json.dumps(build_places(listings), indent=1), encoding="utf-8")
     counts = build_index(chunks, str(OUT / "chroma"), localities=LOCALITIES)
 
     by_loc = {loc: sum(1 for r in listings if r.locality == loc) for loc in LOCALITIES}

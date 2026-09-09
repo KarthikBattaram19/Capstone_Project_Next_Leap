@@ -23,6 +23,21 @@ def test_loads_and_wraps(bundle_min):
     assert store.collection("Koramangala").count() == 2
 
 
+def test_places_resolve_by_name_without_geocoding(bundle_min):
+    store = ArtefactStore.load(bundle_min)
+    p = store.place("  koramangala ")  # trimmed, case-insensitive
+    assert p is not None and p.name == "Koramangala"
+    assert store.place("Nowhere") is None
+    assert "Whitefield" in store.place_names()  # a work hub nobody's listings sit in
+
+
+def test_missing_places_table_refuses(tmp_path):
+    shutil.copytree(BUNDLE, tmp_path / "b")
+    (tmp_path / "b" / "places.json").unlink()
+    with pytest.raises(BootError, match="places.json"):
+        ArtefactStore.load(str(tmp_path / "b"))
+
+
 def test_version_mismatch_refuses(tmp_path):
     shutil.copytree(BUNDLE, tmp_path / "b")
     p = tmp_path / "b" / "manifest.json"
