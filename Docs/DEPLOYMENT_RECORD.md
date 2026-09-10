@@ -14,15 +14,25 @@ happened yet it says so; nothing here is a plan dressed as a fact.
 Both answered on 2026-09-10: `GET /health` → `{"status":"ok","contract_version":"1"}` in
 0.98 s from this machine; the Vercel page returned HTTP 200.
 
-## What production is running, and what it is not
+## What production is running
 
 Railway builds from the GitHub repository on every push to `main`, using
-`backend/Dockerfile` (`railway.json` at the repository root). On 2026-09-10 `origin/main`
-stood at commit `7a14afc` (2026-09-09, an OSM precompute fix). **That is Phase 1 code.**
-Every Phase 2 task (the conversation) and every Phase 3 task (booking, PDF, email, the
-finished UI) exists only in commits that have not been pushed. The promotion in Task 3.7
-Steps 1–3 therefore happens on the next push to `main`, backend first, and is recorded
-in the section *Promotion checklist* below rather than claimed here.
+`backend/Dockerfile` (`railway.json` at the repository root). **Promoted 2026-09-10:**
+`main` was pushed from `7a14afc` (Phase 1 code) to `a746ae2` (all of Phases 2 and 3), then
+two fixes found on production (`dc0047d`, `8efdf57`, below). Railway deployment
+`919c632e` (11:12 IST) is the one serving; Vercel rebuilt the frontend from the same
+pushes (its JS carries the new booking strings).
+
+**What the promotion actually took — three faults, each fixed the same hour.**
+
+| Fault | How it showed | Fix |
+|---|---|---|
+| `GEMINI_API_KEY` absent on Railway | every container start exited 2 ("missing required environment variables: GEMINI_API_KEY"); Railway had already removed the old container, so production was down ~12 minutes | variable set (with `JOB1_PROVIDER=gemini`); the boot message named it exactly |
+| `GOOGLE_OAUTH_CREDENTIALS` on Railway was a 72-character non-JSON value (never exercised by Phase 1 code) | first `POST /bookings/slots` → 500 traceback `CalendarError: Extra data` | value replaced with the working 3-key JSON; and the routes now answer **503** naming the calendar capability instead of a bare 500 (`8efdf57`) |
+| Deepgram refused every speech stream (HTTP 400 at socket init) | the hello was answered, then `DeepgramStream.start()` raised — no voice turn could ever begin | Task 2.3 sent all 464 locality names as keyterms; measured against nova-3, 80 open and 85 do not; the list is now budgeted to 60 terms ranked by listing count, and a live ping opens a real stream with the production list (`dc0047d`) |
+
+After the last fix: a hello answered with a session id, the socket held open 6 s with no
+error in the deploy log, and the booking table below re-run on production.
 
 ## Region, and the numbers behind it
 
@@ -91,7 +101,7 @@ it is checked on its own evidence.
 | Job 2 | `claude-sonnet-5`, effort low | `backend/scout/config.py` |
 | Python | 3.12.10, every dependency pinned in `backend/requirements.lock` | `backend/pyproject.toml` |
 
-## Promotion checklist (Task 3.7 Steps 1–3, to run on the push)
+## Promotion checklist (Task 3.7 Steps 1–3 — run on 2026-09-10; kept for the next push)
 
 The push to `main` is the promotion. Before it, the Railway variables must carry every
 name the boot check demands, or the deploy fails its health check and the previous
@@ -116,7 +126,24 @@ version keeps serving (which is the intended failure mode):
 6. One real booking by voice on the production URL, then a cancel by code — the Phase 3
    exit line.
 
-## Evidence gathered locally on 2026-09-10 (the same code the push will deploy)
+## Evidence on the production URL, 2026-09-10, after the promotion
+
+Over HTTP against `https://capstoneprojectnextleap-production.up.railway.app`, with the
+real Google account:
+
+| Step | Result |
+|---|---|
+| `POST /bookings/slots` | 3 slots, 0.68 s |
+| `POST /bookings` | booked, `calendar_sync: complete`, 1.64 s (L6 < 5 s) |
+| `POST /bookings/{code}/cancel` | cancelled, 1.20 s (L7 < 5 s) |
+| Cancelled code vs unknown code | identical `404` |
+| Email | Railway log: `confirmation email sent for booking <code>` |
+| CORS | foreign origin: no `access-control-allow-origin`; Vercel origin: header echoed |
+
+Still to be done by hand on the production page: one spoken conversation, an explanation,
+a booking by voice and a cancel by code — the Phase 3 exit line.
+
+## Evidence gathered locally on 2026-09-10, before the push
 
 Against `python -m scout.main` on this machine with the operator's `backend/.env`, the
 real Google account, over HTTP:
