@@ -93,3 +93,21 @@ def assert_every_claim_cites(
                 raise AssertionError(f"unknown citation kind in {ref}")
     for s in explanation.sources:
         assert s.label.strip() != "[OSM]", "a bare [OSM] citation is an automatic failure"
+
+
+# Expectations that can only be checked against an explanation. A case declaring one of
+# these and receiving no explanation used to pass in silence, because Suite C guarded its
+# whole grounding block with `if vm.explanation is not None`. Five cases were green that
+# way on 2026-09-10 — four of them contamination probes.
+NEEDS_EXPLANATION = ("gaps_declared", "must_not_mention")
+
+
+def assert_explanation_was_produced(explanation, expect: dict, case_id: str) -> None:
+    """A case that asserts about prose must actually have prose to assert about."""
+    needed = [k for k in NEEDS_EXPLANATION if expect.get(k)]
+    if needed and explanation is None:
+        raise AssertionError(
+            f"{case_id} declares {', '.join(needed)} but no explanation was produced — "
+            "the turn never reached lane B, so those assertions would have been skipped "
+            "rather than passed"
+        )

@@ -7,7 +7,10 @@ from scout.contract.outcome import Answered, Degraded
 from scout.conversation.session import SessionManager
 
 from evals.assertions.commute import assert_three_layers_agree, assert_your_commute_absent
-from evals.assertions.grounding import assert_every_claim_cites
+from evals.assertions.grounding import (
+    assert_every_claim_cites,
+    assert_explanation_was_produced,
+)
 from evals.conftest import load_cases
 from evals.harness.driver import Driver
 
@@ -45,6 +48,8 @@ async def test_grounding(case, store, settings, job2_drops):
             c for g in vm.shortlist.groups for c in g.cards if c.listing_id == exp["listing_id"]
         )
         assert_your_commute_absent(card)
+
+    assert_explanation_was_produced(vm.explanation, exp, case["id"])
 
     if vm.explanation is not None:
         assert_every_claim_cites(vm.explanation, store, case["locality"])

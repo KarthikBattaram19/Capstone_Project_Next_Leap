@@ -52,11 +52,39 @@ def parse_ordinal(text: str) -> int | None:
     return ORDINALS.get(m.group(1).lower())
 
 
+# A question that NAMES a listing ("the first one", "this one") is asking about that
+# listing, not changing the preferences — so it belongs in lane B even when it uses none of
+# the words in _EXPLAIN. Found by the 2026-09-10 eval pass: "is there a park near the first
+# one?" and "when can I move into the first one?" were routed to lane A, which produces no
+# explanation at all, so Suite C's grounding assertions were skipped rather than passed.
+_ASKS_ABOUT_LISTING = re.compile(
+    r"\b(?:what|when|where|how|which|is|are|does|do|can|could|tell me)\b"
+    r"[^?]*\b(?:this|that|the\s+\w+)\s+one\b",
+    re.IGNORECASE,
+)
+
+# The renter quoting the guide back at us: no listing reference and no _EXPLAIN word, but
+# plainly a question about a document the assistant holds.
+_ASKS_ABOUT_GUIDE = re.compile(r"\bthe guide say|\bwhat does (?:it|the guide) say", re.IGNORECASE)
+
+# Acting on a listing is not asking about it. These verbs anywhere in the turn keep the turn
+# in lane A: "can I book the second one?" reads like a question and is a booking.
+_ACTS = re.compile(r"\b(?:book|cancel|reschedule|drop|remove|add|show)\b", re.IGNORECASE)
+
+
 def classify_turn(text: str, has_shortlist: bool) -> TurnType:
-    if (
-        has_shortlist
-        and _EXPLAIN.search(text)
-        and not re.match(r"^\s*(book|cancel|reschedule)\b", text, re.IGNORECASE)
+    if not has_shortlist:
+        return "A"
+    # Unchanged from before the 2026-09-10 widening: whatever _EXPLAIN matched then still
+    # routes the same way now, so "show me why you picked this one" keeps its explanation.
+    if _EXPLAIN.search(text) and not re.match(
+        r"^\s*(book|cancel|reschedule)\b", text, re.IGNORECASE
     ):
+        return "B"
+    # The widening, and the action guard that belongs only to it: a turn that acts on a
+    # listing is not asking about it, however much it reads like a question.
+    if _ACTS.search(text):
+        return "A"
+    if _ASKS_ABOUT_LISTING.search(text) or _ASKS_ABOUT_GUIDE.search(text):
         return "B"
     return "A"

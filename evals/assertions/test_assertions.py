@@ -16,7 +16,11 @@ from scout.contract.viewmodels import (
 )
 
 from evals.assertions.commute import assert_three_layers_agree, assert_your_commute_absent
-from evals.assertions.grounding import _supports, assert_every_claim_cites
+from evals.assertions.grounding import (
+    _supports,
+    assert_every_claim_cites,
+    assert_explanation_was_produced,
+)
 from evals.assertions.order import assert_untouched_identical
 
 ROUTED_LABEL = "[OSM routing — precomputed 2026-09-07]"
@@ -279,3 +283,23 @@ def test_grounding_rejects_a_ref_missing_from_sources_and_an_unknown_kind():
     )
     with pytest.raises(AssertionError, match="unknown citation kind"):
         assert_every_claim_cites(unknown, store, "Koramangala")
+
+
+# --- the hole the 2026-09-10 pass fell through -------------------------------------------
+
+
+def test_a_case_needing_an_explanation_fails_when_none_was_produced():
+    # Suite C used to guard its whole grounding block with `if vm.explanation is not None`,
+    # so five cases asserting gaps and contamination passed without an explanation existing.
+    with pytest.raises(AssertionError) as e:
+        assert_explanation_was_produced(None, {"must_not_mention": ["Forum Mall"]}, "c-019")
+    assert "c-019" in str(e.value) and "must_not_mention" in str(e.value)
+
+
+def test_a_case_with_no_explanation_expectations_is_allowed_to_have_none():
+    # Commute cases assert on the card, not on prose. They may legitimately answer in lane A.
+    assert_explanation_was_produced(None, {"commute_method": "ROUTED"}, "c-001")
+
+
+def test_an_explanation_that_exists_satisfies_the_check():
+    assert_explanation_was_produced(object(), {"gaps_declared": ["deposit"]}, "c-008")
