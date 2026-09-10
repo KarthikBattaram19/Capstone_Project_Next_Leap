@@ -84,6 +84,33 @@ describe("session reducer", () => {
     expect(s2.listening).toBe("processing");
   });
 
+  it("an HTTP booking replaces the offer, and a cancel by code changes only that booking", () => {
+    const slot = { start_ist: "2026-09-15T10:00:00+05:30", end_ist: "2026-09-15T11:00:00+05:30", spoken: "Mon 10 am" };
+    const s1 = reduce(
+      { ...initial, shortlist },
+      { type: "offered", slots: [slot] },
+    );
+    expect(s1.offeredSlots).toEqual([slot]);
+    const booking = {
+      code: "K7M4PX",
+      listing_id: "a",
+      slot,
+      state: "booked" as const,
+      pdf_status: "pending" as const,
+      calendar_sync: "complete" as const,
+    };
+    const s2 = reduce(s1, { type: "booking", booking });
+    expect(s2.booking).toEqual(booking);
+    expect(s2.offeredSlots).toEqual([]);
+    expect(s2.shortlist).toEqual(shortlist);
+    // A different code leaves the booking on screen alone.
+    const s3 = reduce(s2, { type: "booking_state", code: "ZZZZZZ", state: "cancelled" });
+    expect(s3.booking?.state).toBe("booked");
+    const s4 = reduce(s3, { type: "booking_state", code: "K7M4PX", state: "cancelled" });
+    expect(s4.booking?.state).toBe("cancelled");
+    expect(s4.shortlist).toEqual(shortlist);
+  });
+
   it("transcript interim marks listening; final does not change the phase", () => {
     const s1 = reduce({ ...initial, listening: "idle" }, { type: "transcript", text: "two b", final: false });
     expect(s1.listening).toBe("listening");

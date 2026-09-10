@@ -1,4 +1,4 @@
-import type { BookingRequest, BookingResponse, SlotsResponse } from "@/lib/viewmodels/contract";
+import type { BookingRequest, BookingResponse, BookingState, SlotsResponse } from "@/lib/viewmodels/contract";
 
 export class ApiError extends Error {
   constructor(
@@ -7,6 +7,23 @@ export class ApiError extends Error {
   ) {
     super(message);
   }
+}
+
+/**
+ * The API's `detail`, shown verbatim — unknown and cancelled codes deliberately get
+ * the same sentence, and this layer must not reword either. FastAPI's own
+ * validation errors send a list instead of a string; their messages are joined.
+ */
+function detailText(d: unknown): string | null {
+  const detail = (d as { detail?: unknown } | null)?.detail;
+  if (typeof detail === "string") return detail;
+  if (Array.isArray(detail)) {
+    const msgs = detail
+      .map((x) => (x as { msg?: unknown } | null)?.msg)
+      .filter((m): m is string => typeof m === "string");
+    if (msgs.length > 0) return msgs.join("; ");
+  }
+  return null;
 }
 
 /** The plain-HTTP door: bookings by code (arch §11.1). The code is the only credential. */
@@ -26,7 +43,7 @@ export class HttpClient {
     }
     if (!r.ok) {
       const d = await r.json().catch(() => ({}));
-      throw new ApiError(r.status, d.detail ?? r.statusText);
+      throw new ApiError(r.status, detailText(d) ?? r.statusText);
     }
     return r.json();
   }
@@ -40,7 +57,7 @@ export class HttpClient {
   }
 
   cancel(code: string) {
-    return this.post<{ code: string; state: string; spoken: string }>(`/bookings/${code}/cancel`, {});
+    return this.post<{ code: string; state: BookingState; spoken: string }>(`/bookings/${code}/cancel`, {});
   }
 
   reschedule(code: string, slot_start_ist: string) {

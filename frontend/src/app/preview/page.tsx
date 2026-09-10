@@ -24,7 +24,9 @@ const h: WorkspaceHandlers = {
   onConfirm: noop,
   onCancel: noop,
   onReschedule: noop,
-  onLookup: noop,
+  onRescheduleTo: noop,
+  onCodeCancel: noop,
+  onCodeReschedule: noop,
 };
 
 function Section({ id, label, children }: { id: string; label: string; children: React.ReactNode }) {

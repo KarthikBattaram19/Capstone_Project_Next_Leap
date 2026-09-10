@@ -23,42 +23,62 @@ function Echo({ value }: { value: string }) {
   );
 }
 
+/**
+ * The booking on screen: slot, time (IST), the code large, PDF status, the
+ * calendar-sync note, Cancel / Reschedule. Every word the service sends back
+ * (`spoken` on success, `detail` on an error) is shown here verbatim.
+ *
+ * `mode` is "book" while slots are offered for a fresh booking (email needed) and
+ * "reschedule" while slots are offered to move an existing one (no email: the
+ * code is the credential).
+ */
 export function BookingPanel({
   booking,
   offeredSlots,
+  mode = "book",
   listingLabel,
   busy,
   error,
+  message,
   onConfirm,
+  onRescheduleTo,
   onCancel,
   onReschedule,
 }: {
   booking: BookingVM | null;
   offeredSlots: SlotVM[];
+  mode?: "book" | "reschedule";
   listingLabel?: string;
   busy?: boolean;
   error?: string | null;
+  /** The last `spoken` from the booking API (book, cancel, reschedule, slots). */
+  message?: string | null;
   onConfirm?: (slot: SlotVM, email: string) => void;
+  /** Reschedule the booking on screen to a slot picked from `offeredSlots`. */
+  onRescheduleTo?: (code: string, slot: SlotVM) => void;
   onCancel?: (code: string) => void;
+  /** Ask for slots to move the booking on screen to. */
   onReschedule?: (code: string) => void;
 }) {
   const [slot, setSlot] = useState<SlotVM | null>(offeredSlots[0] ?? null);
   const [email, setEmail] = useState("");
 
   const confirmed = booking && booking.state === "booked";
+  const rescheduling = mode === "reschedule" && !!booking;
+  const offering = offeredSlots.length > 0 && (!confirmed || rescheduling);
 
   return (
     <section className="booking" aria-label="Book a visit">
       <header className="booking__head">
         <div>
           <span className="booking__eyebrow">Site visit</span>
-          <h2 className="booking__title">{confirmed ? "Visit booked" : "Book a visit"}</h2>
+          <h2 className="booking__title">{rescheduling ? "Move the visit" : confirmed ? "Visit booked" : "Book a visit"}</h2>
           {listingLabel ? <p className="booking__listing">{listingLabel}</p> : null}
         </div>
         <CalendarIcon className="booking__glyph" />
       </header>
 
-      {!confirmed && offeredSlots.length > 0 ? (
+      {offering ? (
         <>
           <div className="booking__slots" role="radiogroup" aria-label="Available visit slots">
             {offeredSlots.map((s) => {
@@ -79,33 +99,44 @@ export function BookingPanel({
             })}
           </div>
 
-          <label className="booking__field">
-            <span className="booking__label">Your email for the confirmation PDF</span>
-            <input
-              className="input"
-              type="email"
-              autoComplete="email"
-              placeholder="name@example.com"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-            />
-          </label>
-          <Echo value={email} />
+          {rescheduling ? (
+            <button
+              type="button"
+              className="btn btn--accent btn--wide"
+              disabled={!slot || busy || !onRescheduleTo}
+              onClick={() => slot && booking && onRescheduleTo?.(booking.code, slot)}
+            >
+              {busy ? "Moving…" : "Move the visit to this slot"}
+            </button>
+          ) : (
+            <>
+              <label className="booking__field">
+                <span className="booking__label">Your email for the confirmation PDF</span>
+                <input
+                  className="input"
+                  type="email"
+                  autoComplete="email"
+                  placeholder="name@example.com"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                />
+              </label>
+              <Echo value={email} />
 
-          {error ? <p className="booking__error">{error}</p> : null}
-
-          <button
-            type="button"
-            className="btn btn--accent btn--wide"
-            disabled={!slot || !email || busy || !onConfirm}
-            onClick={() => slot && onConfirm?.(slot, email)}
-          >
-            {busy ? "Confirming…" : "Confirm this visit"}
-          </button>
+              <button
+                type="button"
+                className="btn btn--accent btn--wide"
+                disabled={!slot || !email || busy || !onConfirm}
+                onClick={() => slot && onConfirm?.(slot, email)}
+              >
+                {busy ? "Confirming…" : "Confirm this visit"}
+              </button>
+            </>
+          )}
         </>
       ) : null}
 
-      {!confirmed && offeredSlots.length === 0 ? (
+      {!confirmed && !offering && !booking ? (
         <p className="booking__hint">
           Say <em>“book a visit”</em> for a listing and I will read out the next three free hours.
         </p>
@@ -118,6 +149,9 @@ export function BookingPanel({
             {booking.code}
           </div>
           <p className="booking__when">{booking.slot.spoken}</p>
+          <p className="booking__ist" aria-label="Slot in Indian Standard Time">
+            {booking.slot.start_ist} → {booking.slot.end_ist} · IST
+          </p>
           <ul className="booking__status">
             {booking.state !== "booked" ? <li className="booking__state">This booking is {booking.state}.</li> : null}
             {booking.state === "booked" && PDF_TEXT[booking.pdf_status] ? (
@@ -130,10 +164,10 @@ export function BookingPanel({
               <li className="booking__sync">Calendar still syncing — your booking stands</li>
             ) : null}
           </ul>
-          {booking.state === "booked" ? (
+          {booking.state === "booked" && !rescheduling ? (
             <div className="booking__actions">
               <button type="button" className="btn btn--ghost" disabled={!onReschedule || busy} onClick={() => onReschedule?.(booking.code)}>
-                Reschedule
+                {busy ? "Working…" : "Reschedule"}
               </button>
               <button type="button" className="btn btn--ghost btn--danger" disabled={!onCancel || busy} onClick={() => onCancel?.(booking.code)}>
                 Cancel
@@ -141,6 +175,17 @@ export function BookingPanel({
             </div>
           ) : null}
         </div>
+      ) : null}
+
+      {message ? (
+        <p className="booking__message" role="status">
+          {message}
+        </p>
+      ) : null}
+      {error ? (
+        <p className="booking__error" role="alert">
+          {error}
+        </p>
       ) : null}
 
       <p className="booking__owner">Owner contact 999999999 · demo placeholder, not a real number</p>

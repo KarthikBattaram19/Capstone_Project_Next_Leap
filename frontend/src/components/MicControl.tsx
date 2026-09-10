@@ -1,4 +1,6 @@
 import { MicIcon } from "./Icons";
+import { MicErrorHelp } from "./MicErrorHelp";
+import { ReloadNotice } from "./Notices";
 
 export type MicPhase = "idle" | "connecting";
 
@@ -12,10 +14,13 @@ export function MicControl({
   phase,
   onStart,
   micError,
+  reloaded,
 }: {
   phase: MicPhase;
   onStart: () => void;
   micError: "denied" | "no_device" | null;
+  /** The tab was reloaded mid-conversation: the conversation is gone (spec §6.21). */
+  reloaded?: boolean;
 }) {
   const connecting = phase === "connecting";
   return (
@@ -44,22 +49,9 @@ export function MicControl({
         {connecting ? "Unlocking audio and opening the microphone" : "She greets you first, then you say what you need"}
       </p>
 
-      {micError ? (
-        <div className="mic-error" role="alert">
-          {micError === "denied" ? (
-            <>
-              <p className="mic-error__title">Microphone access was refused.</p>
-              <ul className="mic-error__how">
-                <li><b>Chrome</b> · click the lock icon in the address bar → Microphone → Allow, then reload.</li>
-                <li><b>Firefox</b> · click the microphone icon left of the address bar → remove the block, then reload.</li>
-                <li><b>Safari</b> · Safari menu → Settings for This Website → Microphone → Allow.</li>
-              </ul>
-            </>
-          ) : (
-            <p className="mic-error__title">No microphone was found. Plug one in, or type below instead.</p>
-          )}
-        </div>
-      ) : null}
+      <MicErrorHelp error={micError} />
+
+      {reloaded ? <ReloadNotice /> : null}
 
       <div className="hero__examples" aria-label="Examples of what you can say">
         <span className="chip chip--example">2 BHK in Koramangala under ₹35,000</span>

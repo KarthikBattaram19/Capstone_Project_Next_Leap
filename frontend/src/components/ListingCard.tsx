@@ -73,6 +73,45 @@ export function ListingCard({
         {card.your_commute ? <CommuteRow row={card.your_commute} /> : null}
       </ul>
 
+      {/* The expanded view: every field with its label, "not stated" where the
+          dataset has nothing, and each distance's full label as text — the badge
+          says the method, this says the source and date too (spec §4, §3.5). */}
+      <details className="card__more">
+        <summary className="card__more-summary">All details</summary>
+        <dl className="card__more-list">
+          {(
+            [
+              ["Locality", card.locality],
+              ["Society", card.society_name],
+              ["Rent", card.rent],
+              ["Deposit", card.deposit],
+              ["Maintenance", card.maintenance],
+              ["BHK", card.bhk_type],
+              ["Size (sq ft)", card.square_footage],
+              ["Floor", card.floor],
+              ["Parking", card.parking],
+              ["Furnishing", card.furnishing],
+              ["Amenities", card.amenities.length > 0 ? card.amenities.join(", ") : NOT_STATED],
+              ["Available from", card.available_from],
+            ] as const
+          ).map(([label, value]) => (
+            <div key={label} className="card__more-row">
+              <dt className="card__label">{label}</dt>
+              <dd className={"card__more-value" + (value === NOT_STATED ? " card__value--none" : "")}>{value}</dd>
+            </div>
+          ))}
+          {[card.transit, ...(card.your_commute ? [card.your_commute] : [])].map((row) => (
+            <div key={row.what} className="card__more-row">
+              <dt className="card__label">{row.what}</dt>
+              <dd className={"card__more-value" + (row.value_text === NOT_STATED ? " card__value--none" : "")}>
+                {row.value_text}
+                <span className="card__more-source">{row.full_label}</span>
+              </dd>
+            </div>
+          ))}
+        </dl>
+      </details>
+
       {onWhy ? (
         <footer className="card__foot">
           <button type="button" className="btn btn--ghost btn--sm" onClick={() => onWhy(card)}>

@@ -13,6 +13,8 @@ export class WsClient {
   private closedByUs = false;
   private attempt = 0;
   private timer: ReturnType<typeof setTimeout> | undefined;
+  /** The backend's session id from the hello frame (contract `hello_out`); POST /bookings needs it. */
+  sessionId: string | null = null;
 
   onTranscript: (text: string, final: boolean) => void = () => {};
   onAck: (text: string) => void = () => {};
@@ -62,6 +64,7 @@ export class WsClient {
           case "hello":
             settled = true;
             this.attempt = 0;
+            this.sessionId = typeof m.session_id === "string" ? m.session_id : null;
             this.onOpen();
             resolve();
             break;

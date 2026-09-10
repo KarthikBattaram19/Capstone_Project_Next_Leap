@@ -699,6 +699,7 @@ b {
 
 .card {
   container-type: inline-size;
+  container-name: card;
   padding: 24px;
   border-radius: var(--r-lg);
   background: var(--surface);
@@ -876,10 +877,61 @@ b {
 }
 
 /* The number goes, never the label: the method must survive any width (spec §4). */
-@container (max-width: 260px) {
+@container card (max-width: 260px) {
   .commute__value {
     visibility: hidden;
   }
+}
+
+/* The expanded view: every field labelled, full source labels as text. */
+.card__more {
+  margin-top: 12px;
+  border-top: 1px solid var(--border);
+  padding-top: 10px;
+}
+
+.card__more-summary {
+  cursor: pointer;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--text-2);
+  list-style: none;
+}
+
+.card__more-summary::before {
+  content: "▸ ";
+}
+
+.card__more[open] .card__more-summary::before {
+  content: "▾ ";
+}
+
+.card__more-list {
+  margin-top: 10px;
+  display: grid;
+  gap: 6px;
+}
+
+.card__more-row {
+  display: grid;
+  grid-template-columns: minmax(6rem, 8rem) minmax(0, 1fr);
+  gap: 8px;
+  align-items: baseline;
+  font-size: 13px;
+}
+
+.card__more-value {
+  color: var(--text);
+  overflow-wrap: anywhere;
+}
+
+.card__more-source {
+  display: block;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text-2);
 }
 
 .card__foot {
@@ -1590,6 +1642,23 @@ b {
   color: var(--bad);
 }
 
+/* What the service said back, verbatim (spoken on success). */
+.booking__message {
+  font-size: 13px;
+  color: var(--text);
+  padding: 10px 14px;
+  border-radius: var(--r);
+  background: var(--surface-3);
+  border: 1px solid var(--border);
+}
+
+.booking__ist {
+  text-align: center;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text-2);
+}
+
 .booking__hint {
   color: var(--text-2);
   font-size: 14px;
@@ -1678,14 +1747,24 @@ b {
 }
 
 .code-entry {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  flex-wrap: wrap;
+  display: grid;
+  gap: 10px;
   padding: 14px 18px;
   border-radius: var(--r-lg);
   background: var(--surface-3);
   border: 1px solid var(--border);
+}
+
+.code-entry__row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.code-entry__row .input:not(.input--code) {
+  flex: 1 1 12rem;
+  width: auto;
 }
 
 .code-entry__icon {

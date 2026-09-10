@@ -6,6 +6,7 @@ import { CodeEntry } from "./CodeEntry";
 import { EmptyState } from "./EmptyState";
 import { FailureBanner } from "./FailureBanner";
 import { EndCallIcon } from "./Icons";
+import { MicErrorHelp } from "./MicErrorHelp";
 import { DegradedNotice, MismatchPanel, NoticeList, ReloadNotice, UnreachablePanel, VoiceOutNotice } from "./Notices";
 import { QuestionPrompt } from "./QuestionPrompt";
 import { ReadbackChips } from "./ReadbackChips";
@@ -25,16 +26,29 @@ export interface WorkspaceHandlers {
   onWhy: (card: CardVM) => void;
   onBook: (listingId: string) => void;
   onConfirm: (slot: SlotVM, email: string) => void;
+  /** BookingPanel Cancel → POST /bookings/{code}/cancel. */
   onCancel: (code: string) => void;
+  /** BookingPanel Reschedule → POST /bookings/slots for the booking's listing. */
   onReschedule: (code: string) => void;
-  onLookup: (code: string) => void;
+  /** A slot picked while rescheduling → POST /bookings/{code}/reschedule. */
+  onRescheduleTo: (code: string, slot: SlotVM) => void;
+  /** CodeEntry Cancel by code → POST /bookings/{code}/cancel; the answer shows under the code field. */
+  onCodeCancel: (code: string) => void;
+  /** CodeEntry Reschedule with a typed time → POST /bookings/{code}/reschedule. */
+  onCodeReschedule: (code: string, when: string) => void;
 }
 
 export interface WorkspaceExtras {
   bookingBusy?: boolean;
+  /** The API's `detail` from the last failed booking call, verbatim. */
   bookingError?: string | null;
-  lookupMessage?: string | null;
+  /** The API's `spoken` from the last successful booking call, verbatim. */
+  bookingMessage?: string | null;
+  /** The last message for a code typed into CodeEntry (`spoken` or `detail`). */
+  codeMessage?: string | null;
   bookingListingId?: string | null;
+  /** Set while slots are offered to move this booking rather than make a new one. */
+  rescheduleCode?: string | null;
   /** True when the tab was reloaded mid-conversation (spec §6.21). */
   reloaded?: boolean;
 }
@@ -86,6 +100,7 @@ export function Workspace({
         </button>
         <div className="voice__extras">
           {s.voiceOut !== "on" ? <VoiceOutNotice state={s.voiceOut} onEnable={h.onEnableVoice} /> : null}
+          <MicErrorHelp error={s.micError} />
           {s.micError ? <TextFallback onSend={h.onSendText} disabled={s.connection !== "open"} /> : null}
           {x.reloaded ? <ReloadNotice /> : null}
         </div>
@@ -115,13 +130,16 @@ export function Workspace({
 
         {showBooking ? (
           <BookingPanel
-            key={x.bookingListingId ?? s.booking?.code ?? "booking"}
+            key={(x.rescheduleCode ? "move:" : "") + (x.bookingListingId ?? s.booking?.code ?? "booking")}
             booking={s.booking}
             offeredSlots={s.offeredSlots}
+            mode={x.rescheduleCode && x.rescheduleCode === s.booking?.code ? "reschedule" : "book"}
             listingLabel={bookingLabel}
             busy={x.bookingBusy}
             error={x.bookingError}
+            message={x.bookingMessage}
             onConfirm={h.onConfirm}
+            onRescheduleTo={h.onRescheduleTo}
             onCancel={h.onCancel}
             onReschedule={h.onReschedule}
           />
@@ -137,7 +155,7 @@ export function Workspace({
           </div>
         ) : null}
 
-        <CodeEntry onLookup={h.onLookup} busy={x.bookingBusy} message={x.lookupMessage} />
+        <CodeEntry onCancel={h.onCodeCancel} onReschedule={h.onCodeReschedule} busy={x.bookingBusy} message={x.codeMessage} />
       </section>
     </main>
   );

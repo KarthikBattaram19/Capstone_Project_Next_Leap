@@ -7,6 +7,7 @@
  *   - "unreachable" is its own state, never rendered as an empty shortlist (§6.12).
  */
 import type {
+  BookingState,
   BookingVM,
   ExplanationVM,
   ShortlistVM,
@@ -70,7 +71,13 @@ export type Action =
   | { type: "speaking"; on: boolean }
   | { type: "outcome"; outcome: TurnOutcome }
   | { type: "mic_error"; error: "denied" | "no_device" | null }
-  | { type: "voice_out"; state: SessionState["voiceOut"] };
+  | { type: "voice_out"; state: SessionState["voiceOut"] }
+  /** Slots fetched over HTTP (POST /bookings/slots) for a listing, or for a reschedule. */
+  | { type: "offered"; slots: SlotVM[] }
+  /** A booking returned by POST /bookings or /bookings/{code}/reschedule; the offer is over. */
+  | { type: "booking"; booking: BookingVM }
+  /** POST /bookings/{code}/cancel answered: the state the service now reports for that code. */
+  | { type: "booking_state"; code: string; state: BookingState };
 
 function closedConnection(reason: string): Connection {
   if (reason === "contract_version_mismatch") return "mismatch";
@@ -100,6 +107,15 @@ export function reduce(s: SessionState, a: Action): SessionState {
       return { ...s, micError: a.error };
     case "voice_out":
       return { ...s, voiceOut: a.state };
+    case "offered":
+      return { ...s, offeredSlots: a.slots };
+    case "booking":
+      return { ...s, booking: a.booking, offeredSlots: [] };
+    case "booking_state":
+      // Only the booking on screen changes; a code typed for some other visit does
+      // not touch it. The shortlist and everything else stay as they were.
+      if (!s.booking || s.booking.code !== a.code) return s;
+      return { ...s, booking: { ...s.booking, state: a.state } };
     case "outcome": {
       const o = a.outcome;
       const base: SessionState = {
