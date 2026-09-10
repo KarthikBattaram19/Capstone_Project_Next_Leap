@@ -146,7 +146,9 @@ async def test_the_turn_records_what_the_assembler_dropped(make):
     orch, session, _speaker, lid = make(ScriptedJob2([]))
     orch.job2 = ScriptedJob2(
         [
-            Job2Sentence("Rent is stated in the dataset for this listing.", [f"dataset:{lid}:rent"]),
+            Job2Sentence(
+                "Rent is stated in the dataset for this listing.", [f"dataset:{lid}:rent"]
+            ),
             Job2Sentence("The area is very safe.", ["guide:made-up"]),
             Job2Sentence("Everyone loves it here.", []),
         ]

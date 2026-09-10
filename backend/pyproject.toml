@@ -39,6 +39,9 @@ testpaths = ["tests"]
 line-length = 100
 target-version = "py312"
 
+[tool.ruff.lint]
+extend-select = ["DTZ"]
+
 [tool.setuptools.packages.find]
 where = ["."]
 include = ["scout*"]

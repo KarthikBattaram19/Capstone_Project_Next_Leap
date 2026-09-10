@@ -3,3 +3,6 @@
 # not conflict. Kept identical so a file does not change meaning when it moves.
 line-length = 100
 target-version = "py312"
+
+[lint]
+extend-select = ["DTZ"]
