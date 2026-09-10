@@ -158,7 +158,7 @@ async def test_a_turn_that_raises_reports_a_failure_instead_of_silence(live):
     assert session.state is TurnState.IDLE
 
 
-async def test_speech_during_a_turn_is_barge_in(live):
+async def test_words_during_a_turn_are_barge_in_but_a_sound_onset_alone_is_not(live):
     async def slow(session, text):
         await asyncio.sleep(5)
         return Answered(view_model=AnsweredViewModel(), spoken="too late")
@@ -167,8 +167,11 @@ async def test_speech_during_a_turn_is_barge_in(live):
     await session._final("two BHK in Koramangala")
     first = session._turn
     await asyncio.sleep(0.05)  # it is mid-turn now
-    await session._speech_started()
+    await session._speech_started()  # a breath, a cough: Deepgram's VAD fires on it
+    assert session.orch.cancelled == 0 and not first.done(), "an onset alone cancelled the turn"
+    assert session.state is TurnState.TYPE_A
 
+    await session._interim("no wait")  # real words: the renter's new sentence wins
     assert session.orch.cancelled == 1, "the speaker must be told to stop"
     # _run_turn swallows the CancelledError and returns, so the task ends done, not
     # cancelled — what matters is that it stops and never answers.
@@ -176,3 +179,20 @@ async def test_speech_during_a_turn_is_barge_in(live):
     assert first.done(), "the interrupted turn must not keep going"
     assert session.state is TurnState.CAPTURING
     assert not [e for e in sink.events if e[0] == "outcome"], "the stale turn still answered"
+
+
+async def test_an_onset_with_no_words_while_thinking_still_ends_in_an_outcome(live):
+    # Production, 2026-09-10: the renter answered the readback, the VAD fired again on
+    # nothing, the turn was cancelled, and the page sat in "processing" forever.
+    async def job1(session, text):
+        await asyncio.sleep(0.3)
+        return Answered(view_model=AnsweredViewModel(), spoken="ok")
+
+    session, sink = live(job1)
+    await session._final("yes")
+    await asyncio.sleep(0.05)
+    await session._speech_started()
+    await session._utterance_end()  # ...and no words ever follow
+    await asyncio.sleep(0.6)
+    assert [e for e in sink.events if e[0] == "outcome"], f"stuck in {session.state}"
+    assert session.state is TurnState.IDLE

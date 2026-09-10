@@ -78,3 +78,36 @@ async def test_cancel_stops_audio_and_sends_stop():
 async def test_tts_failure_completes_in_text():
     res = await Speaker(FakeTts(fail=True), FakeSink()).speak(["Hello."])
     assert res.tts_failed and not res.cancelled
+
+
+class StallingTts(FakeTts):
+    """One chunk, then silence forever — the shape of the 20 s stall seen on production."""
+
+    async def stream(self, text):
+        self.spoken.append(text)
+        yield b"\x00\x01"
+        await asyncio.sleep(3600)
+
+
+async def test_a_stalled_stream_is_given_up_and_the_audio_is_ended():
+    tts, sink = StallingTts(), FakeSink()
+    res = await asyncio.wait_for(
+        Speaker(tts, sink, first_byte_s=0.2, idle_s=0.1).speak(["One.", "Two."]), 2
+    )
+    assert res.tts_failed and not res.cancelled
+    assert sink.events == ["start", "chunk", "end"]  # the page un-mutes on "end"
+    assert tts.spoken == ["One."]  # the stall ends the reply; the text is on screen
+
+
+class SlowFirstByteTts(FakeTts):
+    async def stream(self, text):
+        await asyncio.sleep(3600)
+        yield b"\x00"
+
+
+async def test_a_first_byte_that_never_comes_is_a_tts_failure_not_a_hang():
+    sink = FakeSink()
+    res = await asyncio.wait_for(
+        Speaker(SlowFirstByteTts(), sink, first_byte_s=0.1, idle_s=0.1).speak(["One."]), 2
+    )
+    assert res.tts_failed and sink.events == []  # nothing started, nothing to end

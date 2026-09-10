@@ -102,21 +102,47 @@ class LiveSession:
     async def _speech_started(self) -> None:
         if self.state is TurnState.IDLE:
             self.state = transition(self.state, TurnState.CAPTURING)
-        elif self.state is not TurnState.CAPTURING:
-            # Barge-in (spec §6.17). The renter's new sentence always wins, whether the
-            # assistant was speaking or still thinking.
-            await self.orch.cancel_speech(self.session)
-            if self._turn and not self._turn.done():
-                self._turn.cancel()
-            self.state = transition(self.state, TurnState.CAPTURING)
+        elif self.state is TurnState.SPEAKING:
+            # Barge-in (spec §6.17): the renter spoke over the reply, so stop it now.
+            # Cheap and reversible — the outcome is already on screen.
+            await self._barge_in()
+        # While the assistant is still THINKING, a sound onset alone cancels nothing.
+        # Deepgram's VAD fires on a breath or a chair; cancelling the turn on it and then
+        # hearing no words left the page in "processing" forever (production, 2026-09-10).
+        # Words arriving during a thinking turn are the barge-in, below.
         self._speech_started_at = self._speech_started_at or time.monotonic()
 
+    _THINKING = frozenset(
+        {
+            TurnState.TRANSCRIBING,
+            TurnState.ACK,
+            TurnState.CLASSIFYING,
+            TurnState.TYPE_A,
+            TurnState.TYPE_B,
+        }
+    )
+
+    async def _barge_in(self) -> None:
+        await self.orch.cancel_speech(self.session)
+        if self._turn and not self._turn.done():
+            self._turn.cancel()
+        self.state = transition(self.state, TurnState.CAPTURING)
+
+    async def _words_arrived(self, text: str) -> None:
+        """Real words during a thinking or speaking turn: the renter's new sentence wins."""
+        if text.strip() and self.state in self._THINKING | {TurnState.SPEAKING}:
+            await self._barge_in()
+
     async def _interim(self, text: str) -> None:
+        await self._words_arrived(text)
         if self.state is TurnState.IDLE:
             self.state = transition(self.state, TurnState.CAPTURING)
         await self.sink.transcript(" ".join([*self._segments, text]), final=False)  # L0
 
     async def _final(self, text: str) -> None:
+        await self._words_arrived(text)
+        if self.state is TurnState.IDLE:
+            self.state = transition(self.state, TurnState.CAPTURING)
         self._segments.append(text)
         if self._hold:
             self._hold.cancel()

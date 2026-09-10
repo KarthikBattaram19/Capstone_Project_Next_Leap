@@ -50,6 +50,14 @@ function isContractOutcome(o: unknown): o is TurnOutcome {
 const VOICE_TIMEOUT_MS = 2000;
 
 /**
+ * A reply that stops mid-stream: if no audio chunk arrives for this long after playback
+ * began, give the microphone back and drop the "speaking" state. The backend bounds a
+ * stalled sentence at 4-6 s (speaker.py); this is the page's own floor under it, because
+ * a muted mic with nothing playing is a renter who can neither hear nor be heard.
+ */
+const AUDIO_STALL_MS = 8000;
+
+/**
  * "Was this tab reloaded mid-conversation?" — read once when the page's code
  * loads in the browser (the flag is set while a session is live, and a reload is
  * the only way to arrive here with it still set), cleared when the session ends.
@@ -105,6 +113,9 @@ export default function Page() {
   const player = useRef<PcmPlayer | null>(null);
   const http = useRef(new HttpClient(API));
   const unmuteTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  const stallTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  // Set when the stream stalled: late chunks of that reply are dropped, not played.
+  const stalled = useRef(false);
   const voiceTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   // True from an ack until `audio_out start`: the outcome then decides whether to wait for voice.
   const awaitingVoice = useRef(false);
@@ -147,6 +158,16 @@ export default function Page() {
       dispatch({ type: "voice_out", state: unlocked ? "on" : "blocked" });
 
       const client = new WsClient(wsUrl());
+      const armStallGuard = () => {
+        clearTimeout(stallTimer.current);
+        stallTimer.current = setTimeout(() => {
+          stalled.current = true;
+          player.current?.stop();
+          clearTimeout(unmuteTimer.current);
+          mic.current?.unmute();
+          dispatch({ type: "speaking", on: false });
+        }, AUDIO_STALL_MS + (player.current?.remainingMs() ?? 0));
+      };
       client.onOpen = () => dispatch({ type: "open" });
       client.onReconnecting = () => dispatch({ type: "closed", reason: "reconnecting" });
       client.onTranscript = (text, final) => dispatch({ type: "transcript", text, final });
@@ -165,9 +186,17 @@ export default function Page() {
         // Mute BEFORE the first chunk plays, so the reply never reaches Deepgram.
         clearTimeout(unmuteTimer.current);
         mic.current?.mute();
+        stalled.current = false;
+        armStallGuard();
       };
-      client.onAudioChunk = (pcm) => player.current?.enqueue(pcm);
+      client.onAudioChunk = (pcm) => {
+        if (stalled.current) return;
+        player.current?.enqueue(pcm);
+        armStallGuard();
+      };
       client.onAudioEnd = () => {
+        clearTimeout(stallTimer.current);
+        if (stalled.current) return;
         // Un-mute when playback finishes, not when the server stops sending.
         const wait = (player.current?.remainingMs() ?? 0) + 150;
         clearTimeout(unmuteTimer.current);
@@ -178,6 +207,7 @@ export default function Page() {
       };
       // Barge-in: the renter spoke over the reply; stop playing at once.
       client.onAudioStop = () => {
+        clearTimeout(stallTimer.current);
         player.current?.stop();
         clearTimeout(unmuteTimer.current);
         mic.current?.unmute();
