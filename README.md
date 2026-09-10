@@ -4,8 +4,7 @@ A voice-first rental assistant that collects a tenant's spoken preferences, shor
 
 The problem it addresses isn't finding listings — it's judging whether one fits your life. Is the commute realistic? What's the area actually like? Is the extra room worth the extra rent? Every answer this system gives is traceable to a source, and where it has no source it says so.
 
-> **Status: scaffold exists; implementation in progress — see `Implementation_Plan.md`.**
-> This repository contains the documents and the scaffold (backend package, Next.js frontend, CI skeleton, environment example); the scaffold's unit test and frontend build have been run. Commands, paths and environment variable names below describe the intended build beyond the scaffold.
+> **Status: Phases 0–3 built (2026-09-10) — see `Docs/Implementation_Plan.md`.** Booking, cancel and reschedule work by voice and over HTTP against the real Google calendars; the confirmation PDF is emailed and discarded. Not yet done: the three eval suites are not claimed green (a daily model quota gates the runs), the Phase 2/3 code has not been promoted to production (`Docs/DEPLOYMENT_RECORD.md`), and Phase 4 sign-off has not started.
 
 ---
 
@@ -158,15 +157,20 @@ Both are pinned by **exact model ID, never a `latest` alias** — the CI guarant
 
 ### Prerequisites
 
-Five credentials, **all set on the backend**. None belong in the frontend or in the repo.
+Every secret is **set on the backend**; none belongs in the frontend or in the repo. The
+boot check refuses to start, naming every missing value at once, if any is absent.
+`.env.example` lists them all.
 
 | Variable | Source |
 |---|---|
 | `DEEPGRAM_API_KEY` | [deepgram.com](https://deepgram.com) |
-| `GROQ_API_KEY` | [console.groq.com/keys](https://console.groq.com/keys) |
-| `ANTHROPIC_API_KEY` | [console.anthropic.com](https://console.anthropic.com) |
-| `SMALLEST_API_KEY` | [app.smallest.ai/dashboard](https://app.smallest.ai/dashboard) |
-| `GOOGLE_OAUTH_CREDENTIALS` | Google Cloud Console — Calendar + Gmail scopes |
+| `GEMINI_API_KEY` (with `JOB1_PROVIDER=gemini`, the default) or `GROQ_API_KEY` (with `JOB1_PROVIDER=groq`) | Job 1; only the selected provider's key is required |
+| `ANTHROPIC_API_KEY` | [console.anthropic.com](https://console.anthropic.com) — Job 2 |
+| `SMALLEST_API_KEY`, `SMALLEST_VOICE_ID` | [app.smallest.ai/dashboard](https://app.smallest.ai/dashboard) |
+| `GOOGLE_OAUTH_CREDENTIALS` | printed once by `python scripts/google_auth.py <client_secret.json>` (Calendar + Gmail send scopes) |
+| `GOOGLE_TENANT_CALENDAR_ID`, `GOOGLE_OWNER_CALENDAR_ID`, `GOOGLE_SENDER_EMAIL` | the demo account's two secondary calendars and its address |
+| `OPERATOR_TOKEN` | any secret string; guards `POST /admin/availability` |
+| `CORS_ALLOWED_ORIGINS` | comma-separated explicit allowlist; `*` is refused |
 
 The frontend takes exactly one backend-related variable, and it is public, not a secret:
 
@@ -192,7 +196,35 @@ The build is ordered by **what can invalidate what**, not by what is satisfying 
 5. **Voice pipeline**, then **shortlist and refinement**, then **grounded explanation**.
 6. **Booking, PDF and email**, then the **UI**, then hardening and sign-off.
 
-Local development commands will be added with the scaffold.
+### Running it locally
+
+```powershell
+# Backend (Python 3.12). The lock file carries the dev tools too (pytest, ruff).
+cd backend
+py -3.12 -m venv .venv
+.venv\Scripts\Activate.ps1
+pip install -r requirements.lock
+pip install -e .
+copy ..\.env.example .env        # then fill every value
+python -m pytest tests/unit -q   # unit suite; the committed bundle is loaded from a copy
+python -m scout.main             # boot checks first; exits 2 naming any missing secret
+
+# Frontend (Next.js). NEXT_PUBLIC_API_URL is baked in at build time.
+cd frontend
+npm install
+npm run contract                 # regenerates the types from contract/v1.schema.json
+npm test
+echo NEXT_PUBLIC_API_URL=http://localhost:8000 > .env.local
+npm run dev
+
+# Eval suites (need the Job 1 and Job 2 keys; each run costs model quota)
+python -m pytest evals -q
+```
+
+Booking without the microphone: `POST /bookings/slots`, `POST /bookings`,
+`POST /bookings/{code}/cancel`, `POST /bookings/{code}/reschedule` — bodies in
+`contract/v1.schema.json`; the 6-character code is the only credential, and an unknown
+code and a cancelled one get the same answer.
 
 ---
 
