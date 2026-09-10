@@ -56,6 +56,14 @@ class Settings(BaseSettings):
     # Free tier: 15 requests per minute per model, and a REJECTED request still counts,
     # so pacing under the cap beats retrying into it. 0 disables pacing (paid tiers).
     job1_gemini_rpm: int = 15
+    # Job 1 must finish before a shortlist exists and Gate L gives first audio 3.5 s, so a
+    # call still running at 12 s has already missed its purpose - waiting the old 30 s only
+    # delayed "I didn't catch that". Median is 0.99 s (measured 2026-09-10); p99 is NOT
+    # measured, so this is a judgement, and it is a setting precisely so it can be tuned.
+    job1_gemini_timeout_s: float = 12.0
+    # Three attempts in all. The 2026-09-10 eval pass lost three cases that each timed out
+    # TWICE, which one retry could not save.
+    job1_gemini_timeout_retries: int = 2
     job2_model: str = "claude-sonnet-5"
     job2_effort: str = "low"  # P7
     job2_max_tokens: int = 2048

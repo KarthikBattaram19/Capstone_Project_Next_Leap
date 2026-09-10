@@ -14,6 +14,7 @@ here needs the SDK — httpx is already a dependency, and one endpoint is the wh
 from __future__ import annotations
 
 import asyncio
+import contextlib
 import json
 import random
 from typing import ClassVar
@@ -126,6 +127,8 @@ class GeminiJob1Client:
         self._thinking = settings.job1_gemini_thinking
         self._key = settings.gemini_api_key
         self._pacer = _Pacer.shared(self._model, settings.job1_gemini_rpm)
+        self._timeout_s = settings.job1_gemini_timeout_s
+        self._timeout_retries = settings.job1_gemini_timeout_retries
         # Built on first use, not here: constructing one costs real time, and something
         # builds a client per request batch (the eval driver) or per app (create_app) long
         # before any call is made. Once built it is kept open — P2 wants connection reuse,
@@ -154,13 +157,29 @@ class GeminiJob1Client:
         text = candidate["content"]["parts"][0]["text"]
         return _loads(text, schema_name)
 
+    def _build_session(self) -> httpx.AsyncClient:
+        return httpx.AsyncClient(
+            timeout=httpx.Timeout(self._timeout_s, connect=5.0),
+            limits=httpx.Limits(max_keepalive_connections=4, keepalive_expiry=300.0),
+        )
+
     def _session(self) -> httpx.AsyncClient:
         if self._http is None:
-            self._http = httpx.AsyncClient(
-                timeout=httpx.Timeout(30.0, connect=5.0),
-                limits=httpx.Limits(max_keepalive_connections=4, keepalive_expiry=300.0),
-            )
+            self._http = self._build_session()
         return self._http
+
+    async def _drop_session(self) -> None:
+        """Throw the pooled connection away.
+
+        A retry that goes back out over the same keepalive socket is a retry into whatever
+        made the first attempt hang. Three eval cases timed out TWICE on 2026-09-10, which
+        is what a dead pooled connection looks like; a fresh one costs a TLS handshake.
+        """
+        stale, self._http = self._http, None
+        if stale is not None:
+            # A dead connection may object to being closed. It is going away either way.
+            with contextlib.suppress(httpx.HTTPError, OSError, RuntimeError):
+                await stale.aclose()
 
     async def _post_with_retries(self, body: dict) -> httpx.Response:
         """POST, retrying a rate limit the way the Groq client does (max_retries=4).
@@ -177,13 +196,16 @@ class GeminiJob1Client:
                 try:
                     resp = await self._session().post(url, params={"key": self._key}, json=body)
                 except httpx.TimeoutException as e:
-                    # One retry on a timeout, no more: the free tier occasionally sits on a
-                    # request past the 30 s read timeout (an eval case lost this way on
-                    # 2026-09-10), and a second wait would be a minute the renter does not
-                    # have. Type only — httpx's message carries the URL, and the URL the key.
+                    # Type only in the message - httpx's own carries the URL, and the URL
+                    # carries the key. The count goes in because "it timed out" and "it
+                    # timed out three times" are different operator problems.
                     timeouts += 1
-                    if timeouts > 1 or attempt == RETRIES:
-                        raise GeminiError(f"{type(e).__name__} from Gemini") from None
+                    spent = timeouts > self._timeout_retries or attempt == RETRIES
+                    await self._drop_session()
+                    if spent:
+                        raise GeminiError(
+                            f"{type(e).__name__} from Gemini after {timeouts} attempts"
+                        ) from None
                     continue
             if resp.status_code < 400:
                 return resp

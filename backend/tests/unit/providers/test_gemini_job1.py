@@ -32,7 +32,9 @@ def _client(monkeypatch, handler) -> GeminiJob1Client:
     # transport, and real pacing would make each one sleep four seconds. The pacer has its
     # own test below.
     c = GeminiJob1Client(Settings(_env_file=None, gemini_api_key="k-test", job1_gemini_rpm=0))
-    monkeypatch.setattr(c, "_http", httpx.AsyncClient(transport=httpx.MockTransport(handler)))
+    monkeypatch.setattr(
+        c, "_build_session", lambda: httpx.AsyncClient(transport=httpx.MockTransport(handler))
+    )
     return c
 
 
@@ -231,21 +233,57 @@ def test_pacers_are_separated_by_model_and_rate():
     assert GeminiJob1Client(a)._pacer is not GeminiJob1Client(b)._pacer
 
 
-async def test_one_timeout_is_retried_and_a_second_is_a_named_failure(monkeypatch):
+async def test_repeated_timeouts_are_retried_on_a_fresh_connection(monkeypatch):
+    """Three cases died this way in the 2026-09-10 eval pass, each timing out TWICE.
+
+    A single retry was not enough. The retry also went back out over the same pooled
+    connection, which is the likeliest reason a second 30 s wait failed the same way, so a
+    timeout now drops the connection before trying again.
+    """
+    calls, built = [], []
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        calls.append(1)
+        if len(calls) <= 2:
+            raise httpx.ReadTimeout("read timed out", request=request)
+        return _reply({"intent": "a", "email": None})
+
+    c = GeminiJob1Client(Settings(_env_file=None, gemini_api_key="k-test", job1_gemini_rpm=0))
+
+    def build():
+        session = httpx.AsyncClient(transport=httpx.MockTransport(handler))
+        built.append(session)
+        return session
+
+    monkeypatch.setattr(c, "_build_session", build)
+
+    out = await c.complete_json("s", "u", "job1", SCHEMA)
+
+    assert out == {"intent": "a", "email": None}
+    assert len(calls) == 3, "two timeouts must both be retried"
+    assert len(built) == 3, "each timeout must drop the connection, not retry into it"
+
+
+async def test_timeouts_give_up_once_the_budget_is_spent_and_say_so(monkeypatch):
     calls = []
 
     def handler(request: httpx.Request) -> httpx.Response:
         calls.append(1)
-        if len(calls) == 1:
-            raise httpx.ReadTimeout("read timed out", request=request)
-        return _reply({"intent": "a", "email": None})
-
-    out = await _client(monkeypatch, handler).complete_json("s", "u", "job1", SCHEMA)
-    assert out == {"intent": "a", "email": None} and len(calls) == 2
-
-    def always(request: httpx.Request) -> httpx.Response:
         raise httpx.ReadTimeout("read timed out", request=request)
 
     with pytest.raises(GeminiError) as e:
-        await _client(monkeypatch, always).complete_json("s", "u", "job1", SCHEMA)
-    assert "ReadTimeout" in str(e.value) and "key" not in str(e.value)
+        await _client(monkeypatch, handler).complete_json("s", "u", "job1", SCHEMA)
+
+    message = str(e.value)
+    assert "ReadTimeout" in message and "key" not in message
+    assert "3" in message, f"the failure should say how many attempts were made: {message}"
+    assert len(calls) == 3, "the budget is three attempts, not an unbounded retry loop"
+
+
+async def test_the_timeout_is_configurable_and_shorter_than_the_old_thirty_seconds():
+    # Job 1 must finish before a shortlist exists, and Gate L gives first audio 3.5 s. A
+    # call still running at 12 s has already missed its purpose; waiting 30 s only delays
+    # "I didn't catch that". Median is 0.99 s (measured 2026-09-10); p99 is NOT measured.
+    s = Settings(_env_file=None)
+    assert s.job1_gemini_timeout_s == 12.0
+    assert s.job1_gemini_timeout_retries == 2
