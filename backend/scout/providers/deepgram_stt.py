@@ -28,9 +28,37 @@ Handler = Callable[[str], Awaitable[None]]
 DOMAIN_TERMS = ["BHK", "lakh", "deposit", "maintenance", "semi furnished", "fully furnished"]
 
 
-def build_keyterms(localities: list[str]) -> list[str]:
-    """Generated from the dataset's locality field — never typed by hand (spec §5.1)."""
-    return sorted(set(localities)) + DOMAIN_TERMS
+# Deepgram refuses the stream (HTTP 400 "Unexpected error when initializing websocket
+# connection") once the keyterm list is too long. Measured 2026-09-10 against nova-3 with
+# the real locality names: 80 terms opened, 85 did not; 470 (every locality) never opened,
+# which is why no voice turn could start on the first Phase 2 deploy. The limit is not
+# documented in the SDK and did not track count, characters or words cleanly (150 one-word
+# terms and 40 four-word terms both opened), so the budget below sits well inside every
+# passing point rather than at the edge.
+MAX_KEYTERMS = 60
+MAX_KEYTERM_CHARS = 900
+
+
+def build_keyterms(localities: dict[str, int] | list[str]) -> list[str]:
+    """Generated from the dataset's locality field — never typed by hand (spec §5.1).
+
+    Given the manifest's ``{locality: listing_count}`` the localities with the most
+    listings come first, so the budget is spent where the renter is most likely to look;
+    a plain list is taken in sorted order. The domain terms are always included.
+    """
+    if isinstance(localities, dict):
+        ranked = sorted(localities, key=lambda name: (-localities[name], name))
+    else:
+        ranked = sorted(set(localities))
+    room = MAX_KEYTERMS - len(DOMAIN_TERMS)
+    out: list[str] = []
+    used = sum(len(t) for t in DOMAIN_TERMS)
+    for name in ranked:
+        if len(out) >= room or used + len(name) > MAX_KEYTERM_CHARS:
+            break
+        out.append(name)
+        used += len(name)
+    return out + DOMAIN_TERMS
 
 
 class DeepgramStream:

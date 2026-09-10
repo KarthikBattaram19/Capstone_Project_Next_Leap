@@ -4,6 +4,7 @@ Run with a populated backend/.env:  python -m pytest backend/tests/integration -
 CI never runs these — its pytest target is backend/tests/unit.
 """
 
+import asyncio
 import json
 
 import pytest
@@ -17,6 +18,7 @@ _S = Settings()
 _MISSING = [
     name
     for name, value in (
+        ("DEEPGRAM_API_KEY", _S.deepgram_api_key),
         ("GROQ_API_KEY", _S.groq_api_key),
         ("ANTHROPIC_API_KEY", _S.anthropic_api_key),
         ("SMALLEST_API_KEY", _S.smallest_api_key),
@@ -148,3 +150,29 @@ async def test_both_calendars_exist_are_writable_and_are_on_ist():
             )
             assert entry.status_code == 200, f"{cal}: {entry.text[:200]}"
             assert entry.json().get("accessRole") in ("owner", "writer")
+
+
+async def test_deepgram_opens_a_stream_with_the_production_keyterm_list():
+    """The check that would have caught the first Phase 2 deploy: every locality as a keyterm
+    made Deepgram refuse the socket (400) before a word was heard."""
+    import json
+    import pathlib
+
+    from scout.providers.deepgram_stt import DeepgramStream, build_keyterms
+
+    manifest = pathlib.Path("../data/bundle/manifest.json").read_text(encoding="utf-8")
+    counts = json.loads(manifest)["localities"]
+
+    async def noop(*a, **k):
+        pass
+
+    st = DeepgramStream(
+        _S,
+        build_keyterms(counts),
+        on_interim=noop,
+        on_final=noop,
+        on_speech_started=noop,
+        on_utterance_end=noop,
+    )
+    await asyncio.wait_for(st.start(), 20)
+    await st.close()
