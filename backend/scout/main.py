@@ -12,17 +12,22 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from scout.api.http import router as http_router
+from scout.api.ratelimit import RateLimiter
 from scout.api.ws import router as ws_router
+from scout.booking.reconcile import ReconcileQueue
+from scout.booking.service import BookingService
 from scout.config import Settings
 from scout.conversation.job1 import Job1
 from scout.conversation.live import LiveSession
 from scout.conversation.orchestrator import TurnOrchestrator
 from scout.conversation.session import SessionManager
 from scout.engines.availability import AvailabilityRegister
+from scout.engines.slots import SlotService
 from scout.platform import telemetry
 from scout.platform.artefacts import ArtefactStore
 from scout.platform.boot import BootError, check_bundle, check_secrets, run_boot_checks
 from scout.providers import make_job1_client
+from scout.providers.google_calendar import GoogleCalendarAdapter
 
 EXPIRY_SWEEP_S = 60
 
@@ -33,30 +38,47 @@ def create_app(settings: Settings) -> FastAPI:
     # store that is refused before the port is bound.
     store = ArtefactStore.load(settings.bundle_dir)
     sessions = SessionManager(settings.session_ttl_s)
+    # One register, shared: the orchestrator, the admin toggle and the booking service
+    # must all see the same flip (spec §6.43 re-checks the flag at confirm).
+    availability = AvailabilityRegister(store)
     orchestrator = TurnOrchestrator(
         store,
         settings,
         job1=Job1(make_job1_client(settings), store.localities),
         job2=_job2(settings),
-        availability=AvailabilityRegister(store),
+        availability=availability,
         speaker_factory=lambda: None,  # every live session supplies its own (Task 2.10)
     )
+    # The adapter builds its Google client on first use, never here: unit tests run
+    # create_app with empty credentials (Task 3.2).
+    calendar = GoogleCalendarAdapter(settings)
+    slots = SlotService()
+    reconcile = ReconcileQueue(calendar)
+    booking = BookingService(calendar, slots, availability, reconcile)
 
     @contextlib.asynccontextmanager
     async def lifespan(_: FastAPI) -> AsyncIterator[None]:
         sweeper = asyncio.create_task(_expire_loop(sessions))
+        repairer = asyncio.create_task(reconcile.run_forever())
         try:
             yield
         finally:
-            sweeper.cancel()
-            with contextlib.suppress(asyncio.CancelledError):
-                await sweeper
+            for task in (sweeper, repairer):
+                task.cancel()
+                with contextlib.suppress(asyncio.CancelledError):
+                    await task
 
     app = FastAPI(title="scout", docs_url=None, redoc_url=None, lifespan=lifespan)
     app.state.settings = settings
     app.state.store = store
     app.state.sessions = sessions
     app.state.orchestrator = orchestrator
+    app.state.availability = availability
+    app.state.slots = slots
+    app.state.reconcile = reconcile
+    app.state.booking = booking
+    app.state.code_limiter = RateLimiter(10, 60)
+    app.state.after_booking = lambda b: None  # PDF + email arrive in Task 3.4
     app.add_middleware(
         CORSMiddleware,
         allow_origins=settings.origins,
