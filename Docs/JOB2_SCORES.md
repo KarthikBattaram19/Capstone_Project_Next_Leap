@@ -32,12 +32,12 @@ score.
 
 | Run | Result | Why |
 |---|---|---|
-| Suite C, run 1 | **not run** | see below |
+| Suite C, run 1 | **ran 2026-09-10, does NOT count** | 20/20, but five cases were vacuous - see "The evening run" |
 | Suite C, run 2 | **not run** | |
 | Suite C, run 3 | **not run** | |
-| Suite A, best complete run | **18 / 20** (2026-09-09, with `reasoning_effort=low`) | both failures were one defect — a size arriving as "1274 sq ft" — since fixed; the re-run exhausted the day's allowance |
-| Suite B, any run | **0 / 20 completed** | every case failed with Job 1 down on a 429, not on anything it asserts |
-| Dropped sentences per case | **instrumented, not yet measured** | the counter exists as of 2026-09-10 (below); it has no values until a suite run produces them |
+| Suite A, best complete run | **20 / 20** (2026-09-10, on Gemini) | first clean run; the "1274 sq ft" defect from 2026-09-09 stayed fixed |
+| Suite B, any run | **17 / 20** (2026-09-10) | first run that ever completed. All three failures were one cause: a Gemini read timeout, twice per case. Not a refinement defect |
+| Dropped sentences per case | **measured 2026-09-10** | 48 bound, 11 dropped across Suite C, every drop `no_refs`. Zero `unknown_ref`: Job 2 never cited outside its bundle |
 | L3 / L5 from traces | **not measured** | needs a suite run |
 | Groq-hosted alternative for Job 2 (spec §5.1) | **not run** | needs a Suite C baseline to compare against |
 
@@ -90,6 +90,52 @@ on a clean day: debugging runs spend the same 500.
 
 For comparison, Groq's free tier afforded 1.3 passes a day (200,000 tokens at ~1,020 a
 call). Gemini affords 3.
+
+## The evening run, 2026-09-10 - one valid pass, three defects found
+
+Job 1 on Gemini, 151 calls, **zero 429s**: the per-minute pacer held for a whole pass.
+
+| Suite | Result |
+|---|---|
+| A | **20 / 20** |
+| B | **17 / 20** - b-008, b-013, b-020 |
+| C | **20 / 20, but not a valid 20/20** - see below |
+
+**Suite B's three failures were one cause, and it was not the refinement logic.** All three
+returned `Failed(capability="understanding")` from `GeminiError: ReadTimeout from Gemini`,
+each having timed out **twice** - the single retry then in place could not save them. Two
+timeouts in a row on three separate cases is what a dead pooled connection looks like: the
+retry went back out over the socket that had just hung.
+
+**Suite C's 20/20 was hollow.** The new drop counter is what exposed it: five cases bound
+zero sentences - c-005, c-008, c-010, c-018, c-019. Their questions ("is there a park near
+the first one?", "when can I move into the first one?") matched none of the router's
+explanation patterns, so they went to lane A, which produces no explanation at all. Suite C
+guarded its whole grounding block with `if vm.explanation is not None`, so
+`assert_every_claim_cites`, `gaps_declared` and `must_not_mention` were **skipped, not
+passed**. Four of the five are contamination probes. Read that run as **15 cases tested, 5
+vacuous**.
+
+On the 15 that did run, grounding held: **48 sentences bound, 11 dropped, every drop
+`no_refs`, zero `unknown_ref`.** Job 2 did not once cite a reference outside its bundle.
+
+**Fixed the same evening, none yet verified against the live provider:**
+
+| Commit | Fix |
+|---|---|
+| `139639a` | A question that names a listing ("the first one") routes to lane B. Verified across all 122 case turns: exactly those five change lane, nothing regresses B to A. Also a real product bug - a renter asking about a park got no explanation |
+| `139639a` | A case declaring `gaps_declared` or `must_not_mention` now fails when no explanation exists, instead of quietly checking nothing |
+| `6453602` | A Gemini timeout drops the pooled connection before retrying; three attempts, and the read timeout falls from 30 s to 12 s (worst case 60 s to 36 s, with more chances) |
+
+**Two later passes produced nothing.** Pass 2 was killed at ~60% after running into the
+daily ceiling - its rising failure count was quota, not code. Pass 3 aborted on its quota
+probe before spending a call. The day's 500 went on one valid pass, one killed pass, a
+concurrent session's own run, and debugging.
+
+**On the fixed build a pass costs 146 Job 1 calls** (five turns moved from Job 1 to Job 2),
+so three sign-off passes are 438 of 500 - it fits, with 62 spare and no room to re-run a
+failed pass the same day. **The 500 is per project, not per session:** two sessions sharing
+this checkout spent it between them on 2026-09-10.
 
 ## The hybrid-retrieval trigger (arch §9.1, not fired)
 
