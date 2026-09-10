@@ -50,12 +50,27 @@ class ClaimAssembler:
     def __init__(self, bundle: FactBundle) -> None:
         self._b = bundle
         self._chunks = {c.citation_ref: c for c in bundle.chunks}
+        # What the fence caught, by reason. A silent drop cannot answer the question
+        # Docs/JOB2_SCORES.md asks — whether Job 2 is being fenced or is simply writing
+        # uncitable prose. Counts only: the dropped sentence itself is never stored or
+        # logged (spec §5.3).
+        self.drops = {"no_refs": 0, "unknown_ref": 0, "gap_assertion": 0}
+        self.bound = 0
+
+    @property
+    def dropped(self) -> int:
+        return sum(self.drops.values())
+
+    def _drop(self, reason: str) -> None:
+        self.drops[reason] += 1
 
     def bind(self, s: Job2Sentence) -> BoundClaim | None:
         if not s.fact_refs:
+            self._drop("no_refs")
             return None
         known = self._b.all_refs()
         if any(r not in known for r in s.fact_refs):
+            self._drop("unknown_ref")
             return None
         facts = {r: (self._b.facts.get(r) or self._chunks[r]) for r in s.fact_refs}
         # Talking only about gaps: keep it when it denies, drop it when it asserts.
@@ -64,7 +79,9 @@ class ClaimAssembler:
             and _ASSERTS_VALUE.search(s.text)
             and not _DENIES.search(s.text)
         ):
+            self._drop("gap_assertion")
             return None
+        self.bound += 1
         return BoundClaim(text=s.text, refs=list(s.fact_refs), facts=facts)
 
     def render_gaps(self) -> list[str]:

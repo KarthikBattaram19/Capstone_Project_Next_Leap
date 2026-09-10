@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+import sys
 from collections.abc import Callable
 
 from scout.config import Settings
@@ -220,6 +221,18 @@ class TurnOrchestrator:
             job2_failed = True
         finally:
             await queue.put(None)  # the speaker's generator terminates
+
+        session.job2_bound += assembler.bound
+        for reason, n in assembler.drops.items():
+            session.job2_drops[reason] = session.job2_drops.get(reason, 0) + n
+        if assembler.dropped:
+            # Counts and reasons only — never the sentence, which is model prose about a
+            # renter's listing (spec §5.3). This is the number Docs/JOB2_SCORES.md asks for.
+            print(
+                f"job2 assembler: {assembler.bound} bound, {assembler.dropped} dropped "
+                f"({', '.join(f'{k}={v}' for k, v in assembler.drops.items() if v)})",
+                file=sys.stderr,
+            )
 
         gaps = assembler.render_gaps() + [g for g in getattr(self.job2, "last_gaps", []) if g]
         sources = [self.vm.citation(f, lid) for f in bound_facts.values()]

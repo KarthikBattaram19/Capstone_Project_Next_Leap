@@ -86,6 +86,27 @@ def settings(fixture_bundle: str) -> Settings:
     )
 
 
+@pytest.fixture(scope="session")
+def job2_drops(pytestconfig) -> dict[str, dict[str, int]]:
+    """Per-case assembler counts, collected across the run and printed in the summary.
+
+    Docs/JOB2_SCORES.md wants "dropped sentences per case" recorded before the third
+    sign-off pass. Counts only — no sentence text (spec §5.3).
+    """
+    return pytestconfig.__dict__.setdefault("_job2_drops", {})
+
+
+def pytest_terminal_summary(terminalreporter, exitstatus, config):
+    rows = getattr(config, "_job2_drops", None)
+    if rows is None:  # no suite in this run asked for the fixture
+        return
+    from evals.harness.dropreport import render
+
+    terminalreporter.write_line("")
+    for line in render(rows):
+        terminalreporter.write_line(line)
+
+
 def load_cases(suite: str) -> list[dict]:
     d = Path(__file__).parent / "cases" / suite
     return [json.loads(p.read_text(encoding="utf-8")) for p in sorted(d.glob("*.json"))]

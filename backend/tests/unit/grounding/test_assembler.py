@@ -65,3 +65,25 @@ def test_sentence_denying_a_gap_is_kept():
 def test_gap_is_rendered_as_an_open_gap_line():
     lines = ClaimAssembler(bundle()).render_gaps()
     assert any("deposit" in line for line in lines)
+
+
+def test_the_assembler_counts_what_it_drops_and_why():
+    # JOB2_SCORES.md: the drop count is what says whether Job 2 is being fenced or is
+    # simply writing uncitable prose. Silent drops cannot answer that question.
+    a = ClaimAssembler(bundle())
+    a.bind(Job2Sentence("Everyone loves it here.", []))
+    a.bind(Job2Sentence("The area is very safe.", ["guide:made-up"]))
+    a.bind(Job2Sentence("The deposit is ₹1,00,000.", ["dataset:a:deposit"]))
+
+    assert a.drops == {"no_refs": 1, "unknown_ref": 1, "gap_assertion": 1}
+    assert a.dropped == 3
+    assert a.bound == 0
+
+
+def test_a_bound_sentence_is_counted_as_bound_not_dropped():
+    a = ClaimAssembler(bundle())
+    a.bind(Job2Sentence("Rent is ₹35,000 a month.", ["dataset:a:rent"]))
+
+    assert a.dropped == 0
+    assert a.bound == 1
+    assert a.drops == {"no_refs": 0, "unknown_ref": 0, "gap_assertion": 0}

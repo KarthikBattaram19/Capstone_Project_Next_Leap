@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import pytest
 from scout.contract.outcome import Answered, Degraded
+from scout.conversation.session import SessionManager
 
 from evals.assertions.commute import assert_three_layers_agree, assert_your_commute_absent
 from evals.assertions.grounding import assert_every_claim_cites
@@ -14,8 +15,13 @@ CASES = load_cases("c")
 
 
 @pytest.mark.parametrize("case", CASES, ids=[c["id"] for c in CASES])
-async def test_grounding(case, store, settings):
-    outcomes = await Driver(store, settings).run(case["turns"])
+async def test_grounding(case, store, settings, job2_drops):
+    # The suite owns the session (as Suite B does) so the assembler's per-case bound and
+    # dropped counts can be read off it afterwards. Recorded, never asserted on: a drop is
+    # the fence working, and a threshold here would be an assertion nobody agreed.
+    session = SessionManager(ttl_s=600).create()
+    outcomes = await Driver(store, settings).run(case["turns"], session=session)
+    job2_drops[case["id"]] = {"bound": session.job2_bound, **session.job2_drops}
     last = outcomes[-1]
     exp = case["expect"]
 

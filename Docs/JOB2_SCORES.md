@@ -37,7 +37,7 @@ score.
 | Suite C, run 3 | **not run** | |
 | Suite A, best complete run | **18 / 20** (2026-09-09, with `reasoning_effort=low`) | both failures were one defect — a size arriving as "1274 sq ft" — since fixed; the re-run exhausted the day's allowance |
 | Suite B, any run | **0 / 20 completed** | every case failed with Job 1 down on a 429, not on anything it asserts |
-| Dropped sentences per case | **not logged** | the assembler drops silently today; the counter is added when the suite first runs |
+| Dropped sentences per case | **instrumented, not yet measured** | the counter exists as of 2026-09-10 (below); it has no values until a suite run produces them |
 | L3 / L5 from traces | **not measured** | needs a suite run |
 | Groq-hosted alternative for Job 2 (spec §5.1) | **not run** | needs a Suite C baseline to compare against |
 
@@ -103,5 +103,12 @@ failure.**
 
 - Run `python -m pytest evals/suites/test_suite_c.py -q` three times and record each count.
 - The assembler's drop count is what tells you whether Job 2 is being fenced or is simply
-  writing uncitable prose. Log it from `ClaimAssembler.bind` before the third run.
+  writing uncitable prose. **It is now counted automatically (2026-09-10)** — no longer
+  something to remember before the third run. `ClaimAssembler` counts every sentence it
+  binds and every one it drops, by reason (`no_refs`, `unknown_ref`, `gap_assertion`);
+  lane B accumulates the counts on the session and logs one line per Type B turn; and a
+  Suite C run prints a per-case table in its terminal summary. Paste that table in here.
+  Counts and reasons only — the dropped sentence is never stored or logged (spec §5.3).
+  `unknown_ref` is the row to watch: it means Job 2 cited a reference that was not in the
+  bundle, which is a fabricated citation the fence caught.
 - If a case flakes, the fix is Job 2's prompt or the case wording. Never loosen an assertion.

@@ -135,3 +135,25 @@ async def test_why_with_no_shortlist_is_lane_a(make):
 
     out = await orch.handle_text(session, "why?")
     assert isinstance(out, NeedsInput), f"got {out.kind}: {out.spoken}"
+
+
+async def test_the_turn_records_what_the_assembler_dropped(make):
+    """Per case, not per sentence: JOB2_SCORES.md asks for a per-case drop count.
+
+    The counts accumulate on the session, so a suite case that asks two questions reports
+    both turns together and a fresh case starts at zero.
+    """
+    orch, session, _speaker, lid = make(ScriptedJob2([]))
+    orch.job2 = ScriptedJob2(
+        [
+            Job2Sentence("Rent is stated in the dataset for this listing.", [f"dataset:{lid}:rent"]),
+            Job2Sentence("The area is very safe.", ["guide:made-up"]),
+            Job2Sentence("Everyone loves it here.", []),
+        ]
+    )
+
+    await orch.handle_text(session, "why did you pick this one?")
+    await session.speaking
+
+    assert session.job2_bound == 1
+    assert session.job2_drops == {"no_refs": 1, "unknown_ref": 1, "gap_assertion": 0}

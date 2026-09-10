@@ -60,6 +60,10 @@ class Session:
     speaker: object | None = None
     speaking: asyncio.Task | None = None
     job2_task: asyncio.Task | None = None
+    # What the claim assembler bound and dropped over this session's lane B turns.
+    # Per session means per eval case: a fresh case starts empty (Docs/JOB2_SCORES.md).
+    job2_bound: int = 0
+    job2_drops: dict[str, int] = field(default_factory=dict)
     lock: asyncio.Lock = field(default_factory=asyncio.Lock)
     last_seen: datetime = field(default_factory=lambda: datetime.now(UTC))
 
