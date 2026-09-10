@@ -90,3 +90,24 @@ def test_admin_availability_needs_the_token_and_flips_the_shared_flag(bundle_min
     # One register, shared: the orchestrator and the booking service see the same flip.
     assert app.state.orchestrator.availability is app.state.availability
     assert _book(c).status_code == 409
+
+
+def test_a_calendar_failure_is_a_503_naming_the_capability_not_a_500(bundle_min):
+    from scout.providers.google_calendar import CalendarAuthError, CalendarError
+
+    class DownCal(FakeCal):
+        async def freebusy(self, cal, start, end):
+            raise CalendarError("boom")
+
+    class AuthCal(FakeCal):
+        async def freebusy(self, cal, start, end):
+            raise CalendarAuthError("401", 401)
+
+    for cal, word in ((DownCal(), "unreachable"), (AuthCal(), "operator")):
+        app, _ = make_app(bundle_min)
+        app.state.booking = BookingService(
+            cal, app.state.slots, app.state.availability, ReconcileQueue(cal), now=lambda: NOW
+        )
+        r = TestClient(app).post("/bookings/slots", json={"listing_id": LISTING})
+        assert r.status_code == 503, r.text
+        assert word in r.json()["detail"] and r.json()["capability"] == "calendar"

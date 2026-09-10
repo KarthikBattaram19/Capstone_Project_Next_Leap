@@ -9,8 +9,9 @@ import sys
 from collections.abc import AsyncIterator
 
 import uvicorn
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 
 from scout.api.http import router as http_router
 from scout.api.ratelimit import RateLimiter
@@ -31,7 +32,7 @@ from scout.platform.artefacts import ArtefactStore
 from scout.platform.boot import BootError, check_bundle, check_secrets, run_boot_checks
 from scout.providers import make_job1_client
 from scout.providers.gmail import GmailAdapter
-from scout.providers.google_calendar import GoogleCalendarAdapter
+from scout.providers.google_calendar import CalendarAuthError, CalendarError, GoogleCalendarAdapter
 
 EXPIRY_SWEEP_S = 60
 
@@ -97,11 +98,25 @@ def create_app(settings: Settings) -> FastAPI:
         allow_methods=["GET", "POST"],
         allow_headers=["content-type", "x-operator-token"],
     )
+    app.add_exception_handler(CalendarError, _calendar_unavailable)
     app.include_router(http_router)
     app.include_router(ws_router)
     app.state.session_factory = lambda s, sink: LiveSession(s, sink, orchestrator, sessions)
     telemetry.configure(settings.latency_log_path)
     return app
+
+
+async def _calendar_unavailable(request: Request, exc: Exception) -> JSONResponse:
+    """A calendar failure is a named capability outage, never a bare 500 (spec §6.46).
+
+    The booking routes answer 503 with a sentence the panel can show; an auth failure
+    says so, because that one needs the operator, not a retry.
+    """
+    if isinstance(exc, CalendarAuthError):
+        detail = "The calendar service refused our credentials; the operator has to fix that."
+    else:
+        detail = "The calendar is temporarily unreachable; please try again in a moment."
+    return JSONResponse(status_code=503, content={"detail": detail, "capability": "calendar"})
 
 
 def _job2(settings: Settings):
