@@ -60,10 +60,17 @@ async def ws_endpoint(ws: WebSocket) -> None:
         await ws.close(code=CLOSE_CONTRACT_MISMATCH, reason="contract_version_mismatch")
         return
 
-    await ws.send_json({"type": "hello", "contract_version": CONTRACT_VERSION})
-
     sink = WsSink(ws, settings.smallest_sample_rate)
-    session_handler = ws.app.state.session_factory(settings, sink)  # stub now; orchestrator later
+    session_handler = ws.app.state.session_factory(settings, sink)
+    # HelloOut carries the session id (contract v1); POST /bookings quotes it back.
+    session = getattr(session_handler, "session", None)
+    await ws.send_json(
+        {
+            "type": "hello",
+            "contract_version": CONTRACT_VERSION,
+            "session_id": getattr(session, "id", ""),
+        }
+    )
     await session_handler.start()
 
     try:

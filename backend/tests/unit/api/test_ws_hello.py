@@ -44,4 +44,7 @@ def test_the_right_hello_is_answered_and_the_socket_stays_open(bundle_min):
     # everything, so the accepting path needs its own case.
     with TestClient(app(bundle_min)).websocket_connect("/ws") as ws:
         ws.send_json({"type": "hello", "contract_version": "1"})
-        assert ws.receive_json() == {"type": "hello", "contract_version": "1"}
+        hello = ws.receive_json()
+        assert hello["type"] == "hello" and hello["contract_version"] == "1"
+        # HelloOut.session_id: the frontend quotes it on POST /bookings.
+        assert isinstance(hello["session_id"], str) and hello["session_id"]
