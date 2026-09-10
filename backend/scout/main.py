@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import asyncio
 import contextlib
+import logging
 import sys
 from collections.abc import AsyncIterator
 
@@ -14,6 +15,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from scout.api.http import router as http_router
 from scout.api.ratelimit import RateLimiter
 from scout.api.ws import router as ws_router
+from scout.booking.confirmation import ConfirmationSender
 from scout.booking.reconcile import ReconcileQueue
 from scout.booking.service import BookingService
 from scout.config import Settings
@@ -21,12 +23,14 @@ from scout.conversation.job1 import Job1
 from scout.conversation.live import LiveSession
 from scout.conversation.orchestrator import TurnOrchestrator
 from scout.conversation.session import SessionManager
+from scout.conversation.voice_booking import VoiceBookingFlow
 from scout.engines.availability import AvailabilityRegister
 from scout.engines.slots import SlotService
 from scout.platform import telemetry
 from scout.platform.artefacts import ArtefactStore
 from scout.platform.boot import BootError, check_bundle, check_secrets, run_boot_checks
 from scout.providers import make_job1_client
+from scout.providers.gmail import GmailAdapter
 from scout.providers.google_calendar import GoogleCalendarAdapter
 
 EXPIRY_SWEEP_S = 60
@@ -55,6 +59,12 @@ def create_app(settings: Settings) -> FastAPI:
     slots = SlotService()
     reconcile = ReconcileQueue(calendar)
     booking = BookingService(calendar, slots, availability, reconcile)
+    # Same lazy pattern for Gmail. The PDF is rendered in memory, mailed and dropped
+    # (spec §2.5); voice and HTTP bookings share one sender and one BookingService.
+    sender = ConfirmationSender(GmailAdapter(settings), orchestrator.vm)
+    orchestrator.booking_flow = VoiceBookingFlow(
+        booking, orchestrator.vm, sender, orchestrator._view
+    )
 
     @contextlib.asynccontextmanager
     async def lifespan(_: FastAPI) -> AsyncIterator[None]:
@@ -78,7 +88,8 @@ def create_app(settings: Settings) -> FastAPI:
     app.state.reconcile = reconcile
     app.state.booking = booking
     app.state.code_limiter = RateLimiter(10, 60)
-    app.state.after_booking = lambda b: None  # PDF + email arrive in Task 3.4
+    # PDF + email off the interactive path (L8): the route answers before the mail goes.
+    app.state.after_booking = lambda b: asyncio.create_task(sender.send(b))
     app.add_middleware(
         CORSMiddleware,
         allow_origins=settings.origins,
@@ -114,6 +125,10 @@ BOOT_CHECKS = [check_secrets, check_bundle]
 
 
 def main() -> None:
+    # Our own INFO lines (e.g. the email outcome by booking code) reach the Railway log;
+    # libraries stay at WARNING. No line anywhere carries transcript text or an address.
+    logging.basicConfig(level=logging.WARNING)
+    logging.getLogger("scout").setLevel(logging.INFO)
     settings = Settings()
     try:
         run_boot_checks(settings, BOOT_CHECKS)
