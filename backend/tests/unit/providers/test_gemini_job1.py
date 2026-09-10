@@ -229,3 +229,23 @@ def test_pacers_are_separated_by_model_and_rate():
     a = Settings(_env_file=None, gemini_api_key="k", job1_gemini_model="gemini-3.5-flash-lite")
     b = Settings(_env_file=None, gemini_api_key="k", job1_gemini_model="gemini-3.8-flash")
     assert GeminiJob1Client(a)._pacer is not GeminiJob1Client(b)._pacer
+
+
+async def test_one_timeout_is_retried_and_a_second_is_a_named_failure(monkeypatch):
+    calls = []
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        calls.append(1)
+        if len(calls) == 1:
+            raise httpx.ReadTimeout("read timed out", request=request)
+        return _reply({"intent": "a", "email": None})
+
+    out = await _client(monkeypatch, handler).complete_json("s", "u", "job1", SCHEMA)
+    assert out == {"intent": "a", "email": None} and len(calls) == 2
+
+    def always(request: httpx.Request) -> httpx.Response:
+        raise httpx.ReadTimeout("read timed out", request=request)
+
+    with pytest.raises(GeminiError) as e:
+        await _client(monkeypatch, always).complete_json("s", "u", "job1", SCHEMA)
+    assert "ReadTimeout" in str(e.value) and "key" not in str(e.value)

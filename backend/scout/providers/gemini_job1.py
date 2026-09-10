@@ -170,10 +170,21 @@ class GeminiJob1Client:
         """
         url = f"{BASE_URL}/{self._model}:generateContent"
         last: Exception | None = None
+        timeouts = 0
         for attempt in range(RETRIES + 1):
             await self._pacer.wait()
             with telemetry.span("external.gemini"):
-                resp = await self._session().post(url, params={"key": self._key}, json=body)
+                try:
+                    resp = await self._session().post(url, params={"key": self._key}, json=body)
+                except httpx.TimeoutException as e:
+                    # One retry on a timeout, no more: the free tier occasionally sits on a
+                    # request past the 30 s read timeout (an eval case lost this way on
+                    # 2026-09-10), and a second wait would be a minute the renter does not
+                    # have. Type only — httpx's message carries the URL, and the URL the key.
+                    timeouts += 1
+                    if timeouts > 1 or attempt == RETRIES:
+                        raise GeminiError(f"{type(e).__name__} from Gemini") from None
+                    continue
             if resp.status_code < 400:
                 return resp
             if resp.status_code not in RETRYABLE or attempt == RETRIES:

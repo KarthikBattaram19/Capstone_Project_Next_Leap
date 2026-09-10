@@ -46,3 +46,15 @@ async def test_a_yes_to_the_readback_is_a_confirmation():
     current = ConstraintSet(localities=("Koramangala",), rent_max=40000)
     res = await _job1().extract("yes that's right", current)
     assert res.intent == "confirm_yes"
+
+
+async def test_bhk_alone_never_becomes_a_property_type():
+    # "one BHK in Whitefield under fifteen thousand" once came back with property_type
+    # "apartment", which excluded the only Whitefield 1BHK in the eval slice — a villa
+    # (Suite C, c-020, 2026-09-10). A bedroom count is not a property type.
+    res = await Job1(make_job1_client(Settings()), ["Whitefield"]).extract(
+        "one BHK in Whitefield under fifteen thousand", ConstraintSet()
+    )
+    fields = {e.field for e in res.edits}
+    assert "property_type" not in fields, fields
+    assert {"localities", "bhk_type", "rent_max"} <= fields, fields

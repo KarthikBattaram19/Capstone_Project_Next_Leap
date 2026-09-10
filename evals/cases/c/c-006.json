@@ -12,9 +12,11 @@
       "lift"
     ],
     "must_not_mention": [
-      "has a lift",
-      "lift is available"
+      "does have a lift",
+      "lift is available",
+      "a lift is provided",
+      "lift access"
     ]
   },
-  "note": "Partial coverage, dataset side. `lift` is null on every listing in the slice, so the resolver hands Job 2 'dataset:koramangala-06651:lift: not stated' and the assembler's render_gaps emits the lift line deterministically. A claim that the listing has a lift would be an invention; the answer must name the gap instead."
+  "note": "Partial coverage, dataset side. `lift` is null on every listing in the slice, so the resolver hands Job 2 'dataset:koramangala-06651:lift: not stated' and the assembler's render_gaps emits the lift line deterministically. A claim that the listing has a lift would be an invention; the answer must name the gap instead. Bait phrases are affirmative forms only (2026-09-10): the earlier 'has a lift' also matched the honest denial 'it isn't stated whether this unit has a lift', which the assembler keeps on purpose (a declared gap is an answer, eval.md EC-J2-08). A bait must be a phrase only an invented claim contains."
 }

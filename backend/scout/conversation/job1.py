@@ -114,7 +114,8 @@ count, a budget and a feature produces four edits, not two; never restate unchan
 locality or a number that was not said; copy amounts exactly as heard (e.g. "35k", "thirty five", "1.2 lakh") — do
 not convert.
 "2BHK apartment" is TWO facts: bhk_type "2BHK" and property_type "apartment" — the same for villa, independent
-house and builder floor.
+house and builder floor. But "BHK" on its own is only a bedroom count: set property_type ONLY when the renter
+names one (flat, apartment, villa, independent house, builder floor); "one BHK in Whitefield" has no property_type.
 "drop anything above 40k" → rent_max set "40k". "only metro-adjacent" → amenities_required add "metro". "the second
 one" → reference 2.
 Localities, one per edit — "Koramangala or HSR Layout" is two edits, never one value naming both:
