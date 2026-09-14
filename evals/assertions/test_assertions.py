@@ -251,7 +251,7 @@ def test_grounding_rejects_an_uncited_claim_and_an_unsupported_one():
         ],
         [CitationVM(ref="guide:koramangala-0-1", label="[Wikipedia — Koramangala]")],
     )
-    with pytest.raises(AssertionError, match="cited chunk does not support the claim"):
+    with pytest.raises(AssertionError, match="does not support the claim"):
         assert_every_claim_cites(unsupported, store, "Koramangala")
 
 
@@ -303,3 +303,59 @@ def test_a_case_with_no_explanation_expectations_is_allowed_to_have_none():
 
 def test_an_explanation_that_exists_satisfies_the_check():
     assert_explanation_was_produced(object(), {"gaps_declared": ["deposit"]}, "c-008")
+
+
+# --- the ref kind the 2026-09-15 pass met for the first time --------------------------------
+
+
+def test_grounding_accepts_the_tenants_own_straight_line_commute_ref():
+    # "computed:<listing>:straight_line" is the one place the straight-line method occurs
+    # (Task 2.7). Job 2 first cited it on 2026-09-15 (c-013) and the kind table ended at
+    # "osm", so a correct citation failed as "unknown citation kind".
+    exp = explanation(
+        "x",
+        [
+            ClaimVM(
+                text="Your commute is 12.3 km in a straight line.",
+                citation_refs=["computed:kor-001:straight_line"],
+            )
+        ],
+        [CitationVM(ref="computed:kor-001:straight_line", label=STRAIGHT_LABEL)],
+    )
+    assert_every_claim_cites(exp, fake_store(), "Koramangala")
+
+
+def test_grounding_rejects_a_cross_locality_computed_ref():
+    exp = explanation(
+        "x",
+        [
+            ClaimVM(
+                text="Your commute is 12.3 km in a straight line.",
+                citation_refs=["computed:hsr-001:straight_line"],
+            )
+        ],
+        [CitationVM(ref="computed:hsr-001:straight_line", label=STRAIGHT_LABEL)],
+    )
+    with pytest.raises(AssertionError, match="cross-locality citation computed:hsr-001"):
+        assert_every_claim_cites(exp, fake_store(), "Koramangala")
+
+
+def test_an_unsupported_claim_names_the_chunk_and_every_ref_it_cited():
+    exp = explanation(
+        "x",
+        [
+            ClaimVM(
+                text="There is a large lake with boating.",
+                citation_refs=["guide:koramangala-0-1", "dataset:kor-001:rent"],
+            )
+        ],
+        [
+            CitationVM(ref="guide:koramangala-0-1", label="[Wikipedia — Koramangala]"),
+            CitationVM(ref="dataset:kor-001:rent", label="[Listing]"),
+        ],
+    )
+    with pytest.raises(AssertionError) as e:
+        assert_every_claim_cites(exp, fake_store(), "Koramangala")
+    msg = str(e.value)
+    assert "guide:koramangala-0-1 does not support" in msg
+    assert "dataset:kor-001:rent" in msg  # the other ref is in the message, for the diagnosis

@@ -81,10 +81,14 @@ def assert_every_claim_cites(
                     f"cross-locality citation: {ref} is {chunk.locality}, expected {locality}"
                 )
                 assert _supports(claim.text, chunk.text), (
-                    f"cited chunk does not support the claim:\n"
-                    f" claim: {claim.text}\n chunk: {chunk.text[:200]}"
+                    f"cited chunk {ref} does not support the claim:\n"
+                    f" claim: {claim.text}\n cites: {claim.citation_refs}\n"
+                    f" chunk: {chunk.text[:200]}"
                 )
-            elif kind in ("dataset", "osm"):
+            elif kind in ("dataset", "osm", "computed"):
+                # "computed:<listing>:straight_line" is the tenant's own commute row, the one
+                # place the straight-line method occurs (Task 2.7); first cited by Job 2 on
+                # 2026-09-15 (c-013), when this table still ended at "osm".
                 listing_id = rest.split(":")[0]
                 assert store.listings[listing_id].locality == locality, (
                     f"cross-locality citation {ref}"
