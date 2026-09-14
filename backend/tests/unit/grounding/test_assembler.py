@@ -87,3 +87,55 @@ def test_a_bound_sentence_is_counted_as_bound_not_dropped():
     assert a.dropped == 0
     assert a.bound == 1
     assert a.drops == {"no_refs": 0, "unknown_ref": 0, "gap_assertion": 0}
+
+
+def bundle_with_a_chunk() -> FactBundle:
+    from scout.domain.guides import GuideChunk
+
+    b = bundle()
+    b.chunks.append(
+        Provenanced(
+            GuideChunk(
+                id="koramangala-0-1",
+                locality="Koramangala",
+                title="Koramangala",
+                url="fixture://guide",
+                text="Blocks 1-4 are separated from blocks 5-8 by the Inner Ring Road.",
+                position=1,
+                fetched_on=date(2026, 9, 7),
+            ),
+            Source.GUIDE,
+            Timing.PRECOMPUTED,
+            as_of=date(2026, 9, 7),
+            citation_ref="guide:koramangala-0-1",
+        )
+    )
+    return b
+
+
+def test_a_sentence_about_what_the_documents_do_not_say_is_dropped_as_a_gap():
+    # c-018, 2026-09-15: a gap spoken as prose, citing two passages that say nothing of it.
+    a = ClaimAssembler(bundle_with_a_chunk())
+    for text in (
+        (
+            "The neighbourhood guides themselves don't actually discuss deposit amounts at all, "
+            "they focus on the area's blocks, traffic and distances."
+        ),
+        "The guide does not mention a deposit.",
+        "These documents never say anything about parking.",
+        "The source is not specific about the maintenance charge.",
+    ):
+        assert a.bind(Job2Sentence(text, ["guide:koramangala-0-1"])) is None, text
+    assert a.drops["gap_assertion"] == 4 and a.bound == 0
+
+
+def test_a_sentence_restating_a_passage_still_binds_when_it_contains_a_denial():
+    a = ClaimAssembler(bundle_with_a_chunk())
+    kept = a.bind(
+        Job2Sentence(
+            "The guide says blocks 1-4 are separated from blocks 5-8 by the Inner Ring Road, "
+            "not by the Outer Ring Road.",
+            ["guide:koramangala-0-1"],
+        )
+    )
+    assert kept is not None and a.bound == 1

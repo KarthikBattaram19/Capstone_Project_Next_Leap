@@ -23,6 +23,19 @@ _DENIES = re.compile(
     re.IGNORECASE,
 )
 
+# A sentence ABOUT the documents — what the guides do not discuss, mention or say — is a
+# gap spoken as prose. The gap is right; the sentence is not: nothing in the cited passage
+# says it, and the renter hears every gap separately (spec §3.5). Suite C c-018 met one on
+# 2026-09-15 ("the neighbourhood guides themselves don't actually discuss deposit amounts"),
+# citing two passages, neither of which contains a word of it.
+_META_GAP = re.compile(
+    r"\b(?:guides?|documents?|passages?|sources?|articles?|pages?)\b[^.;]{0,40}?"
+    r"\b(?:do not|don't|does not|doesn't|never|aren't|isn't|is not|are not)\b[^.;]{0,24}?"
+    r"\b(?:discuss|mention|say|cover|address|state|include|talk|specify|give|provide|list"
+    r"|contain|answer|explain|describe|specific|clear|explicit|silent)",
+    re.IGNORECASE,
+)
+
 
 # The field names the renter hears. "I don't have a available from figure" is not a
 # sentence anyone says out loud; the gap lines are humanised (spec §3.5).
@@ -79,6 +92,10 @@ class ClaimAssembler:
             and _ASSERTS_VALUE.search(s.text)
             and not _DENIES.search(s.text)
         ):
+            self._drop("gap_assertion")
+            return None
+        # Talking about the documents instead of from them: a gap in prose.
+        if _META_GAP.search(s.text):
             self._drop("gap_assertion")
             return None
         self.bound += 1
