@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import re
+
 import pytest
 from scout.contract.outcome import Answered
 from scout.conversation.session import SessionManager
@@ -63,6 +65,12 @@ async def test_grounding(case, store, settings, job2_drops):
         for forbidden in exp.get("must_not_mention", []):
             text = " ".join(c.text for c in vm.explanation.claims).lower()
             assert forbidden.lower() not in text, f"contamination: {forbidden!r} appeared"
+        # The SHAPE of an invented fact (a distance, a time), where the words alone would
+        # also match a correct denial — c-008's "nearest park is" met "nearest park isn't".
+        for pattern in exp.get("must_not_match", []):
+            text = " ".join(c.text for c in vm.explanation.claims)
+            hit = re.search(pattern, text, re.IGNORECASE)
+            assert hit is None, f"invented shape: {pattern!r} matched {hit.group(0)!r}"
 
     for word in exp.get("spoken_contains", []):
         assert word in last.spoken

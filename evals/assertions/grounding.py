@@ -103,7 +103,7 @@ def assert_every_claim_cites(
 # these and receiving no explanation used to pass in silence, because Suite C guarded its
 # whole grounding block with `if vm.explanation is not None`. Five cases were green that
 # way on 2026-09-10 — four of them contamination probes.
-NEEDS_EXPLANATION = ("gaps_declared", "must_not_mention")
+NEEDS_EXPLANATION = ("gaps_declared", "must_not_mention", "must_not_match")
 
 
 def assert_explanation_was_produced(explanation, expect: dict, case_id: str) -> None:

@@ -12,9 +12,12 @@
       "park"
     ],
     "must_not_mention": [
-      "nearest park is",
       "park within"
+    ],
+    "must_not_match": [
+      "park\\b[^.,;]{0,25}?\\b(?:\\d+(?:\\.\\d+)?|one|two|three|four|five|six|seven|eight|nine|ten)[\\s-]*(?:m|km|metres|meters|minutes?|mins?)\\b",
+      "\\b(?:\\d+(?:\\.\\d+)?|one|two|three|four|five|six|seven|eight|nine|ten)[\\s-]*(?:m|km|metres|meters|minutes?|mins?)\\b[^.,;]{0,25}?\\bpark"
     ]
   },
-  "note": "No map coverage. hsr-layout-08220 is one of the five slice listings whose nearest_park row is null (with hsr-layout-08112, -08134, -08145 and whitefield-05019), so render_gaps emits 'No park found in the map data within the search radius.' The forbidden phrases are the shapes an invented park fact takes; neither occurs in any HSR Layout chunk, so a well-cited answer cannot trip them. Agara Lake is deliberately NOT forbidden: it is named in the HSR Layout guide, so citing it is legitimate - what must not appear is a park DISTANCE, which the map data does not have."
+  "note": "No map coverage. hsr-layout-08220 is one of the five slice listings whose nearest_park row is null (with hsr-layout-08112, -08134, -08145 and whitefield-05019), so render_gaps emits 'No park found in the map data within the search radius.' What must not appear is a park DISTANCE or walking TIME, which the map data does not have: must_not_match is that shape — a number and a unit within one clause of the word park, either order. Until 2026-09-15 the forbidden phrase was 'nearest park is', and a correct denial ('the distance to the nearest park isn't available') contained it as a substring; the shape of an invented fact, not its opening words, is what the probe is for. Agara Lake is deliberately NOT forbidden: it is named in the HSR Layout guide, so citing it is legitimate. 'park within' stays as a plain phrase."
 }

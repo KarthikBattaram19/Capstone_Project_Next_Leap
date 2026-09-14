@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import re
 from pathlib import Path
 
 import pytest
@@ -17,6 +18,7 @@ EXPECT_KEYS = {
     "gaps_declared",
     "your_commute_absent",
     "must_not_mention",
+    "must_not_match",
     "kind",
 }
 CASES_C = load_cases("c")
@@ -105,6 +107,37 @@ def test_contamination_phrases_belong_to_another_locality_only():
             assert not any(
                 p in c["text"].lower() for c in chunks if c["locality"] == case["locality"]
             ), f"{case['id']}: {phrase!r} is in its own locality's chunks"
+        for pattern in case["expect"].get("must_not_match", []):
+            assert not any(
+                re.search(pattern, c["text"], re.IGNORECASE)
+                for c in chunks
+                if c["locality"] == case["locality"]
+            ), f"{case['id']}: {pattern!r} matches its own locality's chunks"
+
+
+def test_c008_forbids_the_shape_of_a_park_distance_and_not_a_denial():
+    patterns = CASES_C[7]["expect"]["must_not_match"]
+
+    def hit(text: str) -> bool:
+        return any(re.search(p, text, re.IGNORECASE) for p in patterns)
+
+    for invented in (
+        "The nearest park is about 500 m away.",
+        "There is a park within 300 metres.",
+        "It is a 10-minute walk to the park.",
+        "A five minutes' walk to a park.",
+    ):
+        assert hit(invented), invented
+    for legitimate in (
+        (
+            "The distance to the nearest park isn't available for this property, though HSR "
+            "Layout is described as home to several small and medium-sized parks maintained "
+            "by BBMP."
+        ),
+        "The metro is 1.2 km by route, and no park is in the map data.",
+        "This 2BHK is near Agara Lake park.",
+    ):
+        assert not hit(legitimate), legitimate
 
 
 @pytest.mark.parametrize("case", CASES_C, ids=[c["id"] for c in CASES_C])
