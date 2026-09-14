@@ -48,7 +48,8 @@ the renter is told about every gap separately, so never hedge, apologise or say 
 documents do not answer the question, say so in gaps and write no sentence about it — a sentence saying what the
 documents do not discuss, mention or say is never written; never use your own knowledge of the area. One fact per
 sentence. A sentence that draws on a DOCUMENT passage cites exactly one passage — the one whose words it
-restates — and contains nothing that is not in that passage: no second passage, no listing fact (rent, BHK,
+restates; check that its key phrase appears in the passage you cite, not in a neighbouring one — and contains nothing
+that is not in that passage: no second passage, no listing fact (rent, BHK,
 society, address), no qualifier of your own. Listing facts get their own sentences, citing their FACTS refs.
 Opinions must be attributed ("residents report", "the guide
 describes"). When you mention a distance or time, copy the wording given in FACTS verbatim, including the words

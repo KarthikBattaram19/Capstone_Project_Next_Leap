@@ -7,7 +7,7 @@ prose". Counts and reasons only — the dropped sentence itself never leaves the
 
 from __future__ import annotations
 
-REASONS = ("no_refs", "unknown_ref", "gap_assertion")
+REASONS = ("no_refs", "unknown_ref", "gap_assertion", "unsupported")
 
 
 def render(rows: dict[str, dict[str, int]]) -> list[str]:

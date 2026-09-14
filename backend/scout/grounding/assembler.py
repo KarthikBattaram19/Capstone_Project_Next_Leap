@@ -9,6 +9,7 @@ from typing import Any
 from scout.conversation.job2 import Job2Sentence
 from scout.domain.provenance import Provenanced
 from scout.grounding.resolvers import FactBundle
+from scout.grounding.support import supports
 
 # A sentence that carries a number, a price, a distance or a yes/no is asserting a value.
 _ASSERTS_VALUE = re.compile(r"\d|₹|km|minute|yes|no\b", re.IGNORECASE)
@@ -67,7 +68,7 @@ class ClaimAssembler:
         # Docs/JOB2_SCORES.md asks — whether Job 2 is being fenced or is simply writing
         # uncitable prose. Counts only: the dropped sentence itself is never stored or
         # logged (spec §5.3).
-        self.drops = {"no_refs": 0, "unknown_ref": 0, "gap_assertion": 0}
+        self.drops = {"no_refs": 0, "unknown_ref": 0, "gap_assertion": 0, "unsupported": 0}
         self.bound = 0
 
     @property
@@ -97,6 +98,15 @@ class ClaimAssembler:
         # Talking about the documents instead of from them: a gap in prose.
         if _META_GAP.search(s.text):
             self._drop("gap_assertion")
+            return None
+        # A passage is cited for what it says. A sentence whose cited passage does not
+        # support it is a mis-citation — right words, wrong ref — and Suite C fails it;
+        # the renter never hears it either.
+        if any(
+            r in self._chunks and not supports(s.text, self._chunks[r].value.text)
+            for r in s.fact_refs
+        ):
+            self._drop("unsupported")
             return None
         self.bound += 1
         return BoundClaim(text=s.text, refs=list(s.fact_refs), facts=facts)

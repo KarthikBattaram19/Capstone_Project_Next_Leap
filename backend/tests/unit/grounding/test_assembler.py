@@ -75,7 +75,7 @@ def test_the_assembler_counts_what_it_drops_and_why():
     a.bind(Job2Sentence("The area is very safe.", ["guide:made-up"]))
     a.bind(Job2Sentence("The deposit is ₹1,00,000.", ["dataset:a:deposit"]))
 
-    assert a.drops == {"no_refs": 1, "unknown_ref": 1, "gap_assertion": 1}
+    assert a.drops == {"no_refs": 1, "unknown_ref": 1, "gap_assertion": 1, "unsupported": 0}
     assert a.dropped == 3
     assert a.bound == 0
 
@@ -86,7 +86,7 @@ def test_a_bound_sentence_is_counted_as_bound_not_dropped():
 
     assert a.dropped == 0
     assert a.bound == 1
-    assert a.drops == {"no_refs": 0, "unknown_ref": 0, "gap_assertion": 0}
+    assert a.drops == {"no_refs": 0, "unknown_ref": 0, "gap_assertion": 0, "unsupported": 0}
 
 
 def bundle_with_a_chunk() -> FactBundle:
@@ -139,3 +139,29 @@ def test_a_sentence_restating_a_passage_still_binds_when_it_contains_a_denial():
         )
     )
     assert kept is not None and a.bound == 1
+
+
+def test_a_sentence_whose_cited_passage_does_not_support_it_is_dropped():
+    # c-008, twice on 2026-09-15: the words of one HSR Layout passage, the ref of another.
+    a = ClaimAssembler(bundle_with_a_chunk())
+    assert (
+        a.bind(
+            Job2Sentence(
+                "HSR Layout is home to several small parks maintained by BBMP.",
+                ["guide:koramangala-0-1"],
+            )
+        )
+        is None
+    )
+    assert a.drops["unsupported"] == 1 and a.bound == 0
+
+
+def test_a_paraphrase_of_the_cited_passage_binds():
+    a = ClaimAssembler(bundle_with_a_chunk())
+    kept = a.bind(
+        Job2Sentence(
+            "The Inner Ring Road separates blocks 1-4 from blocks 5-8.",
+            ["guide:koramangala-0-1"],
+        )
+    )
+    assert kept is not None and a.drops["unsupported"] == 0

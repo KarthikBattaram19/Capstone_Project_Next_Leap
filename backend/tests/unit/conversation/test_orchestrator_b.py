@@ -189,4 +189,9 @@ async def test_the_turn_records_what_the_assembler_dropped(make):
     await session.speaking
 
     assert session.job2_bound == 1
-    assert session.job2_drops == {"no_refs": 1, "unknown_ref": 1, "gap_assertion": 0}
+    assert session.job2_drops == {
+        "no_refs": 1,
+        "unknown_ref": 1,
+        "gap_assertion": 0,
+        "unsupported": 0,
+    }
