@@ -33,12 +33,11 @@ score.
 | Run | Result | Why |
 |---|---|---|
 | Suite C, run 1 | **ran 2026-09-10, does NOT count** | 20/20, but five cases were vacuous - see "The evening run" |
-| Suite C, run 2 | **not run** | |
-| Suite C, run 3 | **not run** | |
-| Suite A, best complete run | **20 / 20** (2026-09-10, on Gemini) | first clean run; the "1274 sq ft" defect from 2026-09-09 stayed fixed |
-| Suite B, any run | **17 / 20** (2026-09-10) | first run that ever completed. All three failures were one cause: a Gemini read timeout, twice per case. Not a refinement defect |
-| Dropped sentences per case | **measured 2026-09-10** | 48 bound, 11 dropped across Suite C, every drop `no_refs`. Zero `unknown_ref`: Job 2 never cited outside its bundle |
-| L3 / L5 from traces | **not measured** | needs a suite run |
+| Suite C, sign-off runs 1-3 | **not yet run on the final build** (`2aa2499`) | five runs on 2026-09-15 found and fixed five defects, one per run (see "The night of 2026-09-14/15"); the last, 19/20, failed only on a case wording since corrected. The three consecutive runs start when the Gemini day resets, 12:30 IST 2026-09-15 |
+| Suite A | **20 / 20, 20 / 20** (2026-09-14, two consecutive passes on `bbaa68b`) | plus 20/20 on 2026-09-10 |
+| Suite B | **20 / 20, 20 / 20** (2026-09-14, two consecutive passes on `bbaa68b`) | the 2026-09-10 timeouts did not recur after the fresh-connection retry |
+| Dropped sentences per case | **measured 2026-09-15**, table below | 55 bound, 9 dropped on the last run; the new `unsupported` reason caught 2 mis-citations, zero `unknown_ref` |
+| L3 / L5 from traces | **traces now written**, not yet scored | `latency/evals-c-*.jsonl`; the eval fixture hands `LATENCY_LOG_PATH` to telemetry since `1bb5ed1`. Job 1 spans include the 15-a-minute pacer's wait, so they are not Gate L numbers |
 | Groq-hosted alternative for Job 2 (spec §5.1) | **not run** | needs a Suite C baseline to compare against |
 
 **Why the suite has not run.** Every Suite C case begins with two Type A turns — the
@@ -136,6 +135,73 @@ concurrent session's own run, and debugging.
 so three sign-off passes are 438 of 500 - it fits, with 62 spare and no room to re-run a
 failed pass the same day. **The 500 is per project, not per session:** two sessions sharing
 this checkout spent it between them on 2026-09-10.
+
+## The night of 2026-09-14/15 - a revoked key, two green suites, and five Suite C defects
+
+**Pass 2 (23:36 IST, `bbaa68b`): A 20/20, B 20/20, C 7/20 with zero sentences bound in
+every case.** The Anthropic key had been revoked on the provider side (HTTP 401 "API key
+is invalid"; the same key had answered on 2026-09-10 and `backend/.env` was unchanged
+since 2026-09-09). Every Job 2 call failed, every lane B turn degraded, and nothing said
+so: the log carried only the 13 grounding assertions that followed, and the seven cases
+with no prose expectation passed on degraded turns. 146 of the day's 500 Gemini calls
+went on it. Fixed in `1bb5ed1`: a preflight pings both providers before a run and aborts
+naming the provider and status; a `Job2Down` is logged with its reason and carried on
+`Degraded.why`; Suite C accepts `Answered` only; `Settings.__repr__` redacts secrets
+(pytest had printed the first fifty characters of the key under each failure).
+
+**Pass 3 (23:50 IST, A and B only): 40/40.** Suites A and B do not touch Job 2. With the
+fresh key (supplied just after midnight) Suite C ran five times on successive builds:
+
+| Run | Build | Result | The one defect it found | Fix |
+|---|---|---|---|---|
+| 1 | `1bb5ed1` | 17/20 | c-013 cited `computed:…:straight_line`, the tenant's own commute row, a ref kind the assertion did not know; c-008 and c-017 merged a listing fact or a second passage into a one-passage sentence | `0e64959`: the assertion learns `computed`; the prompt says one passage per sentence, listing facts in their own |
+| 2 | `0e64959` | 19/20 | c-018 wrote "the neighbourhood guides themselves don't actually discuss deposit amounts", a gap as prose, citing two passages that say none of it | `0511917`: the assembler drops a sentence about what the documents do not say (`gap_assertion`) |
+| 3 | `0511917` | 19/20 | c-008 restated passage 0-2 word for word and cited passage 0-1 (right words, wrong ref) - the same shape as run 1 | `692e7bf`: the assembler applies Suite C's support test to every cited passage and drops the sentence (`unsupported`) |
+| 4 | `692e7bf` | 19/20 | c-013: "I work in Whitefield" came back from Job 1 as a locality edit; the shortlist emptied and "why the first one?" asked "Which one do you mean?" | `0bc73c8`: the Job 1 prompt says where they travel to is a commute point; live probe 3/3 |
+| 5 | `0bc73c8` | 19/20 | c-008: "nearest park is" matched inside "nearest park isn't available", a correct denial | `2aa2499`: the case forbids the shape of an invented distance (`must_not_match`), not those words |
+
+Runs 3-5 each cost 42 Gemini calls (41 Type A turns and the preflight). The day's budget
+closed at roughly 466 of 500, so the three consecutive runs on `2aa2499` start after the
+12:30 IST reset: `python -m pytest evals/suites/test_suite_c.py -q` three times, ~4 min
+and 42 calls each. Any failure means a fix and three fresh runs.
+
+**Grounding held throughout.** Across the five runs Job 2 never cited a ref outside its
+bundle (`unknown_ref` 0 everywhere). Run 5's table:
+
+```
+  c-001        3 bound    2 dropped   no_refs=2
+  c-002        3 bound    1 dropped   unsupported=1
+  c-003        6 bound    0 dropped   -
+  c-004        4 bound    1 dropped   no_refs=1
+  c-005        3 bound    1 dropped   unsupported=1
+  c-006        2 bound    0 dropped   -
+  c-007        3 bound    0 dropped   -
+  c-008        2 bound    0 dropped   -
+  c-009        2 bound    0 dropped   -
+  c-010        0 bound    0 dropped   -
+  c-011        1 bound    0 dropped   -
+  c-012        4 bound    1 dropped   no_refs=1
+  c-013        3 bound    1 dropped   no_refs=1
+  c-014        0 bound    1 dropped   no_refs=1
+  c-015        3 bound    0 dropped   -
+  c-016        1 bound    0 dropped   -
+  c-017        5 bound    0 dropped   -
+  c-018        1 bound    1 dropped   no_refs=1
+  c-019        4 bound    0 dropped   -
+  c-020        5 bound    0 dropped   -
+  TOTAL       55 bound, 9 dropped
+```
+
+`unsupported` is the row to read now, next to `unknown_ref`: it is a sentence whose cited
+passage does not contain what it says. Two in twenty cases on run 5, both fenced.
+
+**Not done, deliberately.** The two 2026-09-14 passes of Suites A and B ran on `bbaa68b`;
+the commits since touch the eval harness, Job 1's commute rule, the Job 2 prompt and the
+assembler, none of the Suite A/B logic - but sign-off wants three consecutive runs of all
+three suites on one build, so the A/B passes are evidence, not the sign-off record. Also:
+the CI `evals` job now runs on `workflow_dispatch` only, one matrix run at a time, and
+needs a `GEMINI_API_KEY` repository secret that does not exist yet (`gh secret list`
+shows only GROQ and ANTHROPIC).
 
 ## The hybrid-retrieval trigger (arch §9.1, not fired)
 

@@ -4,7 +4,7 @@ A voice-first rental assistant that collects a tenant's spoken preferences, shor
 
 The problem it addresses isn't finding listings — it's judging whether one fits your life. Is the commute realistic? What's the area actually like? Is the extra room worth the extra rent? Every answer this system gives is traceable to a source, and where it has no source it says so.
 
-> **Status: Phases 0–3 built (2026-09-10) — see `Docs/Implementation_Plan.md`.** Booking, cancel and reschedule work by voice and over HTTP against the real Google calendars; the confirmation PDF is emailed and discarded. Not yet done: the three eval suites are not claimed green (a daily model quota gates the runs), the Phase 2/3 code has not been promoted to production (`Docs/DEPLOYMENT_RECORD.md`), and Phase 4 sign-off has not started.
+> **Status: Phases 0–3 built (2026-09-10), evals in sign-off (2026-09-15) — see `Docs/Implementation_Plan.md`.** Booking, cancel and reschedule work by voice and over HTTP against the real Google calendars; the confirmation PDF is emailed and discarded. Suites A and B passed 20/20 twice in a row on 2026-09-14; Suite C found and fixed five defects over five runs on 2026-09-15 and its three consecutive runs on the final build are queued for the next Gemini quota day (`Docs/JOB2_SCORES.md`). Not yet done: the sign-off record and Phase 4.
 
 ---
 
@@ -250,7 +250,7 @@ CORS is an **explicit allowlist, never `*`**. The mic WebSocket goes browser →
 
 ## Testing
 
-Three suites, 20 cases each, **60 total at 100% pass, run 3× in CI**.
+Three suites, 20 cases each, **60 total at 100% pass, run three times** — locally, or in CI by `gh workflow run ci.yml` (the `evals` job is manual-only and serial: Job 1's free-tier Gemini quota is 500 calls a day for the whole project and a pass is ~146 of them). A run pings both providers first and aborts before spending a call if either refuses.
 
 | Suite | Checks |
 |---|---|

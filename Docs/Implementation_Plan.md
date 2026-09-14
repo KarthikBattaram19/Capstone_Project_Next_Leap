@@ -387,11 +387,15 @@ it was ~211,000 and could not fit at all.
 Every free-plan Groq chat model shares the same 200K/day and 8K/minute limits, so no model
 switch buys a bigger allowance — only a cheaper call.
 
-**Where the suites stand.** Suite A's last complete run was **18/20**. Both failures were
-one defect — `square_footage_min` arriving as `"1274 sq ft"` and failing to coerce — now
-fixed with unit tests, but the re-run did not complete: the day's Groq allowance was spent
-(199,918 of 200,000). Suite B has never completed a run. Suite C has not been run. **None of
-the three is claimed green.**
+**Where the suites stand (updated 2026-09-15).** Suites A and B: **20/20 and 20/20 on two
+consecutive passes** on 2026-09-14 (`bbaa68b`), after 20/20 and 17/20 on 2026-09-10. Suite C:
+five runs on 2026-09-15 on successive builds, 17, 19, 19, 19, 19 of 20, each finding one
+defect that is now fixed with a unit test or a live probe (`Docs/JOB2_SCORES.md`, "The night
+of 2026-09-14/15"); the three consecutive runs on the final build (`2aa2499`) are queued for
+the next Gemini quota day. **None of the three is claimed signed off.** The 2026-09-14
+evening also found the Anthropic key revoked: a full pass ran with every Job 2 call failing
+and nothing said so - the harness now pings both providers before spending a call, and a Job
+2 outage is logged and carried on the outcome (`1bb5ed1`).
 
 **What is left is one day's allowance per run.** At ~154K per run the free plan affords one
 run per calendar day, so the three consecutive runs sign-off requires take three days.
