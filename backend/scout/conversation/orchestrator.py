@@ -117,6 +117,13 @@ class TurnOrchestrator:
                 return await self._dispatch(session, text, turn_type)
         return await self._dispatch(session, text, turn_type)
 
+    async def aclose(self) -> None:
+        """Close the provider clients on the loop that used them (app shutdown, eval run)."""
+        for obj in (getattr(self.job1, "client", None), self.job2):
+            close = getattr(obj, "aclose", None)
+            if close is not None:
+                await close()
+
     async def cancel_speech(self, session: Session) -> None:
         sp = getattr(session, "speaker", None)
         if sp:
@@ -208,6 +215,7 @@ class TurnOrchestrator:
         claims: list[ClaimVM] = []
         bound_facts: dict = {}
         job2_failed = False
+        job2_why = ""
         try:
             session.job2_task = asyncio.current_task()
             async for s in self.job2.explain(bundle, text):
@@ -217,8 +225,14 @@ class TurnOrchestrator:
                 claims.append(ClaimVM(text=claim.text, citation_refs=claim.refs))
                 bound_facts.update(claim.facts)
                 await queue.put(claim.text)  # released only once its citation resolved
-        except Job2Down:
+        except Job2Down as e:
             job2_failed = True
+            # The provider's own words (status and message, never prose, never a key: the
+            # Gemini and Anthropic errors both redact). Silent on 2026-09-14, a revoked
+            # Anthropic key degraded all 20 Suite C cases and the log showed only the
+            # assertions that followed.
+            job2_why = str(e)[:300]
+            print(f"job2 down: {job2_why}", file=sys.stderr)
         finally:
             await queue.put(None)  # the speaker's generator terminates
 
@@ -245,7 +259,7 @@ class TurnOrchestrator:
             out: TurnOutcome = Degraded(
                 view_model=vm,
                 missing=["explanation"],
-                why="explanation provider unavailable",
+                why=f"explanation provider unavailable: {job2_why}",
                 spoken=opener + " I can't explain further right now.",
             )
         else:

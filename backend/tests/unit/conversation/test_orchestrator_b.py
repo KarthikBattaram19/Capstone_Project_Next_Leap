@@ -108,7 +108,7 @@ async def test_only_bound_claims_reach_the_renter_and_the_opener_is_spoken_first
     assert out.view_model.snapshot is not None
 
 
-async def test_job2_down_is_degraded_not_a_substitute(make):
+async def test_job2_down_is_degraded_not_a_substitute(make, capsys):
     orch, session, speaker, _lid = make(ScriptedJob2([], raises=Job2Down("provider down")))
     out = await orch.handle_text(session, "why this one?")
     await session.speaking
@@ -117,6 +117,37 @@ async def test_job2_down_is_degraded_not_a_substitute(make):
     assert out.missing == ["explanation"]
     assert out.view_model.explanation is None
     assert speaker.said, "the opener must still be spoken when the explanation is withheld"
+    # The reason is on the outcome and in the log, so a whole degraded suite run cannot
+    # pass for a code defect (2026-09-14: a revoked key looked like 13 grounding failures).
+    assert "provider down" in out.why
+    assert "job2 down: provider down" in capsys.readouterr().err
+
+
+class ClosableJob1Client:
+    def __init__(self):
+        self.closed = False
+
+    async def aclose(self):
+        self.closed = True
+
+
+async def test_aclose_closes_both_provider_clients(make):
+    job2 = ScriptedJob2([])
+    job2.closed = False
+
+    async def close_job2():
+        job2.closed = True
+
+    job2.aclose = close_job2
+    orch, _session, _speaker, _lid = make(job2)
+    orch.job1.client = ClosableJob1Client()
+    await orch.aclose()
+    assert orch.job1.client.closed and job2.closed
+
+
+async def test_aclose_tolerates_clients_that_cannot_be_closed(make):
+    orch, _session, _speaker, _lid = make(ScriptedJob2([]))  # ScriptedJob1 has no client
+    await orch.aclose()
 
 
 async def test_why_with_no_shortlist_is_lane_a(make):

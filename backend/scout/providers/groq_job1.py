@@ -48,6 +48,9 @@ class GroqJob1Client:
         self._model = settings.job1_model
         self._effort = settings.job1_effort
 
+    async def aclose(self) -> None:
+        await self._client.close()
+
     async def complete_json(self, system: str, user: str, schema_name: str, schema: dict) -> dict:
         with telemetry.span("external.groq"):
             resp = await self._client.chat.completions.create(

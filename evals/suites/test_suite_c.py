@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import pytest
-from scout.contract.outcome import Answered, Degraded
+from scout.contract.outcome import Answered
 from scout.conversation.session import SessionManager
 
 from evals.assertions.commute import assert_three_layers_agree, assert_your_commute_absent
@@ -32,7 +32,10 @@ async def test_grounding(case, store, settings, job2_drops):
         assert last.kind == "empty"
         return
 
-    assert isinstance(last, (Answered, Degraded)), f"got {last.kind}: {last.spoken}"
+    # Answered only. A Degraded turn is the explanation withheld, and a grounding suite has
+    # nothing to measure on it: on 2026-09-14 seven cases passed on degraded turns while a
+    # revoked key kept Job 2 from answering once. The why names the provider's reason.
+    assert isinstance(last, Answered), f"got {last.kind}: {getattr(last, 'why', '')} {last.spoken}"
     vm = last.view_model
 
     if "commute_method" in exp:

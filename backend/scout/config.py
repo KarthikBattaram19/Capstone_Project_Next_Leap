@@ -15,6 +15,9 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 BACKEND_DIR = Path(__file__).resolve().parent.parent
 ENV_FILE = BACKEND_DIR / ".env"
 
+# A field whose name carries one of these is a secret and is redacted from repr().
+SECRET_FIELD_MARKERS = ("key", "token", "credentials", "secret", "password")
+
 
 class Settings(BaseSettings):
     # `.env.example` lists what an operator must supply. This model also carries
@@ -80,6 +83,17 @@ class Settings(BaseSettings):
 
     session_ttl_s: int = 1800
     max_clarifying_questions: int = 5
+
+    def __repr_args__(self):
+        # pytest prints every fixture's repr under a failing test, and the eval `settings`
+        # fixture is a live Settings: on 2026-09-14 a Suite C failure put the first fifty
+        # characters of the Anthropic key in the terminal. A secret never appears in a
+        # repr, a str, or a traceback — only whether it is set.
+        for name, value in super().__repr_args__():
+            if name and value and any(m in name for m in SECRET_FIELD_MARKERS):
+                yield name, "<set>"
+            else:
+                yield name, value
 
     @property
     def origins(self) -> list[str]:

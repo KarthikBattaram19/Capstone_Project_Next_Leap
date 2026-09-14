@@ -49,3 +49,9 @@ class AnthropicJob2Client:
         telemetry.mark(telemetry.LLM_LAST_TOKEN)
         if final.stop_reason == "refusal":
             raise anthropic.APIError("job2 refusal", request=None, body=None)  # caller -> Failed
+
+    async def aclose(self) -> None:
+        # The SDK's pooled connection is closed on the loop that opened it. Left to the
+        # garbage collector it closes on whatever loop is current — under pytest that loop
+        # is already gone, and every eval run ended in "Event loop is closed" noise.
+        await self._client.close()

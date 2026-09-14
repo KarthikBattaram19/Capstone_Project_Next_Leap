@@ -1,6 +1,10 @@
 name: ci
 
-on: [push, pull_request]
+on:
+  push:
+  pull_request:
+  # The eval suites run only when asked (below): they spend model quota, not CI minutes.
+  workflow_dispatch:
 
 jobs:
   backend-unit:
@@ -32,13 +36,21 @@ jobs:
       - run: pip install -e "backend[dev]"
       - run: python -m scout.contract.export | diff - contract/v1.schema.json
   evals:
+    # Manual only. Job 1 runs on Gemini's free tier — 15 requests a minute and 500 a day
+    # for the whole project — and one pass is 146 of them. On every push this job would
+    # have spent 438 a day and, with three matrix runs in parallel, three separate
+    # per-process pacers would have shared one 15-a-minute window and burned it on 429s.
+    # Runs one at a time; `gh workflow run ci.yml` starts the three sign-off passes.
+    if: github.event_name == 'workflow_dispatch'
     needs: [backend-unit]
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
+      max-parallel: 1
       matrix:
         run: [1, 2, 3]
     env:
+      GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
       GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
       ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
       LATENCY_LOG_PATH: latency/evals-run${{ matrix.run }}.jsonl

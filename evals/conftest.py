@@ -9,6 +9,7 @@ from pathlib import Path
 
 import pytest
 from scout.config import Settings
+from scout.platform import telemetry
 from scout.platform.artefacts import ArtefactStore
 
 FIXTURES = Path(__file__).parent / "fixtures" / "bundle"
@@ -81,9 +82,24 @@ def resolve_settings(bundle_dir: str, keys: dict[str, str], allow_skip: bool) ->
 
 @pytest.fixture(scope="session")
 def settings(fixture_bundle: str) -> Settings:
-    return resolve_settings(
+    s = resolve_settings(
         fixture_bundle, provider_keys(), allow_skip=os.getenv("ALLOW_EVAL_SKIP") == "1"
     )
+    # LATENCY_LOG_PATH reaches Settings through the environment, but only the server ever
+    # handed it to telemetry — an eval pass wrote no trace file, and the L3/L5 rows in
+    # Docs/JOB2_SCORES.md stayed "needs a suite run" after the runs (2026-09-14).
+    telemetry.configure(s.latency_log_path)
+    if os.getenv("EVAL_SKIP_PREFLIGHT") != "1":
+        from evals.harness.preflight import PreflightError, run_preflight
+
+        try:
+            run_preflight(s)
+        except PreflightError as e:
+            # Abort the whole run before a single case spends quota. A pass is 146 Job 1
+            # calls of a 500-a-day allowance; on 2026-09-14 one went on a key that had
+            # already been revoked.
+            pytest.exit(f"eval preflight failed: {e}", returncode=4)
+    return s
 
 
 @pytest.fixture(scope="session")

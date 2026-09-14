@@ -8,12 +8,16 @@ def test_keyterms_come_from_the_dataset():
 
 def test_keyterms_are_capped_and_spent_on_the_best_populated_localities():
     import json
-    import pathlib
 
+    from scout.config import BACKEND_DIR
     from scout.providers.deepgram_stt import DOMAIN_TERMS, MAX_KEYTERM_CHARS, MAX_KEYTERMS
 
     # 464 real names → the budget, not the list. The most-populated localities survive.
-    manifest = pathlib.Path("../data/bundle/manifest.json").read_text(encoding="utf-8")
+    # Resolved from the code: CI runs pytest from the repo root, where "../data" is
+    # outside the checkout (this test failed every CI run from 2026-09-10 for that).
+    manifest = (BACKEND_DIR.parent / "data" / "bundle" / "manifest.json").read_text(
+        encoding="utf-8"
+    )
     counts = json.loads(manifest)["localities"]
     ks = build_keyterms(counts)
     assert len(ks) == MAX_KEYTERMS

@@ -78,6 +78,7 @@ def create_app(settings: Settings) -> FastAPI:
                 task.cancel()
                 with contextlib.suppress(asyncio.CancelledError):
                     await task
+            await orchestrator.aclose()
 
     app = FastAPI(title="scout", docs_url=None, redoc_url=None, lifespan=lifespan)
     app.state.settings = settings

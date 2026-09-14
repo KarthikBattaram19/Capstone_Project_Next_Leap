@@ -18,5 +18,10 @@ class Driver:
 
         orch = TurnOrchestrator.for_evals(self.store, self.settings)
         session = session or SessionManager(ttl_s=600).create()
-        # One outcome per text turn, all on the same session.
-        return [await orch.handle_text(session, t) for t in turns]
+        try:
+            # One outcome per text turn, all on the same session.
+            return [await orch.handle_text(session, t) for t in turns]
+        finally:
+            # On this loop, not the garbage collector's: pytest has closed the loop by
+            # then, and the SDK's pooled connection dies as "Event loop is closed".
+            await orch.aclose()

@@ -166,3 +166,8 @@ class Job2:
         except Exception as e:
             raise Job2Down(str(e)) from e
         self.last_gaps = parser.gaps()
+
+    async def aclose(self) -> None:
+        close = getattr(self._client, "aclose", None)
+        if close is not None:
+            await close()
