@@ -58,3 +58,17 @@ async def test_bhk_alone_never_becomes_a_property_type():
     fields = {e.field for e in res.edits}
     assert "property_type" not in fields, fields
     assert {"localities", "bhk_type", "rent_max"} <= fields, fields
+
+
+async def test_i_work_in_is_a_commute_point_not_a_locality():
+    # "I work in Whitefield" once came back as a locality edit, which emptied an HSR Layout
+    # shortlist and turned "why the first one?" into "Which one do you mean?" (Suite C,
+    # c-013, 2026-09-15). Where the renter travels TO is the commute field, nothing else.
+    current = ConstraintSet(localities=("HSR Layout",), rent_max=35000, bhk_type="2BHK")
+    res = await Job1(make_job1_client(Settings()), LOCALITIES + ["Whitefield"]).extract(
+        "I work in Whitefield", current
+    )
+    fields = {e.field: e for e in res.edits}
+    assert "commute" in fields, res.edits
+    assert "Whitefield" in str(fields["commute"].value), res.edits
+    assert "localities" not in fields, res.edits
