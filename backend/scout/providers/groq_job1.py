@@ -12,10 +12,13 @@ from __future__ import annotations
 
 import json
 
-from groq import AsyncGroq
+import httpx
+from groq import APIConnectionError, APITimeoutError, AsyncGroq, RateLimitError
 
 from scout.config import Settings
-from scout.platform import telemetry
+from scout.platform import faults, telemetry
+
+GROQ_URL = "https://api.groq.com/openai/v1/chat/completions"
 
 # gpt-oss-120b is a reasoning model: it spends completion tokens thinking before it writes
 # the JSON. Two ways of shortening that were measured on 2026-09-09:
@@ -52,6 +55,8 @@ class GroqJob1Client:
         await self._client.close()
 
     async def complete_json(self, system: str, user: str, schema_name: str, schema: dict) -> dict:
+        if mode := faults.active("groq"):
+            raise _injected(mode)
         with telemetry.span("external.groq"):
             resp = await self._client.chat.completions.create(
                 model=self._model,
@@ -67,3 +72,21 @@ class GroqJob1Client:
                 },
             )
         return json.loads(resp.choices[0].message.content)
+
+
+def _injected(mode: str) -> Exception:
+    """What the SDK raises when Groq really fails that way (Task 4.2 fault switch).
+
+    Built offline: the request is never sent. A schema violation is the JSONDecodeError
+    json.loads raises above on malformed content, which Job1 retries once (§6.32).
+    """
+    request = httpx.Request("POST", GROQ_URL)
+    if mode == "schema_violation":
+        return json.JSONDecodeError("fault injected", "{", 1)
+    if mode == "timeout":
+        return APITimeoutError(request=request)
+    if mode == "429":
+        return RateLimitError(
+            "fault injected: 429", response=httpx.Response(429, request=request), body=None
+        )
+    return APIConnectionError(message="fault injected: connection error", request=request)

@@ -18,10 +18,12 @@ import asyncio
 from collections.abc import Awaitable, Callable
 
 from deepgram import AsyncDeepgramClient
+from deepgram.core.api_error import ApiError
 from deepgram.core.events import EventType
+from websockets.exceptions import ConnectionClosedError
 
 from scout.config import Settings
-from scout.platform import telemetry
+from scout.platform import faults, telemetry
 
 Handler = Callable[[str], Awaitable[None]]
 
@@ -61,6 +63,21 @@ def build_keyterms(localities: dict[str, int] | list[str]) -> list[str]:
     return out + DOMAIN_TERMS
 
 
+def _injected_on_connect(mode: str) -> Exception:
+    """What opening the stream raises when Deepgram really fails that way (Task 4.2).
+
+    deepgram-sdk 7.8.0's connect turns a refused handshake into ApiError(status_code=...);
+    a handshake that never answers is the TimeoutError websockets raises on its open timeout.
+    """
+    if mode == "timeout":
+        return TimeoutError("fault injected: timed out opening the Deepgram stream")
+    status = 429 if mode == "429" else 503
+    return ApiError(
+        status_code=status,
+        body="fault injected: Unexpected error when initializing websocket connection.",
+    )
+
+
 class DeepgramStream:
     def __init__(
         self,
@@ -85,6 +102,8 @@ class DeepgramStream:
         self._segments: list[str] = []  # finalised segments of the utterance in progress
 
     async def start(self) -> None:
+        if mode := faults.active("deepgram"):
+            raise _injected_on_connect(mode)
         self._cm = self._client.listen.v1.connect(
             model=self._s.deepgram_model,
             encoding="linear16",
@@ -150,6 +169,9 @@ class DeepgramStream:
         await self._on_final(text)
 
     async def send_audio(self, pcm16: bytes) -> None:
+        if faults.active("deepgram"):
+            # Mid-stream, every kind of outage looks the same from here: the socket is gone.
+            raise ConnectionClosedError(None, None)
         await self._conn.send_media(pcm16)
 
     async def keepalive(self) -> None:

@@ -18,6 +18,7 @@ from scout.contract.http import (
     SlotsResponse,
 )
 from scout.engines.slots import OutsideInventory
+from scout.platform import faults
 
 router = APIRouter()
 
@@ -132,3 +133,23 @@ async def toggle(
         raise HTTPException(401, "operator token required")
     request.app.state.availability.set(body.listing_id, body.available)
     return {"listing_id": body.listing_id, "available": body.available}
+
+
+# Included by create_app ONLY when FAULT_INJECTION=1; otherwise /admin/fault is a 404.
+fault_router = APIRouter()
+
+
+@fault_router.post("/admin/fault")
+async def inject_fault(
+    body: faults.FaultRequest, request: Request, x_operator_token: str = Header(default="")
+):
+    # The toggle's header and its 401, with one addition: an unset operator token refuses
+    # rather than matching an empty header. This route makes providers fail on purpose.
+    expected = request.app.state.settings.operator_token
+    if not expected or x_operator_token != expected:
+        raise HTTPException(401, "operator token required")
+    try:
+        faults.set_fault(body.provider, body.mode, body.turns)
+    except ValueError as e:
+        raise HTTPException(422, str(e)) from e
+    return {"provider": body.provider, "mode": body.mode, "turns": body.turns}

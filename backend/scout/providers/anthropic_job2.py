@@ -15,9 +15,12 @@ from __future__ import annotations
 from collections.abc import AsyncIterator
 
 import anthropic
+import httpx2  # anthropic 1.3.0's own transport (locked); its errors carry these types
 
 from scout.config import Settings
-from scout.platform import telemetry
+from scout.platform import faults, telemetry
+
+ANTHROPIC_URL = "https://api.anthropic.com/v1/messages"
 
 
 class AnthropicJob2Client:
@@ -28,6 +31,14 @@ class AnthropicJob2Client:
         self._max_tokens = settings.job2_max_tokens
 
     async def stream_json(self, system: str, user: str, schema: dict) -> AsyncIterator[str]:
+        if mode := faults.active("anthropic"):
+            if mode == "schema_violation":
+                # Structured output makes a malformed object unlikely except by truncation,
+                # and a truncated stream raises nothing here: the parser simply never sees
+                # a whole sentence. That is the real path, so it is the injected one.
+                yield '{"sentences": [{"text": "fault injected: cut off mid-sen'
+                return
+            raise _injected(mode)
         first = True
         async with self._client.messages.stream(
             model=self._model,
@@ -55,3 +66,18 @@ class AnthropicJob2Client:
         # garbage collector it closes on whatever loop is current — under pytest that loop
         # is already gone, and every eval run ended in "Event loop is closed" noise.
         await self._client.close()
+
+
+def _injected(mode: str) -> Exception:
+    """What the SDK raises when Anthropic really fails that way (Task 4.2 fault switch).
+
+    Built offline: the request is never sent. Job2.explain turns any of these into Job2Down.
+    """
+    request = httpx2.Request("POST", ANTHROPIC_URL)
+    if mode == "timeout":
+        return anthropic.APITimeoutError(request=request)
+    if mode == "429":
+        return anthropic.RateLimitError(
+            "fault injected: 429", response=httpx2.Response(429, request=request), body=None
+        )
+    return anthropic.APIConnectionError(message="fault injected: connection error", request=request)

@@ -35,6 +35,10 @@ class Settings(BaseSettings):
     google_owner_calendar_id: str = ""
     google_sender_email: str = ""
     operator_token: str = ""
+    # The §6 walkthrough's fault switch (Task 4.2). Exactly "1" turns it on; anything else,
+    # including unset, leaves POST /admin/fault unregistered. A string, not a bool, so
+    # "true" or a stray "yes" in .env cannot open an operator door by accident.
+    fault_injection: str = ""
     # Resolved from the code, not the cwd: `python -m scout.main` must find the bundle
     # from the repo root and from backend/ alike. Docker overrides it with BUNDLE_DIR.
     bundle_dir: str = str(BACKEND_DIR.parent / "data" / "bundle")

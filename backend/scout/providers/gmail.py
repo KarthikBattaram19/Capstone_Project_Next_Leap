@@ -15,7 +15,7 @@ from google_auth_httplib2 import AuthorizedHttp
 from googleapiclient.discovery import build
 
 from scout.config import Settings
-from scout.platform import telemetry
+from scout.platform import faults, telemetry
 from scout.providers.google_calendar import credentials_from
 
 
@@ -77,6 +77,9 @@ class GmailAdapter:
     async def send_pdf(
         self, to: str, subject: str, body: str, pdf_bytes: bytes, filename: str
     ) -> str:
+        if mode := faults.active("gmail"):
+            # Every real failure below leaves as MailError, whatever its cause (§6.7).
+            raise MailError(f"fault injected: {mode}")
         msg = EmailMessage()
         msg["To"], msg["From"], msg["Subject"] = to, self._from, subject
         msg.set_content(body)

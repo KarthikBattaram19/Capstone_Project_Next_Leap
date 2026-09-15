@@ -13,6 +13,7 @@ from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
+from scout.api.http import fault_router
 from scout.api.http import router as http_router
 from scout.api.ratelimit import RateLimiter
 from scout.api.ws import router as ws_router
@@ -27,7 +28,7 @@ from scout.conversation.session import SessionManager
 from scout.conversation.voice_booking import VoiceBookingFlow
 from scout.engines.availability import AvailabilityRegister
 from scout.engines.slots import SlotService
-from scout.platform import telemetry
+from scout.platform import faults, telemetry
 from scout.platform.artefacts import ArtefactStore
 from scout.platform.boot import BootError, check_bundle, check_secrets, run_boot_checks
 from scout.providers import make_job1_client
@@ -102,6 +103,11 @@ def create_app(settings: Settings) -> FastAPI:
     app.add_exception_handler(CalendarError, _calendar_unavailable)
     app.include_router(http_router)
     app.include_router(ws_router)
+    # The §6 walkthrough's switch (Task 4.2). Off, the route does not exist at all, and
+    # `faults.active` answers None to every provider wrapper.
+    faults.configure(faults.enabled_by(settings))
+    if faults.enabled_by(settings):
+        app.include_router(fault_router)
     app.state.session_factory = lambda s, sink: LiveSession(s, sink, orchestrator, sessions)
     telemetry.configure(settings.latency_log_path)
     return app

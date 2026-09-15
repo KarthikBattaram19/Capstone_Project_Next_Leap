@@ -22,7 +22,7 @@ from typing import ClassVar
 import httpx
 
 from scout.config import Settings
-from scout.platform import telemetry
+from scout.platform import faults, telemetry
 
 BASE_URL = "https://generativelanguage.googleapis.com/v1beta/models"
 RETRIES = 4
@@ -136,6 +136,8 @@ class GeminiJob1Client:
         self._http: httpx.AsyncClient | None = None
 
     async def complete_json(self, system: str, user: str, schema_name: str, schema: dict) -> dict:
+        if mode := faults.active("gemini"):
+            raise _injected(mode, schema_name)
         body = {
             "systemInstruction": {"parts": [{"text": system}]},
             "contents": [{"role": "user", "parts": [{"text": user}]}],
@@ -219,6 +221,20 @@ class GeminiJob1Client:
         if self._http is not None:
             await self._http.aclose()
             self._http = None
+
+
+def _injected(mode: str, schema_name: str) -> Exception:
+    """What this client raises when Gemini really fails that way (Task 4.2 fault switch).
+
+    Timeouts and statuses leave as GeminiError, worded as _post_with_retries words them; a
+    schema violation is the ValueError _loads raises, which Job1 retries once (§6.32).
+    """
+    if mode == "schema_violation":
+        return ValueError(f"{schema_name}: expected an object, got a fault-injected list")
+    if mode == "timeout":
+        return GeminiError("ReadTimeout from Gemini after fault injection")
+    status = 429 if mode == "429" else 503
+    return GeminiError(f"{status} from Gemini: fault injected")
 
 
 def _loads(text: str, schema_name: str) -> dict:

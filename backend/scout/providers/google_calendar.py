@@ -29,7 +29,7 @@ from googleapiclient.errors import HttpError
 
 from scout.config import Settings
 from scout.domain.booking import IST, Slot
-from scout.platform import telemetry
+from scout.platform import faults, telemetry
 
 SCOPES = [
     "https://www.googleapis.com/auth/calendar",
@@ -57,6 +57,22 @@ class EventRef:
     end: datetime
     listing_id: str
     email: str
+
+
+def _injected(mode: str) -> CalendarError:
+    """What `_run` raises when Google really fails that way (Task 4.2 fault switch).
+
+    "auth" is Google answering 401, which `_run` maps to CalendarAuthError (§6.46). A
+    refresh token revoked outright fails earlier, as google-auth's RefreshError, and reaches
+    the caller as a plain CalendarError; that one is "down" here. A socket timeout arrives
+    through `except Exception` with no status, exactly as it does below.
+    """
+    if mode == "auth":
+        return CalendarAuthError("<HttpError 401: fault injected, invalid_grant>", 401)
+    if mode == "timeout":
+        return CalendarError("timed out")
+    status = 429 if mode == "429" else 503
+    return CalendarError(f"<HttpError {status}: fault injected>", status)
 
 
 def credentials_from(settings: Settings) -> Credentials:
@@ -138,6 +154,8 @@ class GoogleCalendarAdapter:
         return self._svc
 
     async def _run(self, name: str, fn):
+        if mode := faults.active("calendar"):
+            raise _injected(mode)
         with telemetry.span(f"external.google.{name}"):
             try:
                 return await asyncio.to_thread(fn)
