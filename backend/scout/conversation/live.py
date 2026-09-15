@@ -35,6 +35,7 @@ class LiveSession:
         self._speech_started_at: float | None = None
         self._reprompted = False
         self._reconnected = False
+        self._stt_down = False  # both streams failed: say so once, keep the socket for typing
         self._keepalive: asyncio.Task | None = None
         self.stt = self._make_stt()
 
@@ -49,17 +50,29 @@ class LiveSession:
         )
 
     async def start(self) -> None:
-        await self.stt.start()
-        self._keepalive = asyncio.create_task(self._keepalive_loop())
         # Per session, never on the shared orchestrator.
         self.session.speaker_factory = lambda: Speaker(self.tts, self.sink)
+        try:
+            await self.stt.start()
+        except Exception:  # noqa: BLE001 -- raising here killed the socket, and the browser
+            # showed "can't reach the service" (§6.12) for a speech outage (§6.23), with the
+            # typed fallback gone too.
+            await self._speech_unavailable()
+            return
+        self._keepalive = asyncio.create_task(self._keepalive_loop())
 
     async def close(self) -> None:
         if self._keepalive:
             self._keepalive.cancel()
+        if self._stt_down:
+            with contextlib.suppress(Exception):  # a stream that never opened cannot close
+                await self.stt.close()
+            return
         await self.stt.close()
 
     async def audio(self, pcm: bytes) -> None:
+        if self._stt_down:
+            return  # the mic keeps streaming; the renter has already been told to type
         try:
             await self.stt.send_audio(pcm)
         except Exception:  # noqa: BLE001 -- any transport error is a lost stream (spec §6.23)
@@ -256,24 +269,18 @@ class LiveSession:
 
     async def _stt_lost(self) -> None:  # spec §6.23
         if self._reconnected:
-            await self.sink.outcome(
-                {
-                    "outcome": Failed(
-                        capability="speech_in",
-                        tell_renter=(
-                            "Speech recognition is unavailable right now. You can type instead."
-                        ),
-                        retry_worth_it=True,
-                        spoken="Speech recognition is unavailable right now.",
-                    ).model_dump()
-                }
-            )
+            await self._speech_unavailable()
             return
         self._reconnected = True  # the one permitted reconnect
         lost = " ".join(self._segments)
         self._segments = []
         self.stt = self._make_stt()
-        await self.stt.start()
+        try:
+            await self.stt.start()
+        except Exception:  # noqa: BLE001 -- an unguarded failure here escaped audio() and
+            # closed the socket (found by the Task 4.2 fault switch's Deepgram path).
+            await self._speech_unavailable()
+            return
         await self.sink.outcome(
             {
                 "outcome": Failed(
@@ -285,6 +292,23 @@ class LiveSession:
                     ),
                     retry_worth_it=True,
                     spoken="I lost the connection for a moment — please say that again.",
+                ).model_dump()
+            }
+        )
+
+    async def _speech_unavailable(self) -> None:
+        if self._stt_down:
+            return  # told once; every later mic frame would otherwise repeat it
+        self._stt_down = True
+        await self.sink.outcome(
+            {
+                "outcome": Failed(
+                    capability="speech_in",
+                    tell_renter=(
+                        "Speech recognition is unavailable right now. You can type instead."
+                    ),
+                    retry_worth_it=True,
+                    spoken="Speech recognition is unavailable right now.",
                 ).model_dump()
             }
         )
