@@ -330,7 +330,8 @@ Both gates have cleared. 1.1–1.3 (the knowledge layer) and 1.4–1.6 (store, c
 - Detail: addendum → Task 2.9.
 
 ### Task 2.10 — The turn orchestrator (Type A), the live session, and Suites A + B green
-- **Status: code done and unit-tested, 2026-09-09; Suites A and B NOT green — blocked on the Groq daily token quota (see the Phase 2 exit note below).** 16 tests (7 orchestrator, 6 live session, 3 persona/parser). `stub_turn.py` is deleted; the two guarantees its tests carried — a turn that raises tells the browser instead of going silent, and a new utterance cancels the one still speaking — moved into `test_live_hold.py` with the code. Suite A's best complete run was **19/20**; the twentieth failed on a furnishing value the reducer has since learned to read, and the quota ran out before it could be re-run. Suite B has never completed a run.
+- **Status: done, 2026-09-15 — Suites A and B 20/20 on three consecutive passes on `37a3333` (`Docs/JOB2_SCORES.md`).**
+- **Earlier status: code done and unit-tested, 2026-09-09; Suites A and B NOT green — blocked on the Groq daily token quota (see the Phase 2 exit note below).** 16 tests (7 orchestrator, 6 live session, 3 persona/parser). `stub_turn.py` is deleted; the two guarantees its tests carried — a turn that raises tells the browser instead of going silent, and a new utterance cancels the one still speaking — moved into `test_live_hold.py` with the code. Suite A's best complete run was **19/20**; the twentieth failed on a furnishing value the reducer has since learned to read, and the quota ran out before it could be re-run. Suite B has never completed a run.
 - **Delivers:** the one component that knows the whole turn: Job 1 → out-of-scope and owner-contact replies → booking hand-off → "the second one" resolution (with a check that the list has not changed since it was heard) → clarifying questions within the 5-question budget (then proceed provisionally and say so) → readback and confirmation before the first shortlist → refinement afterwards → the empty state that names the binding constraint. Speech starts as a background task so the result returns without waiting for audio. Also the WebSocket-side live session (STT stream, interim transcripts, the 400 ms hold, acknowledgement before any model, a 30 s runaway cap, barge-in, keepalive, one STT reconnect, typed-text fallback). The stub turn from 0.8 is deleted. The 20 Suite A and 20 Suite B cases are written (their content is tabulated in the addendum).
 - **Why now:** this is the first complete Type A conversation.
 - **Done when:** unit tests pass; Suites A and B pass 40/40, three times in a row. A flaky case is a Job 1 prompt problem or a case-wording problem — assertions are never loosened.
@@ -351,7 +352,8 @@ Both gates have cleared. 1.1–1.3 (the knowledge layer) and 1.4–1.6 (store, c
 - Detail: addendum → Task 2.12.
 
 ### Task 2.13 — The fact-led opener, lane B, Suite C to 20 — pin Job 2
-- **Status: code done and unit-tested, 2026-09-09; Suite C NOT run — same quota blocker.** 5 tests (2 opener, 3 lane B). Suite C is written to 20 cases. Two limits of the frozen slice are recorded in the case notes: it holds **no straight-line OSM transit row** (78 ROUTED, 18 null), so the straight-line method is exercised on the tenant's own commute point where it actually occurs; and every locality has guide chunks, so no case can produce an empty sources list — the partial-coverage cases probe structural gaps (lift, maintenance, park, move-in date) instead. `Docs/JOB2_SCORES.md` records the pin and the live check and states plainly that the suite score is not yet measured.
+- **Status: done, 2026-09-15 — Suite C 20/20 on three consecutive passes on `37a3333`; `claude-sonnet-5` at low effort stays pinned (`Docs/JOB2_SCORES.md`).**
+- **Earlier status: code done and unit-tested, 2026-09-09; Suite C NOT run — same quota blocker.** 5 tests (2 opener, 3 lane B). Suite C is written to 20 cases. Two limits of the frozen slice are recorded in the case notes: it holds **no straight-line OSM transit row** (78 ROUTED, 18 null), so the straight-line method is exercised on the tenant's own commute point where it actually occurs; and every locality has guide chunks, so no case can produce an empty sources list — the partial-coverage cases probe structural gaps (lift, maintenance, park, move-in date) instead. `Docs/JOB2_SCORES.md` records the pin and the live check and states plainly that the suite score is not yet measured.
 - **Delivers:** the opener built by code only from resolved facts (rent, BHK, transit with method words, commute with method words and caveat) — spoken immediately, before Job 2 replies; lane B in the orchestrator (resolve → opener → stream Job 2 → bind each sentence → speak it as it binds → explanation and snapshot panels); Job 2 down yields a *degraded* result (shortlist and opener stay; explanation withheld and named as missing) — never a Job 1 substitute; Suite C extended to 20 cases (covered neighbourhoods, partial/no coverage, five commute cases covering both methods and the null row, safety/amenity, the injection probe, adjacent and distant contamination probes); `Docs/JOB2_SCORES.md`.
 - **Why now:** Job 2 must earn its role on the suite before it is pinned.
 - **Done when:** Suite C passes 20/20 three times; the scores document exists; the model decision is recorded.
@@ -387,12 +389,13 @@ it was ~211,000 and could not fit at all.
 Every free-plan Groq chat model shares the same 200K/day and 8K/minute limits, so no model
 switch buys a bigger allowance — only a cheaper call.
 
-**Where the suites stand (updated 2026-09-15).** Suites A and B: **20/20 and 20/20 on two
-consecutive passes** on 2026-09-14 (`bbaa68b`), after 20/20 and 17/20 on 2026-09-10. Suite C:
-five runs on 2026-09-15 on successive builds, 17, 19, 19, 19, 19 of 20, each finding one
-defect that is now fixed with a unit test or a live probe (`Docs/JOB2_SCORES.md`, "The night
-of 2026-09-14/15"); the three consecutive runs on the final build (`2aa2499`) are queued for
-the next Gemini quota day. **None of the three is claimed signed off.** The 2026-09-14
+**Where the suites stand (updated 2026-09-15, 23:08 IST).** **Phase 2's eval exit is met:
+all 60 cases passed locally on three consecutive full passes on one build (`37a3333`) -
+130 passed ×3, Suites A, B and C each 20/20 ×3, zero `unknown_ref`** (`Docs/JOB2_SCORES.md`,
+"Sign-off passes"). Task 2.13's "done when" is met and the Job 2 pin stands. Before that:
+Suites A and B 20/20 ×2 on 2026-09-14 (`bbaa68b`); Suite C five runs on successive builds,
+17, 19, 19, 19, 19 of 20, each finding one defect since fixed. What these local passes are
+not: Task 4.3's three **CI** runs, which are still to do. The 2026-09-14
 evening also found the Anthropic key revoked: a full pass ran with every Job 2 call failing
 and nothing said so - the harness now pings both providers before spending a call, and a Job
 2 outage is logged and carried on the outcome (`1bb5ed1`).

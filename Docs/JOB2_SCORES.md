@@ -1,8 +1,9 @@
 # Job 2 — the model decision and its score (Task 2.13)
 
-**Status: the model is pinned; the Suite C score is NOT YET MEASURED.** This document is
-written as the record it will be, with the unmeasured rows marked. Nothing below is
-estimated: a row is either a measurement with its date, or it says "not run".
+**Status (2026-09-15, 23:08 IST): the model is pinned and Suite C is measured — 20/20 on three
+consecutive passes of all three suites (60/60 ×3) on `37a3333`.** See "Sign-off passes"
+below. Nothing in this document is estimated: a row is either a measurement with its date,
+or it says "not run".
 
 ## The pin
 
@@ -14,7 +15,7 @@ estimated: a row is either a measurement with its date, or it says "not run".
 | Sampling parameters | none. `temperature`, `top_p` and `top_k` do not exist on `messages.stream` in anthropic 1.3.0, so the rule is enforced by the SDK, not only by us |
 | Assistant prefill | none |
 | Response shape | fixed by `output_config.format` = `JOB2_SCHEMA` |
-| Different from Job 1 | yes — Job 1 is Groq `openai/gpt-oss-120b`. Falling back from Job 2 to Job 1 for an explanation is forbidden; a Job 2 failure produces `Degraded`, never a substitute |
+| Different from Job 1 | yes — Job 1 is Gemini `gemini-3.5-flash-lite` (since 2026-09-10; Groq `openai/gpt-oss-120b` before that). Falling back from Job 2 to Job 1 for an explanation is forbidden; a Job 2 failure produces `Degraded`, never a substitute |
 
 ## What has been measured
 
@@ -33,11 +34,11 @@ score.
 | Run | Result | Why |
 |---|---|---|
 | Suite C, run 1 | **ran 2026-09-10, does NOT count** | 20/20, but five cases were vacuous - see "The evening run" |
-| Suite C, sign-off runs 1-3 | **not yet run on the final build** (`2aa2499`) | five runs on 2026-09-15 found and fixed five defects, one per run (see "The night of 2026-09-14/15"); the last, 19/20, failed only on a case wording since corrected. The three consecutive runs start when the Gemini day resets, 12:30 IST 2026-09-15 |
-| Suite A | **20 / 20, 20 / 20** (2026-09-14, two consecutive passes on `bbaa68b`) | plus 20/20 on 2026-09-10 |
-| Suite B | **20 / 20, 20 / 20** (2026-09-14, two consecutive passes on `bbaa68b`) | the 2026-09-10 timeouts did not recur after the fresh-connection retry |
+| Suite C, sign-off passes 1-3 | **20 / 20, 20 / 20, 20 / 20** (2026-09-15, `37a3333`) | three consecutive full passes, below; before them five runs on successive builds found and fixed five defects (see "The night of 2026-09-14/15") |
+| Suite A | **20 / 20 ×3** (2026-09-15, same three passes on `37a3333`) | plus 20/20 ×2 on 2026-09-14 (`bbaa68b`) and 20/20 on 2026-09-10 |
+| Suite B | **20 / 20 ×3** (2026-09-15, same three passes on `37a3333`) | plus 20/20 ×2 on 2026-09-14 (`bbaa68b`); the 2026-09-10 timeouts did not recur |
 | Dropped sentences per case | **measured 2026-09-15**, table below | 55 bound, 9 dropped on the last run; the new `unsupported` reason caught 2 mis-citations, zero `unknown_ref` |
-| L3 / L5 from traces | **traces now written**, not yet scored | `latency/evals-c-*.jsonl`; the eval fixture hands `LATENCY_LOG_PATH` to telemetry since `1bb5ed1`. Job 1 spans include the 15-a-minute pacer's wait, so they are not Gate L numbers |
+| L3 / L5 from traces | **component timings read from the three passes; L3 and L5 themselves cannot be scored from eval traces** | the harness has no audio, no STT and no browser, so there is no end-of-speech, no `tts.first_byte` and no "rendered" moment. What the traces do give is under "Sign-off passes". L3/L5 proper come from the production timed interactions (Task 4.1) |
 | Groq-hosted alternative for Job 2 (spec §5.1) | **not run** | needs a Suite C baseline to compare against |
 
 **Why the suite has not run.** Every Suite C case begins with two Type A turns — the
@@ -203,12 +204,79 @@ the CI `evals` job now runs on `workflow_dispatch` only, one matrix run at a tim
 needs a `GEMINI_API_KEY` repository secret that does not exist yet (`gh secret list`
 shows only GROQ and ANTHROPIC).
 
+## Sign-off passes, 2026-09-15 evening - 60/60 three times
+
+Build `37a3333` (code identical to `2aa2499`; the commit on top is documentation). Command,
+from the repo root, one pass after the other with nothing else using the Gemini project:
+`LATENCY_LOG_PATH=latency/evals-signoff-passN.jsonl python -m pytest evals -q`. Each pass
+collects 130 tests: Suites A, B and C (20 each) plus 70 harness, assertion and scorer tests.
+
+| Pass | Started (IST) | Result | Wall time | Job 2 sentences |
+|---|---|---|---|---|
+| 1 | 22:32 | **130 passed** - A 20/20, B 20/20, C 20/20 | 11 m 06 s | 51 bound, 6 dropped (`no_refs` 5, `unsupported` 1) |
+| 2 | 22:44 | **130 passed** - A 20/20, B 20/20, C 20/20 | 11 m 31 s | 54 bound, 7 dropped (`no_refs` 7) |
+| 3 | 22:56 | **130 passed** - A 20/20, B 20/20, C 20/20 | 10 m 48 s | 53 bound, 2 dropped (`no_refs` 2) |
+
+**`unknown_ref` was 0 in every case of every pass**: Job 2 never cited a reference outside its
+bundle. `gap_assertion` was 0 throughout; `unsupported` fired once (pass 1, c-008). Every
+pass's preflight reached both providers. The three passes spent 438 Job 1 calls
+(146 each, counted from the `external.gemini` spans) of the day's 500.
+
+Per-case table, pass 3:
+
+```
+  c-001        3 bound    0 dropped   -
+  c-002        2 bound    0 dropped   -
+  c-003        5 bound    0 dropped   -
+  c-004        0 bound    1 dropped   no_refs=1
+  c-005        4 bound    0 dropped   -
+  c-006        4 bound    0 dropped   -
+  c-007        1 bound    0 dropped   -
+  c-008        2 bound    0 dropped   -
+  c-009        3 bound    0 dropped   -
+  c-010        0 bound    0 dropped   -
+  c-011        1 bound    0 dropped   -
+  c-012        4 bound    0 dropped   -
+  c-013        0 bound    1 dropped   no_refs=1
+  c-014        6 bound    0 dropped   -
+  c-015        1 bound    0 dropped   -
+  c-016        1 bound    0 dropped   -
+  c-017        5 bound    0 dropped   -
+  c-018        1 bound    0 dropped   -
+  c-019        5 bound    0 dropped   -
+  c-020        5 bound    0 dropped   -
+  TOTAL       53 bound, 2 dropped
+```
+
+A case with 0 bound can still pass: its assertions are the declared gap and what must not be
+said (c-010 asks "when can I move into the first one?"; `available_from` is null on every
+slice listing, so the right answer is the declared "move-in date" gap, and the case forbids
+"available immediately" / "ready to move").
+
+**Component timings from the three passes' traces** (498 turns: 438 Type A, 60 Type B; none
+cold). Measured from the start of the server-side turn, so they exclude speech recognition,
+audio and rendering - they are components, **not L3 or L5**:
+
+| Component | n | median | p99 | max |
+|---|---|---|---|---|
+| Type B: turn start → Job 2 first token | 60 | 2,497 ms | 4,302 ms | 4,302 ms |
+| Type B: turn start → Job 2 last token | 60 | 6,301 ms | 11,237 ms | 11,237 ms |
+| retrieval | 60 | 97 ms | 1,221 ms | 1,221 ms |
+| Job 1 (`external.gemini`, includes the 15-a-minute pacer's wait) | 438 | 1,353 ms | 6,696 ms | 13,491 ms |
+
+**A risk this shows, not yet a measured miss:** L5 (question end → full explanation
+rendered) has an 8,000 ms target, and Job 2's last token alone came after 8 s on **5 of 60**
+Type B turns (8,773 / 9,526 / 9,002 / 9,526 / 11,237 ms). None exceeds the 16,000 ms 2× hard
+limit. On production L5 also includes end-of-speech detection, so the p99 there will be
+higher than these. Task 4.1's production run decides whether L5 is renegotiated; the Job 1
+numbers are not Gate L figures because the free-tier pacer sits inside the span.
+
 ## The hybrid-retrieval trigger (arch §9.1, not fired)
 
 Dense retrieval is in use. The documented trigger to graduate to hybrid retrieval is a Suite
 C failure on an **exact-token** question — a society name, a road name — where the right
-chunk exists but dense similarity did not surface it. No such failure has been observed,
-because the suite has not run. **Do not build hybrid retrieval until this row records a real
+chunk exists but dense similarity did not surface it. No such failure has been observed in
+three consecutive 20/20 passes (2026-09-15). **Do not build hybrid retrieval until this row records a real
 failure.**
 
 ## Notes for whoever completes this

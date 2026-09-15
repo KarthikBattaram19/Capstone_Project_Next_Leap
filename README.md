@@ -4,7 +4,7 @@ A voice-first rental assistant that collects a tenant's spoken preferences, shor
 
 The problem it addresses isn't finding listings — it's judging whether one fits your life. Is the commute realistic? What's the area actually like? Is the extra room worth the extra rent? Every answer this system gives is traceable to a source, and where it has no source it says so.
 
-> **Status: Phases 0–3 built (2026-09-10), evals in sign-off (2026-09-15) — see `Docs/Implementation_Plan.md`.** Booking, cancel and reschedule work by voice and over HTTP against the real Google calendars; the confirmation PDF is emailed and discarded. Suites A and B passed 20/20 twice in a row on 2026-09-14; Suite C found and fixed five defects over five runs on 2026-09-15 and its three consecutive runs on the final build are queued for the next Gemini quota day (`Docs/JOB2_SCORES.md`). Not yet done: the sign-off record and Phase 4.
+> **Status: Phases 0–3 built (2026-09-10), evals in sign-off (2026-09-15) — see `Docs/Implementation_Plan.md`.** Booking, cancel and reschedule work by voice and over HTTP against the real Google calendars; the confirmation PDF is emailed and discarded. All 60 eval cases (Suites A, B, C) passed on three consecutive local passes on one build on 2026-09-15 (`Docs/JOB2_SCORES.md`). Not yet done: Phase 4 — the three CI runs, the production latency report, the §6 walkthrough and the sign-off record.
 
 ---
 
