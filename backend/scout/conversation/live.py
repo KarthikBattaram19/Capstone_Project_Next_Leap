@@ -207,22 +207,29 @@ class LiveSession:
         # later is answered again instead of meeting silence (eval.md EC-WS-14).
         self._reprompted = False
 
+        final_at = time.perf_counter()  # end-of-speech: the turn's clock starts here
         self.state = transition(self.state, TurnState.TRANSCRIBING)
         await self.sink.transcript(text, final=True)
 
         self.state = transition(self.state, TurnState.ACK)
         await self.sink.ack(text)  # L1 — before any model call
-        telemetry.mark(telemetry.ACK)
+        ack_at = time.perf_counter()
 
         self.state = transition(self.state, TurnState.CLASSIFYING)
-        self._turn = asyncio.create_task(self._run_turn(text))
+        self._turn = asyncio.create_task(self._run_turn(text, final_at, ack_at))
 
-    async def _run_turn(self, text: str) -> None:
+    async def _run_turn(
+        self, text: str, final_at: float | None = None, ack_at: float | None = None
+    ) -> None:
         from scout.conversation.router import classify_turn
 
         tt = classify_turn(text, has_shortlist=not self.session.shortlist.is_empty())
         self.state = transition(self.state, TurnState.TYPE_B if tt == "B" else TurnState.TYPE_A)
-        with telemetry.trace(turn_type=tt):
+        with telemetry.trace(turn_type=tt, t0=final_at) as tr:
+            # Both happened before this task existed, so outside any trace; placed now.
+            if final_at is not None and ack_at is not None:
+                tr.mark_at(telemetry.STT_FINAL, final_at)
+                tr.mark_at(telemetry.ACK, ack_at)
             try:
                 outcome = await self.orch.handle_text(self.session, text)
             except asyncio.CancelledError:

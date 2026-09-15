@@ -50,3 +50,28 @@ def test_no_log_path_writes_nothing_and_a_span_outside_a_turn_is_harmless(tmp_pa
         pass
     assert t.current() is None
     assert list(tmp_path.iterdir()) == []
+
+
+def test_only_the_first_turn_a_process_serves_is_marked_cold(monkeypatch):
+    # Spec §5.2: cold start is reported separately, never averaged in. Nothing set the flag
+    # before Task 4.1, so every row of every trace file claimed to be warm.
+    monkeypatch.setattr(t, "_cold", True)
+    with t.trace(turn_type="A") as first:
+        pass
+    with t.trace(turn_type="A") as second:
+        pass
+    assert first.cold_start is True
+    assert second.cold_start is False
+
+
+def test_a_turn_can_start_its_clock_at_end_of_speech_and_place_earlier_marks():
+    # The final transcript and the ack happen before the turn's task runs; without a clock
+    # set at end-of-speech those marks landed outside any trace and were dropped.
+    import time
+
+    final_at = time.perf_counter()
+    ack_at = final_at + 0.004
+    with t.trace(turn_type="A", t0=final_at) as tr:
+        tr.mark_at(t.STT_FINAL, final_at)
+        tr.mark_at(t.ACK, ack_at)
+    assert [(m.name, round(m.at_ms)) for m in tr.marks] == [("stt.final", 0), ("ack", 4)]

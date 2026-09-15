@@ -196,3 +196,21 @@ async def test_an_onset_with_no_words_while_thinking_still_ends_in_an_outcome(li
     await asyncio.sleep(0.6)
     assert [e for e in sink.events if e[0] == "outcome"], f"stuck in {session.state}"
     assert session.state is TurnState.IDLE
+
+
+async def test_a_spoken_turn_trace_carries_the_final_transcript_and_the_ack(live, tmp_path):
+    import json
+
+    from scout.platform import telemetry
+
+    log = tmp_path / "latency.jsonl"
+    telemetry.configure(str(log))
+    try:
+        session, _ = live()
+        await session._final("two BHK in Koramangala")
+        await asyncio.wait_for(session._turn, timeout=5)
+    finally:
+        telemetry.configure(None)
+
+    marks = {m["name"]: m["at_ms"] for m in json.loads(log.read_text().splitlines()[0])["marks"]}
+    assert 0 <= marks["stt.final"] <= marks["ack"]

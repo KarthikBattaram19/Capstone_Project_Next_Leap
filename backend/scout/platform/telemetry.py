@@ -51,6 +51,10 @@ class Trace:
     def now_ms(self) -> float:
         return (time.perf_counter() - self.t0) * 1000
 
+    def mark_at(self, name: str, at: float) -> None:
+        """A mark for a moment already past, given as a `time.perf_counter()` reading."""
+        self.marks.append(Mark(name=name, at_ms=(at - self.t0) * 1000))
+
     def to_json(self) -> str:
         # Names and durations only. Nothing the renter said reaches this line
         # (spec §3.2, §5.3).
@@ -74,6 +78,9 @@ class Trace:
 
 _current: contextvars.ContextVar[Trace | None] = contextvars.ContextVar("trace", default=None)
 _log_path: Path | None = None
+# The first turn this process serves is the cold start (spec §5.2, §6.56): reported
+# separately and never inside the p99s. Nothing set the flag before Task 4.1.
+_cold = True
 
 
 def configure(log_path: str | None) -> None:
@@ -86,8 +93,15 @@ def current() -> Trace | None:
 
 
 @contextmanager
-def trace(turn_type: str):
-    tr = Trace(turn_type=turn_type)
+def trace(turn_type: str, t0: float | None = None):
+    """One turn. `t0` (a perf_counter reading) starts the clock earlier than now - at
+    end-of-speech - so the final transcript and the ack, which precede the turn's task, can be
+    placed on it with `mark_at`."""
+    global _cold
+    tr = Trace(turn_type=turn_type, cold_start=_cold)
+    _cold = False
+    if t0 is not None:
+        tr.t0 = t0
     token = _current.set(tr)
     try:
         yield tr
