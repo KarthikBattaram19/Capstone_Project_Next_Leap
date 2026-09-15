@@ -61,6 +61,21 @@ jobs:
           python-version: "3.12"
       - run: pip install -e "backend[dev]"
       - run: python -m pytest evals -q
+      # Prints this run's latency table. It never fails the job on its own: these rows are
+      # server traces (per-component timings that start after the ack), not the end-to-end
+      # L0–L8 client rows the targets are defined on, and spec §5.2 scores p99 over every
+      # suite run plus the 20 timed interactions together. Sign-off (Task 4.1 Step 4,
+      # Docs/LATENCY_REPORT.md) reads the merged report, not one run's exit code.
+      - name: latency table
+        shell: bash
+        run: |
+          shopt -s nullglob
+          files=(latency/evals-run*.jsonl)
+          if [ ${#files[@]} -eq 0 ]; then
+            echo "no latency/evals-run*.jsonl was written by this run"
+          else
+            python -m evals.latency.score --table "${files[@]}"
+          fi
       - uses: actions/upload-artifact@v4
         with:
           name: latency-run${{ matrix.run }}

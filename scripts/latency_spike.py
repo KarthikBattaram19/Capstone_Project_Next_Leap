@@ -12,16 +12,41 @@ from pathlib import Path
 import websockets
 
 FRAME_MS = 20
+FRAME_BYTES = 16000 * 2 * FRAME_MS // 1000  # 640 bytes
 
 
-async def one_turn(url: str, wav: Path, turn_type: str) -> dict:
+def read_pcm16(wav: Path) -> bytes:
     with wave.open(str(wav), "rb") as w:
         assert w.getframerate() == 16000 and w.getnchannels() == 1 and w.getsampwidth() == 2, (
             "need 16 kHz mono PCM16"
         )
-        pcm = w.readframes(w.getnframes())
+        return w.readframes(w.getnframes())
 
-    frame = 16000 * 2 * FRAME_MS // 1000  # 640 bytes
+
+class Pacer:
+    """Sends one frame every FRAME_MS against a deadline, not with sleep(FRAME_MS).
+
+    On Windows asyncio.sleep rounds up to the 15.6 ms timer tick, so a 20 ms sleep runs
+    ~31 ms and a 5.66 s utterance took 8.7 s to send. That would inflate every L-number the
+    spike reports. Measured after this change: 5,660 ms of audio sent in 5,672 ms.
+    """
+
+    def __init__(self, ws) -> None:
+        self._ws = ws
+        self.t_first_sent = time.perf_counter()
+        self._n_sent = 0
+
+    async def send(self, data: bytes) -> None:
+        await self._ws.send(data)
+        self._n_sent += 1
+        delay = self.t_first_sent + self._n_sent * FRAME_MS / 1000 - time.perf_counter()
+        if delay > 0:
+            await asyncio.sleep(delay)
+
+
+async def one_turn(url: str, wav: Path, turn_type: str) -> dict:
+    pcm = read_pcm16(wav)
+    frame = FRAME_BYTES
     t: dict[str, float | None] = {
         "first_interim": None,
         "ack": None,
@@ -53,20 +78,9 @@ async def one_turn(url: str, wav: Path, turn_type: str) -> dict:
                     return
 
         rd = asyncio.create_task(reader())
-        t_first_sent = time.perf_counter()
-        # Pace against a deadline, not with sleep(FRAME_MS): on Windows asyncio.sleep
-        # rounds up to the 15.6 ms timer tick, so a 20 ms sleep runs ~31 ms and a
-        # 5.66 s utterance took 8.7 s to send. That would inflate every L-number the
-        # spike reports. Measured after this change: 5,660 ms of audio sent in 5,672 ms.
-        n_sent = 0
-
-        async def send_paced(data: bytes) -> None:
-            nonlocal n_sent
-            await ws.send(data)
-            n_sent += 1
-            delay = t_first_sent + n_sent * FRAME_MS / 1000 - time.perf_counter()
-            if delay > 0:
-                await asyncio.sleep(delay)
+        pacer = Pacer(ws)
+        t_first_sent = pacer.t_first_sent
+        send_paced = pacer.send
 
         for i in range(0, len(pcm), frame):
             await send_paced(pcm[i : i + frame])
