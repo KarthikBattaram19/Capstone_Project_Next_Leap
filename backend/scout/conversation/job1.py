@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import difflib
 import re
 import sys
 from dataclasses import dataclass
@@ -201,7 +202,37 @@ def split_localities(value: str, covered: list[str]) -> list[str]:
     return [part.strip() for part in _LOCALITY_SEPARATORS.split(whole) if part.strip()]
 
 
+# How close a heard name must be to a covered one to be offered as "the closest name".
+# Measured on the real 464 names: "Khoermangara" -> Koramangala 0.78, "Indira Nagar" ->
+# Indiranagar 0.96, but "Chennai" -> Hennagara 0.62, which must not be offered.
+_NEAREST_CUTOFF = 0.75
+_EXAMPLE_LOCALITIES = ("Koramangala", "HSR Layout", "Indiranagar", "Whitefield", "BTM Layout")
+
+
 class Job1:
+    def _not_covered(self, unknown: list[str]) -> str:
+        """Spec §6.24: say it is not covered and offer the nearest covered locality.
+
+        Never the whole covered list: it is spoken, and 464 names is a monologue
+        (production, 2026-09-17). Never a substitution either - the renter says the name.
+        """
+        by_lower = {loc.lower(): loc for loc in self._localities}
+        nearest = [
+            by_lower[m[0]]
+            for part in unknown
+            if (m := difflib.get_close_matches(part.lower(), by_lower, 1, _NEAREST_CUTOFF))
+        ]
+        heard = ", ".join(unknown)
+        if nearest:
+            names = " or ".join(dict.fromkeys(nearest))
+            return f"{heard} isn't covered. The closest name I have is {names} - say it if that is the one."
+        examples = [loc for loc in _EXAMPLE_LOCALITIES if loc in self._localities][:3]
+        examples = examples or self._localities[:3]
+        return (
+            f"{heard} isn't covered. I have listings in {len(self._localities)} Bengaluru "
+            f"localities, such as {', '.join(examples)} - which would you like?"
+        )
+
     def __init__(self, client, localities: list[str]) -> None:
         self.client = client
         self._localities = localities
@@ -256,15 +287,11 @@ class Job1:
                 ]
                 unknown = [part for part, m in zip(named, matched, strict=True) if m is None]
                 if unknown:
-                    covered = ", ".join(self._localities)
                     ambiguities.append(
                         Ambiguity(
                             field="locality",
                             heard=", ".join(unknown),
-                            question=(
-                                f"{', '.join(unknown)} isn't covered. I have listings in "
-                                f"{covered} — which would you like?"
-                            ),
+                            question=self._not_covered(unknown),
                         )
                     )
                     continue
