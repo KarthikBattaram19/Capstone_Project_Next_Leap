@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useReducer, useRef, useState, useSyncExternalStore } from "react";
 
 import { MicControl } from "@/components/MicControl";
-import { StatusPill } from "@/components/StatusPill";
+import { type Service, StatusPill } from "@/components/StatusPill";
 import { Workspace } from "@/components/Workspace";
 import { MicCapture, MicError } from "@/lib/audio/capture";
 import { PcmPlayer } from "@/lib/audio/player";
@@ -112,6 +112,17 @@ export default function Page() {
   const mic = useRef<MicCapture | null>(null);
   const player = useRef<PcmPlayer | null>(null);
   const http = useRef(new HttpClient(API));
+  // What the pill shows before a session: the backend's health, checked once on load.
+  const [service, setService] = useState<Service>("checking");
+  useEffect(() => {
+    let live = true;
+    http.current.health().then((ok) => {
+      if (live) setService(ok ? "up" : "down");
+    });
+    return () => {
+      live = false;
+    };
+  }, []);
   const unmuteTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const stallTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   // Set when the stream stalled: late chunks of that reply are dropped, not played.
@@ -415,7 +426,7 @@ export default function Page() {
   return (
     <div className="app">
       <div className="app__top">
-        <StatusPill connection={s.connection} started={started || connecting} />
+        <StatusPill connection={s.connection} started={started || connecting} service={service} />
       </div>
 
       {!started ? (

@@ -8,13 +8,41 @@ const TEXT: Record<Connection, string> = {
   unreachable: "Can't reach the service",
 };
 
-export function StatusPill({ connection, started }: { connection: Connection; started: boolean }) {
-  const c = started ? connection : "closed";
-  const tone = c === "open" ? "ok" : c === "connecting" ? "wait" : c === "closed" && !started ? "off" : "bad";
+/** What the page's health check on load found, before any session exists. */
+export type Service = "checking" | "up" | "down";
+
+// Before the renter taps there is no socket, so "Not connected" was true but read as a
+// broken site (production, 2026-09-16). Before a session, the pill reports the backend's
+// health instead.
+const IDLE: Record<Service, { text: string; tone: "ok" | "wait" | "bad" }> = {
+  checking: { text: "Checking service…", tone: "wait" },
+  up: { text: "Service ready", tone: "ok" },
+  down: { text: "Can't reach the service", tone: "bad" },
+};
+
+export function StatusPill({
+  connection,
+  started,
+  service,
+}: {
+  connection: Connection;
+  started: boolean;
+  service: Service;
+}) {
+  if (!started) {
+    const idle = IDLE[service];
+    return (
+      <div className={"status status--" + idle.tone} aria-live="polite">
+        <span className="status__dot" />
+        <span className="status__text">{idle.text}</span>
+      </div>
+    );
+  }
+  const tone = connection === "open" ? "ok" : connection === "connecting" ? "wait" : "bad";
   return (
     <div className={"status status--" + tone} aria-live="polite">
       <span className="status__dot" />
-      <span className="status__text">{started ? TEXT[c] : "Not connected"}</span>
+      <span className="status__text">{TEXT[connection]}</span>
     </div>
   );
 }

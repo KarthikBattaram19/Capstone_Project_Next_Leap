@@ -30,6 +30,18 @@ function detailText(d: unknown): string | null {
 export class HttpClient {
   constructor(private base: string) {}
 
+  /** True if GET /health answers `{status:"ok"}` within the timeout; never throws. */
+  async health(timeoutMs = 8000): Promise<boolean> {
+    try {
+      const r = await fetch(`${this.base}/health`, { signal: AbortSignal.timeout(timeoutMs) });
+      if (!r.ok) return false;
+      const d = (await r.json()) as { status?: unknown };
+      return d.status === "ok";
+    } catch {
+      return false;
+    }
+  }
+
   private async post<T>(path: string, body: unknown): Promise<T> {
     let r: Response;
     try {

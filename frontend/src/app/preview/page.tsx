@@ -51,7 +51,7 @@ export default function PreviewPage() {
       <Section id="welcome" label="1 · Welcome">
         <div className="preview__frame">
           <div className="app__top" style={{ position: "absolute" }}>
-            <StatusPill connection="closed" started={false} />
+            <StatusPill connection="closed" started={false} service="up" />
           </div>
           <div className="welcome">
             <MicControl phase="idle" onStart={noop} micError={null} />
