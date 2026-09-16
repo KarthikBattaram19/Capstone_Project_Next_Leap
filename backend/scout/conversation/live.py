@@ -8,11 +8,13 @@ import sys
 import time
 
 from scout.config import Settings
-from scout.contract.outcome import Failed
+from scout.contract.outcome import Answered, Failed
+from scout.contract.viewmodels import AnsweredViewModel
+from scout.conversation import persona
 from scout.conversation.hold import looks_unfinished
 from scout.conversation.orchestrator import TurnOrchestrator
 from scout.conversation.session import SessionManager
-from scout.conversation.speaker import Speaker
+from scout.conversation.speaker import Speaker, split_sentences
 from scout.conversation.state import TurnState, transition
 from scout.platform import telemetry
 from scout.providers.deepgram_stt import DeepgramStream, build_keyterms
@@ -53,6 +55,7 @@ class LiveSession:
     async def start(self) -> None:
         # Per session, never on the shared orchestrator.
         self.session.speaker_factory = lambda: Speaker(self.tts, self.sink)
+        await self._greet()
         try:
             await self.stt.start()
         except Exception:  # noqa: BLE001 -- raising here killed the socket, and the browser
@@ -61,6 +64,22 @@ class LiveSession:
             await self._speech_unavailable()
             return
         self._keepalive = asyncio.create_task(self._keepalive_loop())
+
+    async def _greet(self) -> None:
+        """Nakshatra speaks first (arch §11.2 P-7), before the STT stream opens.
+
+        A constant, never a model call, so no provider sits on the path to the first sound
+        the renter hears. It travels as an ordinary `answered` outcome (addendum Task 2.10)
+        and is spoken in the background, like every other reply.
+        """
+        greeting = Answered(
+            view_model=AnsweredViewModel(notices=[persona.GREETING]), spoken=persona.GREETING
+        )
+        await self.sink.outcome({"outcome": greeting.model_dump()})
+        self.session.speaker = self.session.speaker_factory()
+        self.session.speaking = asyncio.create_task(
+            self.session.speaker.speak(split_sentences(persona.GREETING))
+        )
 
     async def close(self) -> None:
         if self._keepalive:

@@ -288,3 +288,54 @@ async def test_the_cap_does_not_fire_on_an_utterance_inside_the_limit(live):
 
     assert session._speech_started_at is not None
     assert not sink.acks()
+
+
+async def test_the_greeting_is_sent_and_spoken_before_the_microphone_is_heard(monkeypatch):
+    """Arch §11.2 P-7, addendum Task 2.10: on hello Nakshatra speaks first, from a constant.
+
+    Never wired until 2026-09-16, when the browser walkthrough found a click on the mic
+    produced silence. It travels as an ordinary `answered` outcome - no contract change -
+    and is emitted before the STT stream opens, so no provider sits on the path to it.
+    """
+    from scout.conversation import live as live_mod
+    from scout.conversation import persona
+    from scout.conversation.speaker import split_sentences
+
+    order = []
+    spoken = []
+
+    class Stt(FakeStt):
+        async def start(self):
+            order.append("stt_open")
+
+    class FakeSpeaker:
+        def __init__(self, tts, sink):
+            pass
+
+        async def speak(self, sentences):
+            spoken.append(list(sentences))
+
+        async def cancel(self):
+            pass
+
+    class Sink(RecordingSink):
+        async def outcome(self, payload):
+            order.append("outcome")
+            self.last = payload["outcome"]
+            await super().outcome(payload)
+
+    monkeypatch.setattr(LiveSession, "_make_stt", lambda self: Stt())
+    monkeypatch.setattr(live_mod, "Speaker", FakeSpeaker)
+    s = Settings(_env_file=None, cors_allowed_origins="http://localhost:3000")
+    sink = Sink()
+    session = LiveSession(s, sink, FakeOrch(), SessionManager(60))
+
+    await session.start()
+    await asyncio.sleep(0.01)
+
+    assert order[:2] == ["outcome", "stt_open"]
+    assert sink.last["kind"] == "answered"
+    assert sink.last["spoken"] == persona.GREETING
+    assert sink.last["view_model"]["notices"] == [persona.GREETING]
+    assert spoken == [split_sentences(persona.GREETING)]
+    assert session.state is TurnState.IDLE, "the greeting must not look like a turn in flight"
