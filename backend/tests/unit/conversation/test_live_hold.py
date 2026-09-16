@@ -365,3 +365,28 @@ async def test_a_stale_sound_onset_does_not_start_the_runaway_clock(live, monkey
 
     assert not _outcomes(sink), "the cap fired on a clock started by a sound, not by words"
     assert session._speech_started_at == 1000.0 + RUNAWAY_S + 5
+
+
+async def test_a_keepalive_is_due_whenever_no_audio_has_flowed_whatever_the_state(
+    live, monkeypatch
+):
+    """Production, 2026-09-17: a sound onset with no words left the session CAPTURING, the
+    tab was hidden (no frames), and keepalives only went out in IDLE or SPEAKING - so Deepgram
+    closed the idle stream and the renter came back to "I lost the connection" having said
+    nothing. Reproduced against production with a noise burst and a 25 s gap."""
+    from scout.conversation import live as live_mod
+
+    now = [500.0]
+    fake = types.SimpleNamespace(monotonic=lambda: now[0], perf_counter=time.perf_counter)
+    monkeypatch.setattr(live_mod, "time", fake)
+    session, _ = live()
+    session.state = TurnState.CAPTURING
+
+    await session.audio(bytes(320))
+    assert not session._keepalive_due(), "audio is flowing; the stream is not idle"
+    now[0] += 3.5
+    assert session._keepalive_due(), "CAPTURING with no frames for 3.5 s must still keep alive"
+
+    session.state = TurnState.IDLE
+    await session.audio(bytes(320))
+    assert session._keepalive_due(), "IDLE keeps its keepalive, as before"

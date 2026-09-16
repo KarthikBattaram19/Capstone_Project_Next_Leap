@@ -21,6 +21,7 @@ from scout.providers.deepgram_stt import DeepgramStream, build_keyterms
 from scout.providers.smallest_tts import SmallestTts
 
 RUNAWAY_S = 30.0
+AUDIO_GAP_KEEPALIVE_S = 3.0  # no frames for this long means the tab stopped sending
 
 
 class LiveSession:
@@ -40,6 +41,7 @@ class LiveSession:
         self._reconnected = False
         self._stt_down = False  # both streams failed: say so once, keep the socket for typing
         self._keepalive: asyncio.Task | None = None
+        self._last_audio_at = time.monotonic()
         self.stt = self._make_stt()
 
     def _make_stt(self) -> DeepgramStream:
@@ -93,6 +95,7 @@ class LiveSession:
     async def audio(self, pcm: bytes) -> None:
         if self._stt_down:
             return  # the mic keeps streaming; the renter has already been told to type
+        self._last_audio_at = time.monotonic()
         try:
             await self.stt.send_audio(pcm)
         except Exception:  # noqa: BLE001 -- any transport error is a lost stream (spec §6.23)
@@ -121,10 +124,24 @@ class LiveSession:
             self.state = transition(self.state, TurnState.CAPTURING)
         await self._finalize()
 
+    def _keepalive_due(self) -> bool:
+        """IDLE and SPEAKING as before, and ANY state once no frame has flowed for a while.
+
+        A hidden tab stops the frames (§6.16). A sound onset with no words had left the
+        session CAPTURING, where no keepalive went out, so Deepgram closed the idle stream
+        and the renter returned to "I lost the connection" having said nothing (production,
+        2026-09-17).
+        """
+        if self.state in (TurnState.IDLE, TurnState.SPEAKING):
+            return True
+        return time.monotonic() - self._last_audio_at >= AUDIO_GAP_KEEPALIVE_S
+
     async def _keepalive_loop(self) -> None:
         while True:
-            await asyncio.sleep(5)
-            if self.state in (TurnState.IDLE, TurnState.SPEAKING):
+            # Deepgram closes a stream after ~10 s with no audio (net0001); checking every
+            # 2 s puts the first keepalive of a gap at most 5 s in.
+            await asyncio.sleep(2)
+            if self._keepalive_due():
                 # A missed keepalive is not a turn failure: the next send_audio finds the
                 # stream gone and takes the one permitted reconnect.
                 with contextlib.suppress(Exception):
