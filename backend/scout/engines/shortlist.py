@@ -10,6 +10,7 @@ from scout.domain.constraints import ConstraintSet
 from scout.domain.listing import Listing, Parking
 from scout.domain.money import rupees
 from scout.domain.shortlist import Exclusion, Shortlist, ShortlistEntry
+from scout.pipeline.dedupe import haversine_m
 
 Available = Callable[[str], bool]
 
@@ -200,12 +201,40 @@ def binding_constraints(s: Shortlist, c: ConstraintSet) -> list[UnmetConstraint]
     return out
 
 
-def suggest_relaxations(s: Shortlist, c: ConstraintSet, localities: list[str]) -> list[str]:
+def nearest_localities(
+    chosen: list[str] | tuple[str, ...],
+    places: dict[str, dict],
+    covered: list[str],
+    k: int = 2,
+) -> list[str]:
+    """The k covered localities whose centres are closest to any chosen locality's centre.
+
+    Straight-line distance between the build-time centres in places.json (Task 2.7). A
+    chosen locality with no centre yields nothing: "nearby" is a claim about geography and
+    is never made without a measurement behind it.
+    """
+    centres = [places[n] for n in chosen if n in places]
+    if not centres:
+        return []
+    taken = set(chosen)
+    scored = []
+    for name in covered:
+        if name in taken or name not in places:
+            continue
+        p = places[name]
+        d = min(haversine_m(c["lat"], c["lng"], p["lat"], p["lng"]) for c in centres)
+        scored.append((d, name))
+    return [name for _, name in sorted(scored)[:k]]
+
+
+def suggest_relaxations(s: Shortlist, c: ConstraintSet, nearby: list[str]) -> list[str]:
+    """Suggest only. `nearby` comes from nearest_localities - never from list order, which
+    once offered the alphabetically first names as "nearby" (production, 2026-09-17)."""
     tips: list[str] = []
     if any(x.field == "rent_max" for x in s.excluded) and c.rent_max:
         tips.append(f"try {rupees(int(c.rent_max * 1.2 // 1000 * 1000))}")
     if any(x.field == "localities" for x in s.excluded):
-        others = [loc for loc in localities if loc not in c.localities][:2]
+        others = [loc for loc in nearby if loc not in c.localities][:2]
         if others:
             tips.append("or nearby " + " / ".join(others))
     if s.unknown:

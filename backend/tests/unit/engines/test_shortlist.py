@@ -87,3 +87,34 @@ def test_unavailable_is_excluded_with_the_reason():
     s = build([ALL["a"]], ConstraintSet(), lambda lid: False)
     assert s.excluded[0].reason == "no longer available"
     assert s.excluded[0].field == "availability"
+
+
+def test_nearby_localities_are_the_closest_centres_not_the_first_names_alphabetically():
+    """Production, 2026-09-17: an empty result in Indiranagar suggested "nearby 6th Block /
+    A Adugodi" - the first two covered names in alphabetical order, stated as geography."""
+    from scout.engines.shortlist import nearest_localities
+
+    places = {
+        "6th Block": {"lat": 13.10, "lng": 77.40},
+        "A Adugodi": {"lat": 12.94, "lng": 77.61},
+        "Indiranagar": {"lat": 12.971, "lng": 77.641},
+        "Domlur": {"lat": 12.961, "lng": 77.638},
+        "HAL 2nd Stage": {"lat": 12.965, "lng": 77.650},
+        "Whitefield": {"lat": 12.970, "lng": 77.750},
+    }
+    covered = sorted(places)
+    assert nearest_localities(["Indiranagar"], places, covered, k=2) == ["Domlur", "HAL 2nd Stage"]
+    assert nearest_localities(["Nowhere"], places, covered, k=2) == [], "no centre, no claim"
+    assert nearest_localities(["Indiranagar"], places, ["Indiranagar", "Whitefield"], k=2) == [
+        "Whitefield"
+    ], "only covered localities are offered"
+
+
+def test_a_locality_relaxation_is_only_suggested_from_computed_neighbours():
+    from scout.domain.shortlist import Exclusion, Shortlist
+    from scout.engines.shortlist import suggest_relaxations
+
+    s = Shortlist(excluded=(Exclusion("x", "locality HSR Layout", "localities"),))
+    c = ConstraintSet(localities=("Indiranagar",))
+    assert suggest_relaxations(s, c, nearby=["Domlur"]) == ["or nearby Domlur"]
+    assert suggest_relaxations(s, c, nearby=[]) == [], "never name a place as nearby unmeasured"

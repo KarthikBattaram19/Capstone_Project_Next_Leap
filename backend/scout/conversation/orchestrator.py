@@ -521,7 +521,10 @@ class TurnOrchestrator:
                 msg = CONVERSATIONAL_REPLIES["all_withdrawn"]
                 return Empty(unmet=[], suggestions=[], spoken=msg)
             unmet = engine.binding_constraints(new, session.constraints)
-            tips = engine.suggest_relaxations(new, session.constraints, self.store.localities)
+            nearby = engine.nearest_localities(
+                session.constraints.localities, self.store.places, self.store.localities
+            )
+            tips = engine.suggest_relaxations(new, session.constraints, nearby)
             binding = unmet[0] if unmet else None
             where = (
                 " in " + " or ".join(session.constraints.localities)
