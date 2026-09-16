@@ -1,12 +1,16 @@
 """Booking service against an in-memory calendar (Task 3.3). No Google client is ever built."""
 
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 
 from scout.booking.reconcile import ReconcileQueue
 from scout.booking.service import (
+    ALPHABET,
+    AlreadyStarted,
     Booked,
     BookingService,
     Cancelled,
+    CodeGenerator,
+    NoSlots,
     NotFound,
     SlotTaken,
     Unchanged,
@@ -188,3 +192,60 @@ async def test_cancel_drops_queued_repairs_so_no_half_lands_afterwards():
     assert q.pending_for(b.code) == 0
     await q.run_once()
     assert not cal.events and await s.lookup(b.code) is None
+
+
+# --- §6 walkthrough rows: guards that were read but not executed (Task 4.2) ---
+
+
+async def test_cancel_and_reschedule_after_the_slot_started_are_both_refused():
+    """Spec §6.10. The clock that decides this is IST (`engines/slots.py:51`), not the
+    server's - so the test moves `now` past the slot rather than moving the slot."""
+    cal = FakeCal()
+    s = svc(cal)
+    offered = await s.offer("a")
+    slot = offered[0]
+    code = (await s.confirm("a", slot, "t@x")).booking.code
+
+    # The same calendar, read from a clock one minute after the visit began.
+    started = BookingService(
+        cal,
+        SlotService(),
+        Avail(),
+        ReconcileQueue(cal),
+        now=lambda: slot.start + timedelta(minutes=1),
+    )
+    assert isinstance(await started.cancel(code), AlreadyStarted)
+    assert isinstance(await started.reschedule(code, offered[2]), AlreadyStarted)
+    # Refused means nothing moved: both events are still there, on the original slot.
+    assert len(cal.events) == 2
+    assert all(s_.start == slot.start for _, s_, *_ in cal.events.values())
+
+
+async def test_no_free_slot_in_the_window_is_NoSlots_not_an_empty_list():
+    """Spec §6.40. An empty list would reach the renter as "pick one" from nothing, so the
+    absence of slots has to be its own answer."""
+    cal = FakeCal()
+    start, end = SlotService().window(NOW)
+    cal.busy = [(start, end)]  # the whole 7-day window is busy
+    r = await svc(cal).offer("a")
+    assert isinstance(r, NoSlots)
+    assert not isinstance(r, list)
+
+
+async def test_a_confirmation_code_collision_redraws_instead_of_overwriting():
+    """Spec §6.44. `CodeGenerator.new` is driven directly: forcing a real collision through
+    `confirm` would mean fixing `secrets.choice`, which would test the patch, not the guard."""
+    drawn: list[str] = []
+
+    async def exists(code: str) -> bool:
+        drawn.append(code)
+        return len(drawn) <= 2  # the first two draws are already live bookings
+
+    code = await CodeGenerator.new(exists)
+
+    assert len(drawn) == 3, "it must draw again on a collision, not reuse or overwrite"
+    assert code == drawn[-1]
+    assert len(code) == 6
+    # The confusion-free alphabet: no 0/O or 1/I, which are misread when spoken aloud.
+    assert set("".join(drawn)) <= set(ALPHABET)
+    assert not set(ALPHABET) & set("01OI")

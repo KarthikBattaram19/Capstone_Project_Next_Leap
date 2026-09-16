@@ -7,13 +7,14 @@ SMALLEST_VOICE_ID presented in production. The guarantees move here with the cod
 """
 
 import asyncio
+import time
 
 import pytest
 
 from scout.config import Settings
 from scout.contract.outcome import Answered
 from scout.contract.viewmodels import AnsweredViewModel
-from scout.conversation.live import LiveSession
+from scout.conversation.live import RUNAWAY_S, LiveSession
 from scout.conversation.session import SessionManager
 from scout.conversation.state import TurnState
 
@@ -214,3 +215,76 @@ async def test_a_spoken_turn_trace_carries_the_final_transcript_and_the_ack(live
 
     marks = {m["name"]: m["at_ms"] for m in json.loads(log.read_text().splitlines()[0])["marks"]}
     assert 0 <= marks["stt.final"] <= marks["ack"]
+
+
+# --- §6 walkthrough rows: guards that were read but not executed (Task 4.2) ---
+
+
+def _outcomes(sink):
+    return [e for e in sink.events if e[0] == "outcome"]
+
+
+async def test_an_utterance_with_no_words_re_prompts_once_and_never_reaches_job1(live):
+    """Spec §6.18. An empty transcript must not be sent to Job 1, and the re-prompt is
+    once per run of silences - a renter who is simply not speaking should not be nagged
+    on every hold expiry."""
+    session, sink = live()
+
+    await session._finalize()  # nothing captured at all
+
+    outs = _outcomes(sink)
+    assert len(outs) == 1 and outs[0][1] == "failed"
+    assert not sink.acks(), "an empty transcript was acknowledged as if it were an utterance"
+    assert session.state is TurnState.IDLE
+
+    session.state = TurnState.CAPTURING
+    await session._finalize()  # silent again, immediately
+    assert len(_outcomes(sink)) == 1, "the re-prompt repeated on a run of silences"
+
+
+async def test_the_re_prompt_suppressor_clears_once_words_arrive(live):
+    """The other half of §6.18: the suppressor covers a run of silences, not the session,
+    so a renter who goes quiet again later is answered rather than met with nothing."""
+    session, sink = live()
+    await session._finalize()
+    assert len(_outcomes(sink)) == 1
+
+    session.state = TurnState.CAPTURING
+    await session._final("a 2BHK in Koramangala")
+    await asyncio.sleep(0.05)
+    await session._utterance_end()
+    await asyncio.sleep(0.05)
+    assert sink.acks(), "the utterance with words was not acknowledged"
+
+    session.state = TurnState.CAPTURING
+    await session._finalize()  # silent again, but after a real utterance
+    assert len(_outcomes(sink)) >= 2, "the suppressor never cleared; the renter met silence"
+
+
+async def test_a_runaway_utterance_is_capped_and_what_was_captured_still_runs(live):
+    """Spec §6.19. Capture stops at RUNAWAY_S rather than waiting for an end-of-speech that
+    is not coming, and the words captured so far are transcribed and confirmed back - not
+    discarded, which would lose everything the renter said."""
+    session, sink = live()
+    session._segments = ["a 2BHK in Koramangala under 35,000"]
+    session._speech_started_at = time.monotonic() - (RUNAWAY_S + 1.0)
+
+    await session.audio(b"\x00" * 320)  # the frame that crosses the cap
+    await asyncio.sleep(0.05)
+
+    assert session._speech_started_at is None, "the cap did not finalise the utterance"
+    acks = sink.acks()
+    assert acks and acks[0][1] == "a 2BHK in Koramangala under 35,000"
+
+
+async def test_the_cap_does_not_fire_on_an_utterance_inside_the_limit(live):
+    """The cap has to be a cap, not a timeout on every turn."""
+    session, sink = live()
+    session._segments = ["still talking"]
+    session._speech_started_at = time.monotonic()  # just started
+
+    await session.audio(b"\x00" * 320)
+    await asyncio.sleep(0.05)
+
+    assert session._speech_started_at is not None
+    assert not sink.acks()

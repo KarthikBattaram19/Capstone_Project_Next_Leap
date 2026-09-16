@@ -165,3 +165,28 @@ def test_a_paraphrase_of_the_cited_passage_binds():
         )
     )
     assert kept is not None and a.drops["unsupported"] == 0
+
+
+# --- §6 walkthrough rows: guards that were read but not executed (Task 4.2) ---
+
+DISCLAIMER = "Limited neighbourhood data available for this locality."
+
+
+def test_a_locality_with_no_guide_chunks_carries_the_limited_data_disclaimer():
+    """Spec §6.2 - partial info plus the disclaimer, never partial info alone. This is the
+    common case, not an edge one: 337 of the 464 localities have no guide source at all,
+    so the line has to fire on an empty chunk list rather than on a retrieval failure."""
+    b = bundle()
+    assert not b.chunks
+
+    lines = ClaimAssembler(b).render_gaps()
+
+    assert DISCLAIMER in lines
+    # It is additional to the per-fact gaps, not a replacement for them: the missing
+    # deposit is still declared in its own line.
+    assert any("deposit" in ln for ln in lines)
+
+
+def test_the_disclaimer_is_absent_when_the_locality_does_have_a_guide_chunk():
+    """The other half of §6.2: a disclaimer that always appeared would say nothing."""
+    assert DISCLAIMER not in ClaimAssembler(bundle_with_a_chunk()).render_gaps()

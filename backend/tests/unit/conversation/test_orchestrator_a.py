@@ -159,3 +159,99 @@ async def test_unavailable_listing_is_removed_with_a_notice(make):
     o2 = await orch.handle_text(s, "show me again")
     assert gone not in o2.view_model.shortlist.order
     assert any("no longer available" in n for n in o2.view_model.notices)
+
+
+# --- §6 walkthrough rows: guards that were read but not executed (Task 4.2) ---
+
+
+async def test_out_of_scope_says_what_is_covered_and_returns_to_the_task(make):
+    """Spec §6.28. One sentence on scope, then back to the task - and nothing improvised
+    from model knowledge, which is what an out-of-scope answer would have to be."""
+    orch, s = make([j1(intent="out_of_scope")])
+    o = await orch.handle_text(s, "can you help me buy a flat instead?")
+
+    assert isinstance(o, Answered)
+    assert "not buying" in o.spoken and "Bengaluru" in o.spoken
+    assert o.spoken.rstrip().endswith("?")  # it hands the turn back
+    assert s.shortlist.is_empty()  # no arbitrary slice was produced to fill the silence
+
+
+async def test_asking_for_the_owners_number_gets_the_labelled_placeholder(make):
+    """Spec §6.33. The only contact in the system is the demo placeholder, and the reply
+    says so rather than implying a real number is being withheld."""
+    orch, s = make([j1(intent="owner_contact")])
+    o = await orch.handle_text(s, "what is the owner's phone number?")
+
+    assert isinstance(o, Answered)
+    assert "999999999" in o.spoken
+    assert "no real owner details" in o.spoken
+
+
+async def test_no_constraints_at_all_asks_for_the_two_that_narrow_most(make):
+    """Spec §6.31. "Just show me something" must not return an arbitrary slice dressed as
+    a shortlist - it asks for a budget and a locality."""
+    orch, s = make([j1(edits=[])])
+    o = await orch.handle_text(s, "just show me something")
+
+    assert isinstance(o, NeedsInput)
+    assert o.field == "constraints"
+    assert "budget" in o.question and "locality" in o.question
+    assert s.shortlist.is_empty()
+
+
+async def test_when_every_shortlisted_listing_is_withdrawn_it_says_so_and_backfills_nothing(
+    make,
+):
+    """Spec §6.39. Distinct from §6.4's single removal: when the whole shortlist goes, the
+    renter is returned to constraint collection rather than handed listings they never
+    heard chosen."""
+    orch, s = make(
+        [
+            j1(edits=[ConstraintEdit("localities", "add", "Koramangala")]),
+            j1(intent="confirm_yes"),
+            j1(edits=[]),
+        ]
+    )
+    await orch.handle_text(s, "Koramangala")
+    o = await orch.handle_text(s, "yes")
+    heard = list(o.view_model.shortlist.order)
+    assert heard, "the fixture must produce a shortlist for this row to mean anything"
+
+    for lid in heard:
+        orch.availability.set(lid, False)
+    o2 = await orch.handle_text(s, "show me again")
+
+    assert isinstance(o2, Empty)
+    assert "no longer available" in o2.spoken or "all" in o2.spoken.lower()
+    assert s.shortlist.is_empty()  # nothing was backfilled from outside the shortlist
+
+
+async def test_an_ordinal_is_re_anchored_when_the_list_changed_since_it_was_heard(make):
+    """Spec §6.30. The ordinal resolves against `last_read_order` - what the renter last
+    HEARD - and when that no longer matches the current order the listing is named back
+    for confirmation instead of being acted on."""
+    orch, s = make(
+        [
+            j1(edits=[ConstraintEdit("localities", "add", "Koramangala")]),
+            j1(intent="confirm_yes"),
+            j1(reference=2),
+        ]
+    )
+    await orch.handle_text(s, "Koramangala")
+    o = await orch.handle_text(s, "yes")
+    assert len(o.view_model.shortlist.order) >= 2, "need two listings to reorder"
+
+    # The list moved under the renter since they last heard it read out. `Shortlist.order`
+    # is a property that rebuilds its list on every read, so the stale side has to be
+    # `last_read_order` - the one field that actually persists what was spoken.
+    s.last_read_order = list(reversed(s.last_read_order))
+    assert s.shortlist.order != s.last_read_order
+
+    o2 = await orch.handle_text(s, "the second one")
+
+    assert isinstance(o2, NeedsInput)
+    assert o2.field == "reference"
+    assert o2.question.startswith("Do you mean")
+    assert o2.options == ["yes", "no"]
+    # It re-anchors on what they heard second, not on what is now second.
+    assert s.focus_listing_id == s.last_read_order[1]
