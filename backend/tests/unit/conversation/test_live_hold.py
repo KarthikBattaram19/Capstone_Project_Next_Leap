@@ -8,6 +8,7 @@ SMALLEST_VOICE_ID presented in production. The guarantees move here with the cod
 
 import asyncio
 import time
+import types
 
 import pytest
 
@@ -339,3 +340,28 @@ async def test_the_greeting_is_sent_and_spoken_before_the_microphone_is_heard(mo
     assert sink.last["view_model"]["notices"] == [persona.GREETING]
     assert spoken == [split_sentences(persona.GREETING)]
     assert session.state is TurnState.IDLE, "the greeting must not look like a turn in flight"
+
+
+async def test_a_stale_sound_onset_does_not_start_the_runaway_clock(live, monkeypatch):
+    """Production, 2026-09-17: a noise onset just after the greeting set the §6.19 clock, no
+    words followed, and 35 s later the renter's first frame tripped the 30 s cap - an empty
+    utterance, answered "I didn't hear anything" while their words were still arriving. The
+    cap measures an utterance, so its clock starts at the first words, not at a sound."""
+    from scout.conversation import live as live_mod
+
+    now = [1000.0]
+    # Only live.py's clock: patching time.monotonic itself would freeze the event loop.
+    fake = types.SimpleNamespace(monotonic=lambda: now[0], perf_counter=time.perf_counter)
+    monkeypatch.setattr(live_mod, "time", fake)
+    session, sink = live()
+    session.state = TurnState.IDLE
+
+    await session._speech_started()  # a cough, a chair - no words follow
+    now[0] += RUNAWAY_S + 5
+    await session._interim("two BHK in Koramangala")  # the real utterance begins now
+    now[0] += 0.1
+    await session.audio(bytes(320))
+    await asyncio.sleep(0.05)
+
+    assert not _outcomes(sink), "the cap fired on a clock started by a sound, not by words"
+    assert session._speech_started_at == 1000.0 + RUNAWAY_S + 5

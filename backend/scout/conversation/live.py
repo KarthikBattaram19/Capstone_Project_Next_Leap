@@ -143,7 +143,14 @@ class LiveSession:
         # Deepgram's VAD fires on a breath or a chair; cancelling the turn on it and then
         # hearing no words left the page in "processing" forever (production, 2026-09-10).
         # Words arriving during a thinking turn are the barge-in, below.
-        self._speech_started_at = self._speech_started_at or time.monotonic()
+        # The runaway clock (§6.19) is NOT started here: a sound with no words behind it
+        # left it running, and 35 s later the renter's first frame capped an empty
+        # utterance - "I didn't hear anything" mid-sentence (production, 2026-09-17).
+
+    def _start_runaway_clock(self, text: str) -> None:
+        """§6.19 measures an utterance, so its clock starts at the first words."""
+        if text.strip():
+            self._speech_started_at = self._speech_started_at or time.monotonic()
 
     _THINKING = frozenset(
         {
@@ -168,6 +175,7 @@ class LiveSession:
 
     async def _interim(self, text: str) -> None:
         await self._words_arrived(text)
+        self._start_runaway_clock(text)
         if self.state is TurnState.IDLE:
             self.state = transition(self.state, TurnState.CAPTURING)
         await self.sink.transcript(" ".join([*self._segments, text]), final=False)  # L0
@@ -176,6 +184,7 @@ class LiveSession:
         """`confidence` is Deepgram's, for spec §6.20. It defaults to 1.0 so a typed message
         and a test that drives this directly are never treated as noisy speech."""
         await self._words_arrived(text)
+        self._start_runaway_clock(text)
         if self.state is TurnState.IDLE:
             self.state = transition(self.state, TurnState.CAPTURING)
         self._segments.append(text)
