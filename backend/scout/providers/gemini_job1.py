@@ -73,6 +73,23 @@ def _retry_after(resp: httpx.Response, attempt: int) -> float:
     return min(2.0**attempt, 16.0) + random.uniform(0, 0.5)
 
 
+def _daily_quota_spent(resp: httpx.Response) -> bool:
+    """True when the 429 names a per-DAY quota, which no backoff inside a turn can outlast.
+
+    Read from the QuotaFailure detail's `quotaId`
+    (`GenerateRequestsPerDayPerProjectPerModel-FreeTier`, captured 2026-09-16). Retrying it
+    kept a renter on "Thinking..." for 3 min 11 s in production before the same failure.
+    """
+    try:
+        for detail in resp.json().get("error", {}).get("details", []):
+            for violation in detail.get("violations", []) or []:
+                if "PerDay" in str(violation.get("quotaId", "")):
+                    return True
+    except (ValueError, AttributeError, TypeError):
+        pass
+    return False
+
+
 class _Pacer:
     """Keeps requests under a per-minute cap instead of discovering it with a 429.
 
@@ -211,6 +228,8 @@ class GeminiJob1Client:
                     continue
             if resp.status_code < 400:
                 return resp
+            if resp.status_code == 429 and _daily_quota_spent(resp):
+                raise GeminiError(f"daily quota spent - {_redact(resp)}")
             if resp.status_code not in RETRYABLE or attempt == RETRIES:
                 raise GeminiError(_redact(resp))
             last = GeminiError(_redact(resp))

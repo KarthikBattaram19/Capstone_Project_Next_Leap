@@ -287,3 +287,64 @@ async def test_the_timeout_is_configurable_and_shorter_than_the_old_thirty_secon
     s = Settings(_env_file=None)
     assert s.job1_gemini_timeout_s == 12.0
     assert s.job1_gemini_timeout_retries == 2
+
+
+def _quota_429(quota_id: str, retry_delay: str = "3s") -> httpx.Response:
+    # The body shape of a real refusal, captured 2026-09-16 when the free-tier day ran out.
+    return httpx.Response(
+        429,
+        json={
+            "error": {
+                "code": 429,
+                "message": "You exceeded your current quota, please check your plan and billing"
+                " details.",
+                "status": "RESOURCE_EXHAUSTED",
+                "details": [
+                    {
+                        "@type": "type.googleapis.com/google.rpc.QuotaFailure",
+                        "violations": [
+                            {
+                                "quotaMetric": "generativelanguage.googleapis.com/"
+                                "generate_content_free_tier_requests",
+                                "quotaId": quota_id,
+                                "quotaValue": "500",
+                            }
+                        ],
+                    },
+                    {
+                        "@type": "type.googleapis.com/google.rpc.RetryInfo",
+                        "retryDelay": retry_delay,
+                    },
+                ],
+            }
+        },
+    )
+
+
+async def test_a_spent_daily_quota_is_not_retried(monkeypatch):
+    # Production, 2026-09-16: the day's 500 were gone and the client retried four times with
+    # 11 + 60 + 60 + 60 s of backoff, so the renter watched "Thinking..." for 3 min 11 s
+    # before hearing "I didn't catch that". A per-DAY quota cannot come back inside a turn.
+    calls = []
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        calls.append(1)
+        return _quota_429("GenerateRequestsPerDayPerProjectPerModel-FreeTier")
+
+    with pytest.raises(GeminiError, match="daily quota"):
+        await _client(monkeypatch, handler).complete_json("s", "u", "job1", SCHEMA)
+    assert len(calls) == 1
+
+
+async def test_a_per_minute_quota_is_still_retried(monkeypatch):
+    calls = []
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        calls.append(1)
+        if len(calls) == 1:
+            return _quota_429("GenerateRequestsPerMinutePerProjectPerModel-FreeTier", "0s")
+        return _reply({"intent": "a", "email": None})
+
+    out = await _client(monkeypatch, handler).complete_json("s", "u", "job1", SCHEMA)
+    assert out == {"intent": "a", "email": None}
+    assert len(calls) == 2
