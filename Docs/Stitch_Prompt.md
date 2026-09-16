@@ -24,7 +24,7 @@ Design a dark-themed desktop web app called **Nakshatra — Voice Property Scout
 - Failure banner (red left border, red-tinted surface, must look nothing like the empty result): "Explanation is unavailable right now." with a "Retry" button. The capability name is always shown (speech recognition / understanding / explanation / voice output / calendar / email).
 - Degraded notice: a thin amber line "Shortlist shown; explanation withheld — the explanation service did not answer."
 - "Can't reach the service" full-width panel with a Retry button, and "This page is out of date with the service — reload" panel.
-- Microphone denied: recovery text for Chrome, Firefox and Safari, plus a text input fallback "Type instead".
+- Microphone denied: recovery text for Chrome and Firefox, plus a text input fallback "Type instead".
 - "Enable voice" button (audio blocked by the browser) and a "Voice output is temporarily unavailable" toast.
 - Reload notice: "Your conversation was not saved; a confirmed booking still works with its code."
 

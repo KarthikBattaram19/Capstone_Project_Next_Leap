@@ -17,9 +17,6 @@ export function MicErrorHelp({ error }: { error: "denied" | "no_device" | null }
             <li>
               <b>Firefox</b> · click the microphone icon left of the address bar → remove the block, then reload.
             </li>
-            <li>
-              <b>Safari</b> · Safari menu → Settings for This Website → Microphone → Allow.
-            </li>
           </ul>
         </>
       ) : (

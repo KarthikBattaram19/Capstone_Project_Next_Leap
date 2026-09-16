@@ -3783,7 +3783,7 @@ Run `git add frontend` then `git commit -m "feat(frontend): session reducer keep
   - `ShortlistCards`: groups with heading `<locality> · <count>`; renders cards in `order`; never sorts
   - `EmptyState`: renders `unmet` and `suggestions` verbatim, with the sentence "I won't relax anything myself"
   - `FailureBanner`: renders `lastFailure.capability` as a human name ("speech recognition", "understanding", "explanation", "voice output", "calendar", "email") with `tell_renter`, a Retry button when `retry_worth_it`; **distinct styling and copy from `EmptyState`** — the test asserts the two components never share a CSS class
-  - `MicControl`: states `idle/listening/processing/speaking`; click = `player.unlock()` then `mic.start()`; if unlock returns false → `voiceOut: "blocked"` and an "Enable voice" button (spec §6.15); denied mic → recovery text for Chrome/Firefox/Safari + a text input fallback that sends `{type:"text"}` (spec §6.13)
+  - `MicControl`: states `idle/listening/processing/speaking`; click = `player.unlock()` then `mic.start()`; if unlock returns false → `voiceOut: "blocked"` and an "Enable voice" button (spec §6.15); denied mic → recovery text for Chrome/Firefox + a text input fallback that sends `{type:"text"}` (spec §6.13)
   - `BookingPanel`: slot, time (IST), code (large), PDF status, `calendar_sync` note when "reconciling", Cancel/Reschedule buttons; `CodeEntry` for when the panel isn't showing the active booking; identical message for unknown and cancelled codes (it simply shows the API's `detail`)
   - `SourcesPanel`: every `CitationVM.label` (never a bare `[OSM]`), linked when `url` exists
 
@@ -3897,7 +3897,7 @@ Run `git add scripts/timed_interactions.py evals/latency Docs/LATENCY_REPORT.md 
 | 6.53 | fault: smallest down | shortlist + explanation render; "Voice output is temporarily unavailable" | ✓ |
 | 6.58 | fault: anthropic down + locality with no guides | one message: "I can't answer that right now"; neither failure implies the other succeeded | ✓ |
 
-Rows that need a real outage (6.23, 6.46, 6.54) are fault-injected and labelled so. Rows 6.13–6.16 are exercised by hand in Chrome, Firefox and Safari and the browser named.
+Rows that need a real outage (6.23, 6.46, 6.54) are fault-injected and labelled so. Rows 6.13–6.16 are exercised by hand in Chrome and Firefox and the browser named.
 
 - [ ] **Step 3: Commit**
 

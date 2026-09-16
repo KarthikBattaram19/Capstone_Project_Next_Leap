@@ -49,7 +49,7 @@ out in full so they can be replayed verbatim.
 
 | Row | Spec requirement (short) | How | Observed | OK? |
 |---|---|---|---|---|
-| 6.13 | Mic denied or blocked: say so with per-browser recovery, stay usable by typing, never a dead button | `pending: by hand in a browser — deny the mic at the prompt in Chrome, Firefox and Safari and name the browser in the result` (code: `frontend/src/lib/audio/capture.ts:23` classifies `NotAllowedError`; `frontend/src/components/MicErrorHelp.tsx:10` holds the per-browser steps; `frontend/src/components/TextFallback.tsx:8` is the typing path; `backend/scout/conversation/live.py:87` `async def text(...)` accepts it) | not yet exercised | — |
+| 6.13 | Mic denied or blocked: say so with per-browser recovery, stay usable by typing, never a dead button | `pending: by hand in a browser — deny the mic at the prompt in Chrome and Firefox and name the browser in the result` (code: `frontend/src/lib/audio/capture.ts:23` classifies `NotAllowedError`; `frontend/src/components/MicErrorHelp.tsx:10` holds the per-browser steps; `frontend/src/components/TextFallback.tsx:8` is the typing path; `backend/scout/conversation/live.py:87` `async def text(...)` accepts it) | not yet exercised | — |
 | 6.14 | No input device, or disconnected mid-session: detect, say so, preserve state | `pending: by hand in a browser — start with no device, then unplug mid-session` (code: `frontend/src/lib/audio/capture.ts:24` `NotFoundError`; `capture.ts:28` `track.onended = () => this.onDeviceLost?.()`; `frontend/src/components/MicErrorHelp.tsx:26` is the wording) | not yet exercised | — |
 | 6.15 | TTS blocked by autoplay: armed by the tenant's own click; else full text plus one-tap "enable voice" | `pending: by hand in a browser — load with autoplay blocked and answer without clicking the mic first` (code: `frontend/src/lib/audio/player.ts:16` `async unlock()`; `frontend/src/components/MicControl.tsx:37` is the arming gesture; `frontend/src/components/Notices.tsx:60` `VoiceOutNotice` carries the one-tap enable) | not yet exercised | — |
 | 6.16 | Backgrounded tab / suspended context: pause capture, hold state, never treat suspension as end-of-speech | `pending: by hand in a browser — switch tabs mid-utterance and return` (code: `frontend/src/lib/audio/visibility.ts:9` `if (document.hidden) void mic.pause();`, `:10` resumes; `frontend/src/lib/audio/capture.ts:60` suspends the AudioContext rather than closing the stream) | not yet exercised | — |
@@ -159,8 +159,8 @@ fault-injected), and 7 are gaps. The concurrency figure §6.57 asks for is still
    `37a3333`; see its row. Of what is left, 6.7/6.51/6.52 are one piece of missing work (a
    PDF download-and-resend path with a rate-limit message), and 6.25 is a renter-facing
    behaviour with no code at all.
-2. **Nine pending rows** — the five browser rows (6.13–6.16, 6.21) need Chrome, Firefox and
-   Safari named in the result, per Task 4.2; 6.42 and 6.57 need a deployed backend; 6.37 needs
+2. **Nine pending rows** — the five browser rows (6.13–6.16, 6.21) need Chrome and Firefox
+   named in the result, per Task 4.2; 6.42 and 6.57 need a deployed backend; 6.37 needs
    a live Suite C run; 6.58 needs the fault recipe above.
 3. ~~**Twelve untested guards**~~ — **closed on 2026-09-16.** 6.2, 6.10, 6.18, 6.19, 6.28,
    6.30, 6.31, 6.33, 6.34, 6.39, 6.40, 6.44 each now have a test, and each row above names
