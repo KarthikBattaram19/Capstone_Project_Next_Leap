@@ -150,3 +150,28 @@ describe("WsClient reconnect", () => {
     expect(closed).toEqual(["closed"]);
   });
 });
+
+describe("WsClient outcome frames", () => {
+  beforeEach(() => {
+    FakeSocket.instances = [];
+    vi.stubGlobal("WebSocket", FakeSocket);
+  });
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
+  it("hands the page the TurnOutcome inside the frame, not the frame itself", async () => {
+    // The backend sends the contract's OutcomeMsg: {type: "outcome", outcome: {kind, ...}}.
+    // Passing the whole frame left `kind` undefined, so the page dropped every greeting,
+    // question and shortlist on production until 2026-09-17.
+    const c = new WsClient("ws://x/ws");
+    const seen: unknown[] = [];
+    c.onOutcome = (o) => seen.push(o);
+    const p = c.connect();
+    FakeSocket.instances[0].serverOpens();
+    await p;
+    const outcome = { kind: "answered", spoken: "I found 3 listings.", view_model: { notices: [] } };
+    FakeSocket.instances[0].onmessage?.({ data: JSON.stringify({ type: "outcome", outcome }) });
+    expect(seen).toEqual([outcome]);
+  });
+});

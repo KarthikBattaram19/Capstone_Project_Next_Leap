@@ -80,7 +80,8 @@ export class WsClient {
             else if (m.event === "stop") this.onAudioStop();
             break;
           case "outcome":
-            this.onOutcome(m);
+            // The contract's OutcomeMsg nests the TurnOutcome under `outcome`.
+            this.onOutcome(m.outcome);
             break;
         }
       };
