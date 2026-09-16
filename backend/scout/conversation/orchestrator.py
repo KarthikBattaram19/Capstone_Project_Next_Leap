@@ -229,7 +229,10 @@ class TurnOrchestrator:
 
         registry = ResolverRegistry(self.store, self.commute, Retrieval(self.store))
         commute_point = session.constraints.commute
-        bundle = registry.resolve(lid, text, commute_point)
+        # In a worker thread: retrieval embeds the question on the CPU, and on the event
+        # loop it froze every session's audio for its duration (2.7 s on production,
+        # 2026-09-17).
+        bundle = await asyncio.to_thread(registry.resolve, lid, text, commute_point)
         opener = build_opener(bundle, commute_point.name if commute_point else None)
         assembler = ClaimAssembler(bundle)
 

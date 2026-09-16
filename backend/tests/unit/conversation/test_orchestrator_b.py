@@ -195,3 +195,32 @@ async def test_the_turn_records_what_the_assembler_dropped(make):
         "gap_assertion": 0,
         "unsupported": 0,
     }
+
+
+async def test_resolving_facts_does_not_stall_the_event_loop(make, monkeypatch):
+    """Retrieval embeds the question on the CPU. Run on the event loop it froze every other
+    session and this one's own audio for its whole duration - 2.7 s on production
+    (2026-09-17). It runs in a worker thread, so the loop keeps ticking."""
+    import asyncio
+    import time
+
+    from scout.grounding.retrieval import Retrieval
+
+    def slow(self, locality, question, k=4):
+        time.sleep(0.3)
+        return []
+
+    monkeypatch.setattr(Retrieval, "retrieve", slow)
+    orch, session, _, _ = make(ScriptedJob2([]))
+    ticks = 0
+
+    async def ticker():
+        nonlocal ticks
+        while True:
+            await asyncio.sleep(0.02)
+            ticks += 1
+
+    t = asyncio.create_task(ticker())
+    await orch.handle_text(session, "why did you pick this one?")
+    t.cancel()
+    assert ticks >= 8, f"the loop only ticked {ticks} times during a 0.3 s resolve"

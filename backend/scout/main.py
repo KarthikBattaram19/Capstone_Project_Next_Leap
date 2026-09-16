@@ -5,6 +5,7 @@ from __future__ import annotations
 import asyncio
 import contextlib
 import logging
+import os
 import sys
 from collections.abc import AsyncIterator
 
@@ -28,6 +29,7 @@ from scout.conversation.session import SessionManager
 from scout.conversation.voice_booking import VoiceBookingFlow
 from scout.engines.availability import AvailabilityRegister
 from scout.engines.slots import SlotService
+from scout.pipeline.embedding import tune_threads
 from scout.platform import faults, telemetry
 from scout.platform.artefacts import ArtefactStore
 from scout.platform.boot import BootError, check_bundle, check_secrets, run_boot_checks
@@ -159,6 +161,17 @@ def main() -> None:
         # Railway's health check sees a dead process, not a renter.
         print(e, file=sys.stderr)
         sys.exit(2)
+    # Warm the embedding model and keep the fastest ONNX thread setting for this machine,
+    # before the port opens: the first "why?" no longer pays the model load, and the
+    # numbers land in the Railway log (2026-09-17: retrieval was 2.7 s warm there).
+    # repeats=3 is ~13 embeddings: inside the 60 s healthcheck even at 2.7 s each.
+    timings = tune_threads(repeats=3)
+    logging.getLogger("scout").info(
+        "embedding ms/query by ONNX threads (0 = runtime default): %s; kept %s; cpu_count %s",
+        {n: round(ms, 1) for n, ms in timings.items()},
+        min(timings, key=timings.get),
+        os.cpu_count(),
+    )
     uvicorn.run(create_app(settings), host="0.0.0.0", port=settings.port, ws_ping_interval=20)
 
 
