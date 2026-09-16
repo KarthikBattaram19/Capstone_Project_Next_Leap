@@ -415,3 +415,18 @@ async def test_an_ordinal_is_re_anchored_when_the_list_changed_since_it_was_hear
     assert o2.options == ["yes", "no"]
     # It re-anchors on what they heard second, not on what is now second.
     assert s.focus_listing_id == s.last_read_order[1]
+
+
+async def test_job1_hears_digit_ordinals_as_words(make):
+    """The orchestrator normalises "the 1st 1" before routing and before Job 1 sees it."""
+    orch, session = make([Job1Down("down")])
+    seen = []
+    real = orch.job1.extract
+
+    async def recording(text, current):
+        seen.append(text)
+        return await real(text, current)
+
+    orch.job1.extract = recording
+    await orch.handle_text(session, "Book a visit for the 1st 1.")
+    assert seen == ["Book a visit for the first one."]

@@ -20,6 +20,36 @@ _ACTION = re.compile(
     r"\b(book|cancel|reschedule|drop|remove|only|add|show|under|above|budget|bhk)\b", re.IGNORECASE
 )
 
+_ORDINAL_WORDS = {
+    "1st": "first",
+    "2nd": "second",
+    "3rd": "third",
+    "4th": "fourth",
+    "5th": "fifth",
+    "6th": "sixth",
+    "7th": "seventh",
+    "8th": "eighth",
+    "9th": "ninth",
+    "10th": "tenth",
+}
+_DIGIT_ORDINAL_ONE = re.compile(r"\b(\d{1,2}(?:st|nd|rd|th))\s+(?:1|one)\b", re.IGNORECASE)
+
+
+def normalise_ordinals(text: str) -> str:
+    """ "the 1st 1" -> "the first one", before routing and before Job 1.
+
+    Deepgram's numerals/smart_format write a spoken ordinal as digits. On production
+    (2026-09-17) "the first one" arrived as "The 1st 1." and was taken for another language,
+    and "book a visit for the 1st 1" was asked "which listing?". Only the "<ordinal> one"
+    shape is rewritten, so "the 1st floor" keeps its meaning.
+    """
+
+    def word(m: re.Match) -> str:
+        return f"{_ORDINAL_WORDS.get(m.group(1).lower(), m.group(1))} one"
+
+    return _DIGIT_ORDINAL_ONE.sub(word, text)
+
+
 ORDINALS = {
     "first": 1,
     "1st": 1,

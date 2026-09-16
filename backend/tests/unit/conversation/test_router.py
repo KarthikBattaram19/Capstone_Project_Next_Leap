@@ -88,3 +88,24 @@ def test_acting_on_a_listing_stays_type_a(text):
 )
 def test_an_action_verb_inside_an_explanation_question_stays_type_b(text):
     assert classify_turn(text, has_shortlist=True) == "B"
+
+
+@pytest.mark.parametrize(
+    ("heard", "meant"),
+    [
+        # Deepgram's numerals/smart_format write spoken ordinals as digits (production,
+        # 2026-09-17): "the first one" arrived as "The 1st 1." and was taken for another
+        # language, and "book a visit for the 1st 1" was asked "which listing?".
+        ("The 1st 1.", "The first one."),
+        ("Book a visit for the 1st 1.", "Book a visit for the first one."),
+        ("why the 2nd 1?", "why the second one?"),
+        ("the 3rd one please", "the third one please"),
+        ("under 40,000 rupees", "under 40,000 rupees"),
+        ("a 1BHK on the 1st floor", "a 1BHK on the 1st floor"),
+    ],
+)
+def test_digit_ordinals_are_read_as_the_words_the_renter_said(heard, meant):
+    from scout.conversation.router import normalise_ordinals
+
+    assert normalise_ordinals(heard) == meant
+    assert parse_ordinal(normalise_ordinals("why the 2nd 1?")) == 2

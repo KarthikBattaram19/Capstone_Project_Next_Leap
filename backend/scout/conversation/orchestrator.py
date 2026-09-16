@@ -11,7 +11,7 @@ from scout.contract.outcome import Answered, Degraded, Empty, Failed, NeedsInput
 from scout.contract.viewmodels import AnsweredViewModel
 from scout.conversation.booking_flow import BookingFlow, BookingNotWired
 from scout.conversation.job1 import Job1, Job1Down, Job1Result
-from scout.conversation.router import classify_turn, parse_ordinal
+from scout.conversation.router import classify_turn, normalise_ordinals, parse_ordinal
 from scout.conversation.session import ConfirmConstraints, ConfirmHeard, ConfirmLocality, Session
 from scout.conversation.speaker import Speaker, split_sentences
 from scout.domain.constraints import ConstraintEdit
@@ -132,6 +132,7 @@ class TurnOrchestrator:
         call - which matters on a 500-call day.
         """
         session.touch()
+        text = normalise_ordinals(text)
         if self._too_noisy(session, text, confidence):
             session.pending = ConfirmHeard(text)
             q = CONVERSATIONAL_REPLIES["confirm_heard"].format(heard=text)
