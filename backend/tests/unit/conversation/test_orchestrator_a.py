@@ -4,7 +4,7 @@ from scout.config import Settings
 from scout.contract.outcome import Answered, Empty, Failed, NeedsInput
 from scout.conversation.job1 import Job1Down, Job1Result
 from scout.conversation.orchestrator import NullSpeaker, TurnOrchestrator
-from scout.conversation.session import ConfirmHeard, SessionManager
+from scout.conversation.session import ConfirmHeard, ConfirmLocality, SessionManager
 from scout.domain.constraints import ConstraintEdit
 from scout.engines.availability import AvailabilityRegister
 from scout.platform.artefacts import ArtefactStore
@@ -159,6 +159,100 @@ async def test_unavailable_listing_is_removed_with_a_notice(make):
     o2 = await orch.handle_text(s, "show me again")
     assert gone not in o2.view_model.shortlist.order
     assert any("no longer available" in n for n in o2.view_model.notices)
+
+
+# --- §6.25: another language is out of scope; a locality heard in it is confirmed first ---
+
+HINDI_WITH_BUDGET = "mujhe Koramangala mein pachas hazaar tak chahiye"
+
+
+def unclear_with(*edits):
+    return j1(intent="unclear", edits=list(edits))
+
+
+async def test_a_sentence_in_another_language_is_told_english_is_the_scope(make):
+    orch, s = make([unclear_with()])
+
+    o = await orch.handle_text(s, "kiraya kitna hai")
+
+    assert isinstance(o, NeedsInput) and o.field == "english"
+    assert "English" in o.question
+    assert s.constraints.is_empty() and s.shortlist.is_empty()
+    assert s.clarifying_asked == 0, "a statement of scope spent the clarifying-question budget"
+
+
+async def test_a_locality_heard_in_another_language_is_confirmed_and_nothing_is_used_yet(make):
+    orch, s = make(
+        [
+            unclear_with(
+                ConstraintEdit("localities", "add", "Koramangala"),
+                ConstraintEdit("rent_max", "set", 50000),
+            )
+        ]
+    )
+
+    o = await orch.handle_text(s, HINDI_WITH_BUDGET)
+
+    assert isinstance(o, NeedsInput) and o.field == "locality"
+    assert "Koramangala" in o.question and "English" in o.question
+    assert o.options == ["yes", "no"]
+    assert s.constraints.is_empty(), "the non-English sentence was acted on before a yes"
+    assert isinstance(s.pending, ConfirmLocality)
+
+
+async def test_yes_applies_only_the_locality_and_then_reads_everything_back(make):
+    """A budget heard in another language is never used, even after the locality is confirmed."""
+    orch, s = make(
+        [
+            unclear_with(
+                ConstraintEdit("localities", "add", "Koramangala"),
+                ConstraintEdit("rent_max", "set", 50000),
+            ),
+            j1(intent="confirm_yes"),
+        ]
+    )
+    await orch.handle_text(s, HINDI_WITH_BUDGET)
+
+    o = await orch.handle_text(s, "yes")
+
+    assert s.constraints.localities == ("Koramangala",)
+    assert s.constraints.rent_max is None, "a budget heard in another language was used"
+    assert isinstance(o, NeedsInput) and o.field == "constraints_readback"
+
+
+async def test_no_uses_nothing_and_asks_for_the_locality_in_english(make):
+    orch, s = make(
+        [unclear_with(ConstraintEdit("localities", "add", "Koramangala")), j1(intent="confirm_no")]
+    )
+    await orch.handle_text(s, "nanage Koramangala alli mane beku")
+
+    o = await orch.handle_text(s, "no")
+
+    assert isinstance(o, NeedsInput) and o.field == "locality"
+    assert "English" in o.question
+    assert s.constraints.is_empty()
+    assert s.pending is None
+
+
+async def test_saying_it_again_in_english_is_taken_as_the_real_turn(make):
+    orch, s = make(
+        [
+            unclear_with(ConstraintEdit("localities", "add", "Koramangala")),
+            j1(
+                edits=[
+                    ConstraintEdit("localities", "add", "Koramangala"),
+                    ConstraintEdit("rent_max", "set", 40000),
+                ]
+            ),
+        ]
+    )
+    await orch.handle_text(s, "Koramangala mein chahiye")
+
+    o = await orch.handle_text(s, "a 2BHK in Koramangala under forty thousand")
+
+    assert s.constraints.localities == ("Koramangala",) and s.constraints.rent_max == 40000
+    assert not isinstance(s.pending, ConfirmLocality)
+    assert isinstance(o, NeedsInput) and o.field == "constraints_readback"
 
 
 # --- §6.20: a noisy transcript is confirmed, never guessed (Task 4.2 gap) ---

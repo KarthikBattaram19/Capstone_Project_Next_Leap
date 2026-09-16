@@ -12,7 +12,7 @@ from scout.contract.viewmodels import AnsweredViewModel
 from scout.conversation.booking_flow import BookingFlow, BookingNotWired
 from scout.conversation.job1 import Job1, Job1Down, Job1Result
 from scout.conversation.router import classify_turn, parse_ordinal
-from scout.conversation.session import ConfirmConstraints, ConfirmHeard, Session
+from scout.conversation.session import ConfirmConstraints, ConfirmHeard, ConfirmLocality, Session
 from scout.conversation.speaker import Speaker, split_sentences
 from scout.domain.constraints import ConstraintEdit
 from scout.domain.money import rupees
@@ -48,6 +48,13 @@ CONVERSATIONAL_REPLIES: dict[str, str] = {
         'I heard "{heard}" — is that right?'
     ),
     "heard_wrong": "Sorry — could you say that again?",
+    # Spec §6.25: English is the whole scope, and saying so beats guessing at another language.
+    "english_only": (
+        "I can only help in English for now. Could you say that in English — for example, "
+        "'a 2BHK in Koramangala under 35,000'?"
+    ),
+    "english_only_locality": "I can only help in English for now. Did you mean {localities}?",
+    "locality_in_english": "Okay. Which locality would you like? Please say it in English.",
     "no_constraints": (
         "Tell me a budget and a locality to start — for example, 'a 2BHK in Koramangala "
         "under 35,000'."
@@ -318,6 +325,21 @@ class TurnOrchestrator:
         if res.intent == "owner_contact":
             return self._say(session, CONVERSATIONAL_REPLIES["owner_contact"])
 
+        # Spec §6.25: Job 1 marks a sentence in another language, or mixed with one, "unclear".
+        # Nothing in it is acted on. A locality that came through recognisably is named back
+        # for a yes before it is used; anything else heard - a budget, a bedroom count - is
+        # dropped, never guessed. This is a statement of scope, not a clarifying question, so
+        # it does not spend the §6.29 budget.
+        if res.intent == "unclear":
+            places = [e for e in res.edits if e.field == "localities" and e.op in ("add", "set")]
+            if places:
+                session.pending = ConfirmLocality(edits=places)
+                names = " and ".join(str(e.value) for e in places)
+                q = CONVERSATIONAL_REPLIES["english_only_locality"].format(localities=names)
+                return NeedsInput(question=q, field="locality", options=["yes", "no"], spoken=q)
+            q = CONVERSATIONAL_REPLIES["english_only"]
+            return NeedsInput(question=q, field="english", spoken=q)
+
         booked = await self.booking_flow.handle(session, res, text)
         if booked is not None:
             return booked
@@ -353,6 +375,23 @@ class TurnOrchestrator:
                 return NeedsInput(question=q, field="heard", spoken=q)
             # Anything else is the renter simply saying it again: fall through and treat
             # this turn as the real one rather than asking a second time.
+
+        if isinstance(session.pending, ConfirmLocality):
+            confirmed = session.pending
+            session.pending = None
+            if res.intent == "confirm_yes":
+                applied = apply_edits(session.constraints, confirmed.edits)
+                if isinstance(applied, Contradiction):
+                    session.clarifying_asked += 1
+                    return NeedsInput(
+                        question=applied.question, field=applied.field, spoken=applied.question
+                    )
+                session.constraints = applied
+                # Fall through: the §2.1 readback (first shortlist) or a refined shortlist.
+            elif res.intent == "confirm_no":
+                q = CONVERSATIONAL_REPLIES["locality_in_english"]
+                return NeedsInput(question=q, field="locality", spoken=q)
+            # Anything else is the renter saying it again, in English: this turn is the real one.
 
         if res.intent == "confirm_yes" and isinstance(session.pending, ConfirmConstraints):
             session.constraints = confirm_all(session.constraints)

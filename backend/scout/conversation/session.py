@@ -26,6 +26,15 @@ class ConfirmHeard:
 
 
 @dataclass
+class ConfirmLocality:
+    """A locality recognised inside a sentence that was not in English (spec §6.25). Nothing
+    from that sentence is used until the renter says yes to the locality by name; `edits` are
+    only its localities edits, never a budget or a bedroom count heard in another language."""
+
+    edits: list  # list[ConstraintEdit]
+
+
+@dataclass
 class AwaitSlotChoice:
     listing_id: str
     slots: list  # list[Slot] (Task 3.1)
@@ -50,7 +59,13 @@ class ConfirmCancel:
 
 
 PendingAction = (
-    ConfirmConstraints | ConfirmHeard | AwaitSlotChoice | AwaitEmail | ConfirmEmail | ConfirmCancel
+    ConfirmConstraints
+    | ConfirmHeard
+    | ConfirmLocality
+    | AwaitSlotChoice
+    | AwaitEmail
+    | ConfirmEmail
+    | ConfirmCancel
 )
 
 

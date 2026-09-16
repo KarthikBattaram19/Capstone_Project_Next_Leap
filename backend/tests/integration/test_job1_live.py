@@ -26,6 +26,43 @@ def _job1() -> Job1:
     return Job1(make_job1_client(Settings()), LOCALITIES)
 
 
+# ---- §6.25: another language is "unclear"; Indian English is not
+
+
+@pytest.mark.parametrize(
+    "said",
+    [
+        "mujhe Koramangala mein do BHK chahiye",  # Hindi, romanised
+        "nanage Koramangala alli ondu mane beku",  # Kannada, romanised
+    ],
+)
+async def test_another_language_is_unclear_and_keeps_only_the_locality(said):
+    res = await _job1().extract(said, ConstraintSet())
+    assert res.intent == "unclear", res.intent
+    assert [e.value for e in res.edits if e.field == "localities"] == ["Koramangala"], res.edits
+    extra = [e for e in res.edits if e.field != "localities"]
+    assert not extra, f"acted on something heard in another language: {extra}"
+
+
+async def test_another_language_with_no_locality_is_unclear_with_no_edits():
+    res = await _job1().extract("kiraya kitna hai", ConstraintSet())
+    assert res.intent == "unclear", res.intent
+    assert not res.edits, res.edits
+
+
+@pytest.mark.parametrize(
+    "said",
+    [
+        "2 BHK in Koramangala under 1.2 lakh",
+        "show me flats in HSR Layout under fifty thousand rupees",
+    ],
+)
+async def test_indian_english_is_not_mistaken_for_another_language(said):
+    res = await _job1().extract(said, ConstraintSet())
+    assert res.intent != "unclear", f"Indian English marked unclear: {said!r}"
+    assert any(e.field == "localities" for e in res.edits), res.edits
+
+
 async def test_a_full_preference_sentence_extracts_and_normalises():
     res = await _job1().extract("2BHK in Koramangala budget 35k need car parking", ConstraintSet())
     assert res.intent in ("set_preferences", "refine")
