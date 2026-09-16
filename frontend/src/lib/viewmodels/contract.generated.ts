@@ -21,7 +21,7 @@ export type SlotStartIst = string;
 export type CalendarSync = "complete" | "reconciling";
 export type Code = string;
 export type ListingId2 = string;
-export type PdfStatus = "pending" | "sent" | "failed" | "not_applicable";
+export type PdfStatus = "pending" | "sent" | "failed" | "render_failed" | "rate_limited" | "not_applicable";
 export type EndIst = string;
 export type Spoken = string;
 export type StartIst = string;
@@ -108,10 +108,13 @@ export type Question = string;
 export type Spoken8 = string;
 export type Type4 = "outcome";
 export type Code2 = string;
+export type PdfStatus1 = "pending" | "sent" | "failed" | "render_failed" | "rate_limited" | "not_applicable";
+export type Spoken9 = string;
+export type Code3 = string;
 export type SlotStartIst1 = string;
 export type ListingId6 = string;
 export type Slots = SlotVM[];
-export type Spoken9 = string;
+export type Spoken10 = string;
 export type Text2 = string;
 export type Type5 = "text";
 export type Final = boolean;
@@ -131,6 +134,7 @@ export interface ScoutContractV1 {
   hello_in: HelloIn;
   hello_out: HelloOut;
   outcome: OutcomeMsg;
+  pdf_status_response: PdfStatusResponse;
   reschedule_request: RescheduleRequest;
   slots_request: SlotsRequest;
   slots_response: SlotsResponse;
@@ -303,8 +307,13 @@ export interface NeedsInput {
   question: Question;
   spoken: Spoken8;
 }
-export interface RescheduleRequest {
+export interface PdfStatusResponse {
   code: Code2;
+  pdf_status: PdfStatus1;
+  spoken: Spoken9;
+}
+export interface RescheduleRequest {
+  code: Code3;
   slot_start_ist: SlotStartIst1;
 }
 export interface SlotsRequest {
@@ -312,7 +321,7 @@ export interface SlotsRequest {
 }
 export interface SlotsResponse {
   slots: Slots;
-  spoken: Spoken9;
+  spoken: Spoken10;
 }
 export interface TextIn {
   text: Text2;

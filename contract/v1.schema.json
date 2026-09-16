@@ -262,6 +262,8 @@
             "pending",
             "sent",
             "failed",
+            "render_failed",
+            "rate_limited",
             "not_applicable"
           ],
           "title": "Pdf Status",
@@ -854,6 +856,38 @@
       "title": "OutcomeMsg",
       "type": "object"
     },
+    "PdfStatusResponse": {
+      "additionalProperties": false,
+      "properties": {
+        "code": {
+          "title": "Code",
+          "type": "string"
+        },
+        "pdf_status": {
+          "enum": [
+            "pending",
+            "sent",
+            "failed",
+            "render_failed",
+            "rate_limited",
+            "not_applicable"
+          ],
+          "title": "Pdf Status",
+          "type": "string"
+        },
+        "spoken": {
+          "title": "Spoken",
+          "type": "string"
+        }
+      },
+      "required": [
+        "code",
+        "pdf_status",
+        "spoken"
+      ],
+      "title": "PdfStatusResponse",
+      "type": "object"
+    },
     "RescheduleRequest": {
       "additionalProperties": false,
       "properties": {
@@ -1129,6 +1163,9 @@
     "outcome": {
       "$ref": "#/$defs/OutcomeMsg"
     },
+    "pdf_status_response": {
+      "$ref": "#/$defs/PdfStatusResponse"
+    },
     "reschedule_request": {
       "$ref": "#/$defs/RescheduleRequest"
     },
@@ -1159,6 +1196,7 @@
     "booking_response",
     "cancel_request",
     "reschedule_request",
+    "pdf_status_response",
     "availability_toggle"
   ],
   "title": "scout-contract-v1",

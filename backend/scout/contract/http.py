@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from scout.contract.viewmodels import BookingVM, SlotVM
+from scout.contract.viewmodels import BookingVM, PdfStatus, SlotVM
 
 
 class Body(BaseModel):
@@ -29,6 +29,16 @@ class BookingRequest(Body):
 
 class BookingResponse(Body):
     booking: BookingVM
+    spoken: str
+
+
+# GET /bookings/{code}/pdf/status and POST /bookings/{code}/pdf/email (spec §6.7, §6.52).
+# `spoken` is shown verbatim: what happened to the email, and what the renter can do about it.
+# A comment, not a docstring: a docstring would become a schema description, and no other body
+# in the contract carries one.
+class PdfStatusResponse(Body):
+    code: str
+    pdf_status: PdfStatus
     spoken: str
 
 

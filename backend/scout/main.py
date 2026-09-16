@@ -91,6 +91,7 @@ def create_app(settings: Settings) -> FastAPI:
     app.state.reconcile = reconcile
     app.state.booking = booking
     app.state.code_limiter = RateLimiter(10, 60)
+    app.state.confirmation = sender  # the PDF routes read outcomes the booking task recorded
     # PDF + email off the interactive path (L8): the route answers before the mail goes.
     app.state.after_booking = lambda b: asyncio.create_task(sender.send(b))
     app.add_middleware(

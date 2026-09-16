@@ -98,7 +98,9 @@ class SlotVM(VM):
 # Literals here because the frontend (Task 3.5) and the booking state machine (Task 3.3)
 # branch on the exact values, and a Literal carries them into the exported schema.
 BookingState = Literal["offered", "confirming", "booked", "cancelled", "withdrawn"]
-PdfStatus = Literal["pending", "sent", "failed", "not_applicable"]
+# render_failed and rate_limited are §6.51 and §6.52: the sender always produced them, but the
+# contract did not carry them, so a view built from either would have failed validation.
+PdfStatus = Literal["pending", "sent", "failed", "render_failed", "rate_limited", "not_applicable"]
 CalendarSync = Literal["complete", "reconciling"]
 
 
@@ -107,7 +109,7 @@ class BookingVM(VM):
     listing_id: str
     slot: SlotVM
     state: BookingState  # offered | confirming | booked | cancelled | withdrawn
-    pdf_status: PdfStatus  # pending | sent | failed | not_applicable
+    pdf_status: PdfStatus  # pending | sent | failed | render_failed | rate_limited | not_applicable
     calendar_sync: CalendarSync  # complete | reconciling
 
 

@@ -15,6 +15,13 @@ import type { CardVM, SlotVM, TurnOutcome } from "@/lib/viewmodels/contract";
 
 const API = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
 
+/**
+ * When to ask what happened to the confirmation email, which goes after the booking answers
+ * (L8, target 30 s). Four checks stay well inside the 10-a-minute code-lookup limit (spec §6.45),
+ * so a cancel straight afterwards is never refused because the screen was polling.
+ */
+const PDF_CHECKS_MS = [3000, 8000, 15000, 30000];
+
 /** https://host -> wss://host/ws (and http -> ws for a local backend). */
 /** Marks a live conversation so a reload can say it was not saved (spec §6.21). */
 function markLive(): void {
@@ -418,6 +425,49 @@ export default function Page() {
     }
   }, []);
 
+  /** BookingPanel "Email it again" → POST /bookings/{code}/pdf/email (spec §6.7, §6.52). */
+  const onEmailPdf = useCallback(async (code: string) => {
+    setBookingError(null);
+    setBookingBusy(true);
+    try {
+      const r = await http.current.emailPdf(code);
+      // "rate_limited" answers this request only: the last delivery outcome stays on screen,
+      // and the service's sentence saying why appears as the message.
+      if (r.pdf_status !== "rate_limited") dispatch({ type: "booking_pdf", code: r.code, pdf_status: r.pdf_status });
+      setBookingMessage(r.spoken);
+    } catch (e) {
+      setBookingError(apiMessage(e, "Could not email the PDF."));
+    } finally {
+      setBookingBusy(false);
+    }
+  }, []);
+
+  // Without this the panel reads "on its way" for ever, even when the email failed: nothing
+  // else ever tells the browser what happened to it (spec §6.0 principle 4).
+  const pdfPendingCode = s.booking?.state === "booked" && s.booking.pdf_status === "pending" ? s.booking.code : null;
+  useEffect(() => {
+    if (!pdfPendingCode) return;
+    let done = false;
+    const timers = PDF_CHECKS_MS.map((ms) =>
+      setTimeout(async () => {
+        if (done) return;
+        try {
+          const r = await http.current.pdfStatus(pdfPendingCode);
+          if (!done && r.pdf_status !== "pending") {
+            done = true;
+            dispatch({ type: "booking_pdf", code: r.code, pdf_status: r.pdf_status });
+          }
+        } catch {
+          // A missed check is not news for the renter; the next one runs.
+        }
+      }, ms),
+    );
+    return () => {
+      done = true;
+      timers.forEach(clearTimeout);
+    };
+  }, [pdfPendingCode]);
+
   const onEnableVoice = useCallback(async () => {
     const ok = (await player.current?.unlock()) ?? false;
     dispatch({ type: "voice_out", state: ok ? "on" : "blocked" });
@@ -455,8 +505,18 @@ export default function Page() {
             onRescheduleTo,
             onCodeCancel,
             onCodeReschedule,
+            onEmailPdf,
           }}
-          x={{ bookingBusy, bookingError, bookingMessage, codeMessage, bookingListingId, rescheduleCode, reloaded }}
+          x={{
+            bookingBusy,
+            bookingError,
+            bookingMessage,
+            codeMessage,
+            bookingListingId,
+            rescheduleCode,
+            reloaded,
+            pdfUrl: (code: string) => http.current.pdfUrl(code),
+          }}
         />
       )}
     </div>

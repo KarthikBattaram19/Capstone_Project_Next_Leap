@@ -111,6 +111,24 @@ describe("session reducer", () => {
     expect(s4.shortlist).toEqual(shortlist);
   });
 
+  it("what happened to the email updates only the booking with that code (spec §6.7)", () => {
+    const slot = { start_ist: "2026-09-15T10:00:00+05:30", end_ist: "2026-09-15T11:00:00+05:30", spoken: "Mon 10 am" };
+    const booking = {
+      code: "K7M4PX",
+      listing_id: "a",
+      slot,
+      state: "booked" as const,
+      pdf_status: "pending" as const,
+      calendar_sync: "complete" as const,
+    };
+    const s1 = reduce({ ...initial, shortlist, booking }, { type: "booking_pdf", code: "ZZZZZZ", pdf_status: "failed" });
+    expect(s1.booking?.pdf_status).toBe("pending");
+    const s2 = reduce(s1, { type: "booking_pdf", code: "K7M4PX", pdf_status: "failed" });
+    expect(s2.booking?.pdf_status).toBe("failed");
+    expect(s2.booking?.state).toBe("booked");
+    expect(s2.shortlist).toEqual(shortlist);
+  });
+
   it("transcript interim marks listening; final does not change the phase", () => {
     const s1 = reduce({ ...initial, listening: "idle" }, { type: "transcript", text: "two b", final: false });
     expect(s1.listening).toBe("listening");

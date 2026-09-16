@@ -10,8 +10,15 @@ const PDF_TEXT: Record<string, string> = {
   pending: "PDF on its way to your email",
   sent: "PDF sent to your email",
   failed: "The PDF could not be emailed — your code still works",
+  render_failed: "The PDF could not be made just now — your code still works",
+  // An answer to one "Email it again", shown as the message from the service, never as the
+  // email's status: a PDF that already arrived must not start reading as refused (spec §6.52).
+  rate_limited: "",
   not_applicable: "",
 };
+
+/** When the email did not arrive, or there is no record of one, offer to send it again (spec §6.7). */
+const OFFER_EMAIL_AGAIN = new Set(["failed", "render_failed", "not_applicable"]);
 
 /** The email, echoed letter by letter — the highest-error input in the system (arch §10.3). */
 function Echo({ value }: { value: string }) {
@@ -44,6 +51,8 @@ export function BookingPanel({
   onRescheduleTo,
   onCancel,
   onReschedule,
+  pdfHref,
+  onEmailPdf,
 }: {
   booking: BookingVM | null;
   offeredSlots: SlotVM[];
@@ -59,6 +68,10 @@ export function BookingPanel({
   onCancel?: (code: string) => void;
   /** Ask for slots to move the booking on screen to. */
   onReschedule?: (code: string) => void;
+  /** Where the PDF for this booking downloads from; the service makes it on demand (spec §6.7). */
+  pdfHref?: string;
+  /** "Email it again" → POST /bookings/{code}/pdf/email (spec §6.7, §6.52). */
+  onEmailPdf?: (code: string) => void;
 }) {
   const [slot, setSlot] = useState<SlotVM | null>(offeredSlots[0] ?? null);
   const [email, setEmail] = useState("");
@@ -166,6 +179,16 @@ export function BookingPanel({
           </ul>
           {booking.state === "booked" && !rescheduling ? (
             <div className="booking__actions">
+              {pdfHref ? (
+                <a className="btn btn--ghost" href={pdfHref} download={`visit-${booking.code}.pdf`}>
+                  Download PDF
+                </a>
+              ) : null}
+              {OFFER_EMAIL_AGAIN.has(booking.pdf_status) ? (
+                <button type="button" className="btn btn--ghost" disabled={!onEmailPdf || busy} onClick={() => onEmailPdf?.(booking.code)}>
+                  Email it again
+                </button>
+              ) : null}
               <button type="button" className="btn btn--ghost" disabled={!onReschedule || busy} onClick={() => onReschedule?.(booking.code)}>
                 {busy ? "Working…" : "Reschedule"}
               </button>

@@ -27,6 +27,7 @@ const h: WorkspaceHandlers = {
   onRescheduleTo: noop,
   onCodeCancel: noop,
   onCodeReschedule: noop,
+  onEmailPdf: noop,
 };
 
 function Section({ id, label, children }: { id: string; label: string; children: React.ReactNode }) {

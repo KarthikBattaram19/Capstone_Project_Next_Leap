@@ -36,6 +36,8 @@ export interface WorkspaceHandlers {
   onCodeCancel: (code: string) => void;
   /** CodeEntry Reschedule with a typed time → POST /bookings/{code}/reschedule. */
   onCodeReschedule: (code: string, when: string) => void;
+  /** BookingPanel "Email it again" → POST /bookings/{code}/pdf/email. */
+  onEmailPdf: (code: string) => void;
 }
 
 export interface WorkspaceExtras {
@@ -51,6 +53,8 @@ export interface WorkspaceExtras {
   rescheduleCode?: string | null;
   /** True when the tab was reloaded mid-conversation (spec §6.21). */
   reloaded?: boolean;
+  /** The download link for a booking's PDF, by code (GET /bookings/{code}/pdf). */
+  pdfUrl?: (code: string) => string;
 }
 
 function findCard(s: SessionState, id: string | null | undefined): CardVM | undefined {
@@ -142,6 +146,8 @@ export function Workspace({
             onRescheduleTo={h.onRescheduleTo}
             onCancel={h.onCancel}
             onReschedule={h.onReschedule}
+            pdfHref={s.booking && x.pdfUrl ? x.pdfUrl(s.booking.code) : undefined}
+            onEmailPdf={h.onEmailPdf}
           />
         ) : null}
 

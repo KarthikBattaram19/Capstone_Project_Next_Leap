@@ -14,6 +14,7 @@ from scout.contract.http import (
     BookingRequest,
     BookingResponse,
     CancelRequest,
+    PdfStatusResponse,
     RescheduleRequest,
     SlotsRequest,
     SlotsResponse,
@@ -47,6 +48,7 @@ class Contract(BaseModel):
     booking_response: BookingResponse
     cancel_request: CancelRequest
     reschedule_request: RescheduleRequest
+    pdf_status_response: PdfStatusResponse
     availability_toggle: AvailabilityToggle
 
 

@@ -10,6 +10,7 @@ import type {
   BookingState,
   BookingVM,
   ExplanationVM,
+  PdfStatus,
   ShortlistVM,
   SlotVM,
   SnapshotVM,
@@ -77,7 +78,9 @@ export type Action =
   /** A booking returned by POST /bookings or /bookings/{code}/reschedule; the offer is over. */
   | { type: "booking"; booking: BookingVM }
   /** POST /bookings/{code}/cancel answered: the state the service now reports for that code. */
-  | { type: "booking_state"; code: string; state: BookingState };
+  | { type: "booking_state"; code: string; state: BookingState }
+  /** What happened to the confirmation email for that code (GET .../pdf/status, POST .../pdf/email). */
+  | { type: "booking_pdf"; code: string; pdf_status: PdfStatus };
 
 function closedConnection(reason: string): Connection {
   if (reason === "contract_version_mismatch") return "mismatch";
@@ -116,6 +119,9 @@ export function reduce(s: SessionState, a: Action): SessionState {
       // not touch it. The shortlist and everything else stay as they were.
       if (!s.booking || s.booking.code !== a.code) return s;
       return { ...s, booking: { ...s.booking, state: a.state } };
+    case "booking_pdf":
+      if (!s.booking || s.booking.code !== a.code) return s;
+      return { ...s, booking: { ...s.booking, pdf_status: a.pdf_status } };
     case "outcome": {
       const o = a.outcome;
       const base: SessionState = {

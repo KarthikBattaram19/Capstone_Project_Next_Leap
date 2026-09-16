@@ -5,6 +5,7 @@ from datetime import UTC, datetime
 from fastapi.testclient import TestClient
 
 from scout.api.http import NOT_FOUND_TELL
+from scout.booking.confirmation import PDF_TELL, ConfirmationSender
 from scout.booking.reconcile import ReconcileQueue
 from scout.booking.service import BookingService
 from scout.config import Settings
@@ -111,3 +112,118 @@ def test_a_calendar_failure_is_a_503_naming_the_capability_not_a_500(bundle_min)
         r = TestClient(app).post("/bookings/slots", json={"listing_id": LISTING})
         assert r.status_code == 503, r.text
         assert word in r.json()["detail"] and r.json()["capability"] == "calendar"
+
+
+# ---- the confirmation PDF by code (spec §6.7, §6.51, §6.52)
+
+
+class FakeGmail:
+    def __init__(self, fail=False):
+        self.fail, self.sent = fail, []
+
+    async def send_pdf(self, to, subject, body, pdf, filename):
+        if self.fail:
+            raise RuntimeError("gmail down")
+        self.sent.append((to, filename, pdf[:4]))
+        return "msg-1"
+
+
+def pdf_app(bundle_dir, gmail=None):
+    app, _ = make_app(bundle_dir)
+    sender = ConfirmationSender(gmail or FakeGmail(), app.state.orchestrator.vm)
+    app.state.confirmation = sender
+    app.state.after_booking = lambda b: None  # each test drives the email itself
+    return app, sender
+
+
+def test_the_pdf_downloads_by_code_made_on_demand(bundle_min):
+    app, _ = pdf_app(bundle_min)
+    with TestClient(app) as c:
+        code = _book(c).json()["booking"]["code"]
+        r = c.get(f"/bookings/{code}/pdf")
+    assert r.status_code == 200, r.text
+    assert r.headers["content-type"] == "application/pdf"
+    assert r.content.startswith(b"%PDF")
+    assert f'filename="visit-{code}.pdf"' in r.headers["content-disposition"]
+    assert code.encode() in r.content  # an uncompressed page: the code is on it
+
+
+def test_an_unknown_and_a_cancelled_code_get_the_same_404_on_every_pdf_route(bundle_min):
+    """Spec §6.9 and §6.45: the PDF routes must not become a way to tell live codes apart."""
+    app, _ = pdf_app(bundle_min)
+    with TestClient(app) as c:
+        code = _book(c).json()["booking"]["code"]
+        assert c.post(f"/bookings/{code}/cancel").status_code == 200
+        for path, method in [("pdf", "get"), ("pdf/status", "get"), ("pdf/email", "post")]:
+            unknown = getattr(c, method)(f"/bookings/ZZZZZZ/{path}")
+            cancelled = getattr(c, method)(f"/bookings/{code}/{path}")
+            assert unknown.status_code == cancelled.status_code == 404, path
+            assert unknown.json() == cancelled.json() == {"detail": NOT_FOUND_TELL}, path
+
+
+def test_a_pdf_that_cannot_be_made_is_a_plain_503_and_the_booking_stands(bundle_min):
+    """Spec §6.51: the code is authoritative, not the document."""
+    app, sender = pdf_app(bundle_min)
+
+    def boom(b):
+        raise ValueError("reportlab exploded")
+
+    sender.render = boom
+    with TestClient(app) as c:
+        code = _book(c).json()["booking"]["code"]
+        r = c.get(f"/bookings/{code}/pdf")
+        still_booked = c.get(f"/bookings/{code}/pdf/status")
+    assert r.status_code == 503
+    assert r.json()["detail"] == PDF_TELL["render_failed"]
+    assert still_booked.status_code == 200, "a PDF that failed must not take the booking with it"
+
+
+def test_emailing_again_goes_to_the_booking_address_and_says_so(bundle_min):
+    gmail = FakeGmail()
+    app, _ = pdf_app(bundle_min, gmail)
+    with TestClient(app) as c:
+        code = _book(c).json()["booking"]["code"]
+        r = c.post(f"/bookings/{code}/pdf/email")
+        status = c.get(f"/bookings/{code}/pdf/status")
+    assert r.status_code == 200, r.text
+    assert r.json() == {"code": code, "pdf_status": "sent", "spoken": PDF_TELL["sent"]}
+    assert gmail.sent == [("t@x", f"visit-{code}.pdf", b"%PDF")]
+    assert status.json()["pdf_status"] == "sent"
+
+
+def test_a_failed_email_says_the_booking_stands_and_offers_the_download(bundle_min):
+    """Spec §6.7."""
+    app, _ = pdf_app(bundle_min, FakeGmail(fail=True))
+    with TestClient(app) as c:
+        code = _book(c).json()["booking"]["code"]
+        body = c.post(f"/bookings/{code}/pdf/email").json()
+    assert body["pdf_status"] == "failed"
+    assert "booking stands" in body["spoken"] and "download" in body["spoken"]
+
+
+def test_the_fourth_email_in_an_hour_is_refused_in_plain_words(bundle_min):
+    """Spec §6.52: rate-limit resends and say plainly when the limit is hit."""
+    gmail = FakeGmail()
+    app, _ = pdf_app(bundle_min, gmail)
+    with TestClient(app) as c:
+        code = _book(c).json()["booking"]["code"]
+        answers = [c.post(f"/bookings/{code}/pdf/email").json() for _ in range(4)]
+    assert [a["pdf_status"] for a in answers] == ["sent", "sent", "sent", "rate_limited"]
+    assert answers[-1]["spoken"] == PDF_TELL["rate_limited"]
+    assert len(gmail.sent) == 3
+
+
+def test_a_booking_this_server_never_emailed_reads_not_applicable_not_pending(bundle_min):
+    """ "Pending" would promise an email that is not coming."""
+    app, _ = pdf_app(bundle_min)
+    with TestClient(app) as c:
+        code = _book(c).json()["booking"]["code"]
+        r = c.get(f"/bookings/{code}/pdf/status")
+    assert r.json()["pdf_status"] == "not_applicable"
+
+
+def test_the_pdf_routes_share_the_code_lookup_limit(bundle_min):
+    app, _ = pdf_app(bundle_min)
+    with TestClient(app) as c:
+        codes = [c.get("/bookings/ZZZZZZ/pdf/status").status_code for _ in range(11)]
+    assert codes[:10] == [404] * 10 and codes[10] == 429

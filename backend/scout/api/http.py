@@ -1,5 +1,6 @@
-from fastapi import APIRouter, Header, HTTPException, Request
+from fastapi import APIRouter, Header, HTTPException, Request, Response
 
+from scout.booking.confirmation import PDF_TELL
 from scout.booking.service import (
     AlreadyStarted,
     NoSlots,
@@ -13,6 +14,7 @@ from scout.contract.http import (
     AvailabilityToggle,
     BookingRequest,
     BookingResponse,
+    PdfStatusResponse,
     RescheduleRequest,
     SlotsRequest,
     SlotsResponse,
@@ -123,6 +125,52 @@ async def reschedule(code: str, body: RescheduleRequest, request: Request):
         )
     request.app.state.after_booking(r.booking)
     return BookingResponse(booking=vm.booking(r.booking), spoken=r.tell)
+
+
+# ---- the confirmation PDF by code (spec §6.7, §6.51, §6.52)
+#
+# Same door as cancel and reschedule: the code is the only credential, every call is
+# rate-limited, and an unknown code and a cancelled one get the identical 404 (§6.9, §6.45).
+# The PDF carries the code, the visit time and the listing - no renter email - so a download
+# exposes nothing the code does not already control.
+
+
+async def _booked(code: str, request: Request):
+    _limited(request)
+    b = await request.app.state.booking.lookup(code)
+    if b is None:
+        raise HTTPException(404, NOT_FOUND_TELL)
+    return b
+
+
+@router.get("/bookings/{code}/pdf")
+async def pdf_download(code: str, request: Request):
+    b = await _booked(code, request)
+    try:
+        pdf = request.app.state.confirmation.render(b)  # made on demand, never stored (§2.5)
+    except Exception:  # noqa: BLE001 — §6.51: say so plainly; the booking is untouched
+        raise HTTPException(503, PDF_TELL["render_failed"]) from None
+    return Response(
+        content=pdf,
+        media_type="application/pdf",
+        headers={"Content-Disposition": f'attachment; filename="visit-{code}.pdf"'},
+    )
+
+
+@router.post("/bookings/{code}/pdf/email", response_model=PdfStatusResponse)
+async def pdf_email(code: str, request: Request):
+    b = await _booked(code, request)
+    status = await request.app.state.confirmation.send(b)  # the renter asked, so it is awaited
+    return PdfStatusResponse(code=code, pdf_status=status, spoken=PDF_TELL[status])
+
+
+@router.get("/bookings/{code}/pdf/status", response_model=PdfStatusResponse)
+async def pdf_status(code: str, request: Request):
+    await _booked(code, request)
+    # No record means this process never emailed it (or has forgotten): say that, rather than
+    # "pending", which would promise an email that is not coming.
+    status = request.app.state.confirmation.status(code) or "not_applicable"
+    return PdfStatusResponse(code=code, pdf_status=status, spoken=PDF_TELL[status])
 
 
 @router.post("/admin/availability")

@@ -1,4 +1,10 @@
-import type { BookingRequest, BookingResponse, BookingState, SlotsResponse } from "@/lib/viewmodels/contract";
+import type {
+  BookingRequest,
+  BookingResponse,
+  BookingState,
+  PdfStatusResponse,
+  SlotsResponse,
+} from "@/lib/viewmodels/contract";
 
 export class ApiError extends Error {
   constructor(
@@ -42,14 +48,10 @@ export class HttpClient {
     }
   }
 
-  private async post<T>(path: string, body: unknown): Promise<T> {
+  private async call<T>(path: string, init?: RequestInit): Promise<T> {
     let r: Response;
     try {
-      r = await fetch(`${this.base}${path}`, {
-        method: "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify(body),
-      });
+      r = await fetch(`${this.base}${path}`, init);
     } catch {
       throw new ApiError(0, "Can't reach the service right now.");
     }
@@ -58,6 +60,14 @@ export class HttpClient {
       throw new ApiError(r.status, detailText(d) ?? r.statusText);
     }
     return r.json();
+  }
+
+  private post<T>(path: string, body: unknown): Promise<T> {
+    return this.call<T>(path, {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify(body),
+    });
   }
 
   slots(listing_id: string) {
@@ -74,5 +84,20 @@ export class HttpClient {
 
   reschedule(code: string, slot_start_ist: string) {
     return this.post<BookingResponse>(`/bookings/${code}/reschedule`, { code, slot_start_ist });
+  }
+
+  /** What happened to the confirmation email, which goes after the booking answers (spec §6.7). */
+  pdfStatus(code: string) {
+    return this.call<PdfStatusResponse>(`/bookings/${code}/pdf/status`);
+  }
+
+  /** Email the PDF again. Limited to three a booking an hour, and the answer says so (spec §6.52). */
+  emailPdf(code: string) {
+    return this.post<PdfStatusResponse>(`/bookings/${code}/pdf/email`, {});
+  }
+
+  /** The PDF, made on demand, as a plain link: the service sends it as an attachment (spec §6.51). */
+  pdfUrl(code: string) {
+    return `${this.base}/bookings/${code}/pdf`;
   }
 }
