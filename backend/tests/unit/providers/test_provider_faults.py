@@ -165,16 +165,37 @@ async def test_anthropic_schema_violation_is_a_truncated_stream_with_no_whole_se
 
 
 @pytest.mark.parametrize(
-    ("mode", "error"),
-    [("down", SmallestApiError), ("429", SmallestApiError), ("timeout", httpx.ReadTimeout)],
+    ("mode", "error", "turns"),
+    # A 429 is retried once before the first chunk (spec §6.54), so it takes two turns to
+    # reach the caller; an outage or a timeout is never retried and still takes one.
+    [
+        ("down", SmallestApiError, 1),
+        ("429", SmallestApiError, 2),
+        ("timeout", httpx.ReadTimeout, 1),
+    ],
 )
-async def test_smallest_fault_raises_the_sdks_error(monkeypatch, mode, error):
+async def test_smallest_fault_raises_the_sdks_error(monkeypatch, mode, error, turns):
     tts = SmallestTts(_settings())
     monkeypatch.setattr(tts._client.waves, "synthesize_tts", _unreachable)
-    faults.set_fault("smallest", mode, 1)
+    faults.set_fault("smallest", mode, turns)
     with pytest.raises(error):
         async for _ in tts.stream("hello"):
             pass
+
+
+async def test_a_single_tts_429_is_retried_before_any_audio_plays(monkeypatch):
+    """Spec §6.54. A momentary rate limit should cost a little latency, not the voice -
+    falling to §6.53's text when the second attempt would have worked loses the answer
+    aloud for nothing."""
+
+    async def one_chunk(**kw):
+        yield b"\x01\x02"
+
+    tts = SmallestTts(_settings())
+    monkeypatch.setattr(tts._client.waves, "synthesize_tts", one_chunk)
+    faults.set_fault("smallest", "429", 1)
+
+    assert [c async for c in tts.stream("hello")] == [b"\x01\x02"]
 
 
 async def test_smallest_down_is_tts_failed_and_the_answer_still_stands(monkeypatch):
@@ -212,15 +233,19 @@ def _deepgram(monkeypatch) -> DeepgramStream:
 
 
 @pytest.mark.parametrize(
-    ("mode", "error", "status"),
+    ("mode", "error", "status", "turns"),
+    # A 429 opening the stream is retried once (spec §6.54), so it takes two turns to reach
+    # the caller. A refused handshake is §6.23 and is not retried here.
     [
-        ("down", DeepgramApiError, 503),
-        ("429", DeepgramApiError, 429),
-        ("timeout", TimeoutError, None),
+        ("down", DeepgramApiError, 503, 1),
+        ("429", DeepgramApiError, 429, 2),
+        ("timeout", TimeoutError, None, 1),
     ],
 )
-async def test_deepgram_fault_on_connect_raises_the_sdks_error(monkeypatch, mode, error, status):
-    faults.set_fault("deepgram", mode, 1)
+async def test_deepgram_fault_on_connect_raises_the_sdks_error(
+    monkeypatch, mode, error, status, turns
+):
+    faults.set_fault("deepgram", mode, turns)
     with pytest.raises(error) as e:
         await _deepgram(monkeypatch).start()
     if status is not None:
@@ -244,19 +269,46 @@ def _calendar() -> GoogleCalendarAdapter:
 
 
 @pytest.mark.parametrize(
-    ("mode", "error", "status"),
+    ("mode", "error", "status", "turns"),
     [
-        ("down", CalendarError, 503),
-        ("429", CalendarError, 429),
-        ("timeout", CalendarError, None),
-        ("auth", CalendarAuthError, 401),
+        ("down", CalendarError, 503, 1),
+        # A 429 is retried once (spec §6.54), so one turn is recovered and it takes two to
+        # reach the caller - the same arithmetic faults.py already documents for Job 1.
+        ("429", CalendarError, 429, 2),
+        ("timeout", CalendarError, None, 1),
+        ("auth", CalendarAuthError, 401, 1),
     ],
 )
-async def test_calendar_fault_raises_the_adapters_error(mode, error, status):
-    faults.set_fault("calendar", mode, 1)
+async def test_calendar_fault_raises_the_adapters_error(mode, error, status, turns):
+    faults.set_fault("calendar", mode, turns)
     with pytest.raises(error) as e:
         await _calendar().find_by_code("ABC123")
     assert type(e.value) is error and e.value.status == status
+
+
+async def test_a_single_calendar_429_is_retried_and_recovered():
+    """Spec §6.54 - retry once with backoff, so a momentary rate limit becomes a slower
+    booking rather than "the calendar is unreachable"."""
+    faults.set_fault("calendar", "429", 1)
+    found = []
+    service = SimpleNamespace(
+        events=lambda: SimpleNamespace(
+            list=lambda **kw: SimpleNamespace(execute=lambda: found.append(kw) or {"items": []})
+        )
+    )
+    cal = GoogleCalendarAdapter.with_service(service, "T", "O")
+
+    assert await cal.find_by_code("ABC123") == []
+    assert found, "the retry never reached the provider"
+
+
+async def test_a_calendar_outage_is_not_retried_into_a_slower_failure():
+    """The retry is scoped to 429. A `down` must reach §6.3 at once: retrying it would only
+    delay the line that tells the renter the calendar is unreachable."""
+    faults.set_fault("calendar", "down", 1)
+    with pytest.raises(CalendarError) as e:
+        await _calendar().find_by_code("ABC123")
+    assert e.value.status == 503
 
 
 async def test_a_calendar_timeout_is_not_mistaken_for_an_auth_failure():
@@ -269,12 +321,46 @@ async def test_a_calendar_timeout_is_not_mistaken_for_an_auth_failure():
 # ---- Gmail
 
 
-@pytest.mark.parametrize("mode", ["down", "429", "timeout", "auth"])
-async def test_gmail_fault_raises_mail_error(mode):
+@pytest.mark.parametrize(
+    ("mode", "turns"),
+    # A 429 is retried once (spec §6.54), so it takes two turns to reach the caller.
+    [("down", 1), ("429", 2), ("timeout", 1), ("auth", 1)],
+)
+async def test_gmail_fault_raises_mail_error(mode, turns):
     gmail = GmailAdapter.with_service(SimpleNamespace(users=_unreachable), "from@x")
-    faults.set_fault("gmail", mode, 1)
+    faults.set_fault("gmail", mode, turns)
     with pytest.raises(MailError):
         await gmail.send_pdf("to@x", "subject", "body", b"%PDF", "visit.pdf")
+
+
+async def test_a_single_gmail_429_is_retried_and_the_mail_goes():
+    """Spec §6.54. The booking stands either way (§6.7), but a rate limit that resolves on
+    the second try should deliver the PDF rather than fall back to "could not be emailed"."""
+    faults.set_fault("gmail", "429", 1)
+    sent = []
+    service = SimpleNamespace(
+        users=lambda: SimpleNamespace(
+            messages=lambda: SimpleNamespace(
+                send=lambda **kw: SimpleNamespace(
+                    execute=lambda: sent.append(kw) or {"id": "msg-1"}
+                )
+            )
+        )
+    )
+    gmail = GmailAdapter.with_service(service, "from@x")
+
+    assert await gmail.send_pdf("to@x", "subject", "body", b"%PDF", "visit.pdf") == "msg-1"
+    assert sent, "the retry never reached Gmail"
+
+
+async def test_a_gmail_outage_still_fails_at_once():
+    """The retry is scoped to 429: an outage must reach §6.7 immediately so the renter is
+    offered the PDF instead of waiting on a backoff that cannot help."""
+    faults.set_fault("gmail", "down", 1)
+    gmail = GmailAdapter.with_service(SimpleNamespace(users=_unreachable), "from@x")
+    with pytest.raises(MailError) as e:
+        await gmail.send_pdf("to@x", "subject", "body", b"%PDF", "visit.pdf")
+    assert e.value.status is None  # an outage carries no HTTP status to retry on
 
 
 # ---- no fault, no interference

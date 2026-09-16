@@ -13,14 +13,26 @@ from email.message import EmailMessage
 import httplib2
 from google_auth_httplib2 import AuthorizedHttp
 from googleapiclient.discovery import build
+from googleapiclient.errors import HttpError
 
 from scout.config import Settings
 from scout.platform import faults, telemetry
+from scout.platform.retry import RATE_LIMITED, retry_once_on_rate_limit
 from scout.providers.google_calendar import credentials_from
 
 
 class MailError(RuntimeError):
-    pass
+    """`status` is the HTTP status when there was one, so §6.54 can tell a 429 from an
+    outage. Everything downstream still treats any MailError the same way (§6.7): the
+    booking stands and the PDF is offered — the status only decides whether to retry."""
+
+    def __init__(self, message: str, status: int | None = None) -> None:
+        super().__init__(message)
+        self.status = status
+
+
+def _is_rate_limited(e: BaseException) -> bool:
+    return isinstance(e, MailError) and e.status == RATE_LIMITED
 
 
 class GmailAdapter:
@@ -77,21 +89,30 @@ class GmailAdapter:
     async def send_pdf(
         self, to: str, subject: str, body: str, pdf_bytes: bytes, filename: str
     ) -> str:
-        if mode := faults.active("gmail"):
-            # Every real failure below leaves as MailError, whatever its cause (§6.7).
-            raise MailError(f"fault injected: {mode}")
         msg = EmailMessage()
         msg["To"], msg["From"], msg["Subject"] = to, self._from, subject
         msg.set_content(body)
         msg.add_attachment(pdf_bytes, maintype="application", subtype="pdf", filename=filename)
         raw = base64.urlsafe_b64encode(msg.as_bytes()).decode()
-        with telemetry.span("external.gmail.send"):
-            try:
-                res = await asyncio.to_thread(
-                    lambda: self._exec(
-                        self._service().users().messages().send(userId="me", body={"raw": raw})
+
+        # The fault check sits inside the attempt so a `429` fault spends a turn per attempt
+        # the way Job 1's does; `down`/`timeout`/`auth` are not 429s and are never retried
+        # (spec §6.54, scout/platform/retry.py).
+        async def attempt():
+            if mode := faults.active("gmail"):
+                # Every real failure below leaves as MailError, whatever its cause (§6.7).
+                raise MailError(f"fault injected: {mode}", RATE_LIMITED if mode == "429" else None)
+            with telemetry.span("external.gmail.send"):
+                try:
+                    return await asyncio.to_thread(
+                        lambda: self._exec(
+                            self._service().users().messages().send(userId="me", body={"raw": raw})
+                        )
                     )
-                )
-            except Exception as e:
-                raise MailError(str(e)) from e
+                except HttpError as e:
+                    raise MailError(str(e), e.resp.status) from e
+                except Exception as e:
+                    raise MailError(str(e)) from e
+
+        res = await retry_once_on_rate_limit(attempt, _is_rate_limited)
         return res["id"]

@@ -77,6 +77,14 @@ class Settings(BaseSettings):
 
     # Voice (P3, P3b)
     deepgram_model: str = "nova-3"
+    # Spec §6.20: below this, a transcript is treated as low confidence and confirmed rather
+    # than acted on. Deepgram returns `confidence` on every alternative (verified against
+    # deepgram-sdk 7.8.0, listen_v1results_channel_alternatives_item.py, where it is a
+    # required float). **This number is a judgement, not a measurement** - no noisy audio has
+    # been scored against it, because the project has none labelled. It is a setting
+    # precisely so it can be tuned once Task 4.1 puts real production audio on the clock.
+    # 0.0 disables the check and restores the pre-§6.20 behaviour.
+    stt_min_confidence: float = 0.6
     deepgram_endpointing_ms: int = 400
     hold_extra_ms: int = 400
     utterance_end_ms: int = 1000

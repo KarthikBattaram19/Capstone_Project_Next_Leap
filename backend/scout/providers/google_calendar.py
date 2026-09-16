@@ -30,6 +30,7 @@ from googleapiclient.errors import HttpError
 from scout.config import Settings
 from scout.domain.booking import IST, Slot
 from scout.platform import faults, telemetry
+from scout.platform.retry import RATE_LIMITED, retry_once_on_rate_limit
 
 SCOPES = [
     "https://www.googleapis.com/auth/calendar",
@@ -73,6 +74,13 @@ def _injected(mode: str) -> CalendarError:
         return CalendarError("timed out")
     status = 429 if mode == "429" else 503
     return CalendarError(f"<HttpError {status}: fault injected>", status)
+
+
+def _is_rate_limited(e: BaseException) -> bool:
+    """Spec §6.54. A 403 is NOT read as a rate limit here even though Google also uses it for
+    `rateLimitExceeded`: `_run` has already mapped 403 to CalendarAuthError, and retrying a
+    revoked grant would delay §6.46's "the calendar is temporarily unreachable" for nothing."""
+    return isinstance(e, CalendarError) and e.status == RATE_LIMITED
 
 
 def credentials_from(settings: Settings) -> Credentials:
@@ -154,18 +162,24 @@ class GoogleCalendarAdapter:
         return self._svc
 
     async def _run(self, name: str, fn):
-        if mode := faults.active("calendar"):
-            raise _injected(mode)
-        with telemetry.span(f"external.google.{name}"):
-            try:
-                return await asyncio.to_thread(fn)
-            except HttpError as e:
-                status = e.resp.status
-                if status in (401, 403):
-                    raise CalendarAuthError(str(e), status) from e
-                raise CalendarError(str(e), status) from e
-            except Exception as e:
-                raise CalendarError(str(e)) from e
+        # The fault check is inside the retried attempt, so a `429` fault spends a turn per
+        # attempt the way Job 1's does, while `down`/`timeout`/`auth` are never retried
+        # (spec §6.54, scout/platform/retry.py).
+        async def attempt():
+            if mode := faults.active("calendar"):
+                raise _injected(mode)
+            with telemetry.span(f"external.google.{name}"):
+                try:
+                    return await asyncio.to_thread(fn)
+                except HttpError as e:
+                    status = e.resp.status
+                    if status in (401, 403):
+                        raise CalendarAuthError(str(e), status) from e
+                    raise CalendarError(str(e), status) from e
+                except Exception as e:
+                    raise CalendarError(str(e)) from e
+
+        return await retry_once_on_rate_limit(attempt, _is_rate_limited)
 
     async def freebusy(
         self, calendar_id: str, start: datetime, end: datetime

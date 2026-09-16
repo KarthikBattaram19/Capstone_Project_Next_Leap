@@ -19,6 +19,11 @@ from smallestai.core.api_error import ApiError
 
 from scout.config import Settings
 from scout.platform import faults, telemetry
+from scout.platform.retry import (
+    RATE_LIMITED,
+    TTS_RATE_LIMIT_BACKOFF_S,
+    retry_once_on_rate_limit,
+)
 
 
 class SmallestTts:
@@ -28,22 +33,44 @@ class SmallestTts:
         self._model = settings.smallest_model
         self.sample_rate = settings.smallest_sample_rate
 
-    async def stream(self, text: str) -> AsyncIterator[bytes]:
+    async def _open(self, text: str):
+        """Start the stream and pull its first chunk, so a 429 is seen before anything plays.
+
+        The fault check is inside here, so a `429` fault spends a turn per attempt the way
+        Job 1's does; `down` and `timeout` are not 429s and reach §6.53 immediately.
+        """
         if mode := faults.active("smallest"):
             raise _injected(mode)
-        first = True
-        async for chunk in self._client.waves.synthesize_tts(
+        agen = self._client.waves.synthesize_tts(
             text=text,
             voice_id=self._voice,
             model=self._model,
             sample_rate=self.sample_rate,
-        ):
-            if first:
-                telemetry.mark(telemetry.TTS_FIRST_BYTE)
-                first = False
-                if chunk[:4] == b"RIFF":
-                    # Strip a WAV header; the browser plays raw PCM16.
-                    chunk = chunk[44:]
+        ).__aiter__()
+        try:
+            return agen, await agen.__anext__()
+        except StopAsyncIteration:
+            return agen, None
+
+    async def stream(self, text: str) -> AsyncIterator[bytes]:
+        # Spec §6.54, and the only retried wrapper the renter waits on: the backoff is the
+        # short one (see scout/platform/retry.py). The retry covers the stream up to its
+        # FIRST chunk only — once audio is playing a restart would repeat what was already
+        # heard, which is worse than falling to §6.53's text.
+        agen, chunk = await retry_once_on_rate_limit(
+            lambda: self._open(text),
+            _is_rate_limited,
+            backoff_s=TTS_RATE_LIMIT_BACKOFF_S,
+        )
+        if chunk is None:
+            return
+        telemetry.mark(telemetry.TTS_FIRST_BYTE)
+        if chunk[:4] == b"RIFF":
+            # Strip a WAV header; the browser plays raw PCM16.
+            chunk = chunk[44:]
+        if chunk:
+            yield chunk
+        async for chunk in agen:
             if chunk:
                 yield chunk
 
@@ -59,3 +86,7 @@ def _injected(mode: str) -> Exception:
         return httpx.ReadTimeout("fault injected")
     status = 429 if mode == "429" else 503
     return ApiError(status_code=status, body="fault injected")
+
+
+def _is_rate_limited(e: BaseException) -> bool:
+    return isinstance(e, ApiError) and e.status_code == RATE_LIMITED

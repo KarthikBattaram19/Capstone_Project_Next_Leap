@@ -30,6 +30,7 @@ class LiveSession:
         self.tts = SmallestTts(settings)
         self.state = TurnState.IDLE
         self._segments: list[str] = []
+        self._confidence = 1.0  # worst segment confidence of the utterance (spec §6.20)
         self._hold: asyncio.TimerHandle | None = None
         self._turn: asyncio.Task | None = None
         self._speech_started_at: float | None = None
@@ -152,11 +153,15 @@ class LiveSession:
             self.state = transition(self.state, TurnState.CAPTURING)
         await self.sink.transcript(" ".join([*self._segments, text]), final=False)  # L0
 
-    async def _final(self, text: str) -> None:
+    async def _final(self, text: str, confidence: float = 1.0) -> None:
+        """`confidence` is Deepgram's, for spec §6.20. It defaults to 1.0 so a typed message
+        and a test that drives this directly are never treated as noisy speech."""
         await self._words_arrived(text)
         if self.state is TurnState.IDLE:
             self.state = transition(self.state, TurnState.CAPTURING)
         self._segments.append(text)
+        # The utterance is as trustworthy as its worst segment, matching DeepgramStream.
+        self._confidence = min(self._confidence, confidence)
         if self._hold:
             self._hold.cancel()
         if looks_unfinished(" ".join(self._segments)):  # P3b: wait up to 400 ms more
@@ -176,7 +181,9 @@ class LiveSession:
             self._hold.cancel()
             self._hold = None
         text = " ".join(self._segments).strip()
+        confidence = self._confidence
         self._segments = []
+        self._confidence = 1.0
         self._speech_started_at = None
         if self.state is not TurnState.CAPTURING:
             return
@@ -216,10 +223,14 @@ class LiveSession:
         ack_at = time.perf_counter()
 
         self.state = transition(self.state, TurnState.CLASSIFYING)
-        self._turn = asyncio.create_task(self._run_turn(text, final_at, ack_at))
+        self._turn = asyncio.create_task(self._run_turn(text, final_at, ack_at, confidence))
 
     async def _run_turn(
-        self, text: str, final_at: float | None = None, ack_at: float | None = None
+        self,
+        text: str,
+        final_at: float | None = None,
+        ack_at: float | None = None,
+        confidence: float = 1.0,
     ) -> None:
         from scout.conversation.router import classify_turn
 
@@ -231,7 +242,7 @@ class LiveSession:
                 tr.mark_at(telemetry.STT_FINAL, final_at)
                 tr.mark_at(telemetry.ACK, ack_at)
             try:
-                outcome = await self.orch.handle_text(self.session, text)
+                outcome = await self.orch.handle_text(self.session, text, confidence)
             except asyncio.CancelledError:
                 return  # barge-in cancelled the turn
             except Exception as e:  # noqa: BLE001 -- a turn runs as a task nobody awaits, so
@@ -281,6 +292,7 @@ class LiveSession:
         self._reconnected = True  # the one permitted reconnect
         lost = " ".join(self._segments)
         self._segments = []
+        self._confidence = 1.0
         self.stt = self._make_stt()
         try:
             await self.stt.start()

@@ -31,7 +31,7 @@ def message(transcript, *, is_final=False, speech_final=False, kind="Results"):
 
 
 def stream(finals, interims, utterance_ends=None):
-    async def on_final(t):
+    async def on_final(t, confidence=1.0):
         finals.append(t)
 
     async def on_interim(t):

@@ -75,7 +75,7 @@ class FakeOrch:
         self.cancelled = 0
         self._handler = handler
 
-    async def handle_text(self, session, text):
+    async def handle_text(self, session, text, confidence=1.0):
         if self._handler is not None:
             return await self._handler(session, text)
         return Answered(view_model=AnsweredViewModel(), spoken="ok")

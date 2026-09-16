@@ -4,7 +4,7 @@ from scout.config import Settings
 from scout.contract.outcome import Answered, Empty, Failed, NeedsInput
 from scout.conversation.job1 import Job1Down, Job1Result
 from scout.conversation.orchestrator import NullSpeaker, TurnOrchestrator
-from scout.conversation.session import SessionManager
+from scout.conversation.session import ConfirmHeard, SessionManager
 from scout.domain.constraints import ConstraintEdit
 from scout.engines.availability import AvailabilityRegister
 from scout.platform.artefacts import ArtefactStore
@@ -159,6 +159,72 @@ async def test_unavailable_listing_is_removed_with_a_notice(make):
     o2 = await orch.handle_text(s, "show me again")
     assert gone not in o2.view_model.shortlist.order
     assert any("no longer available" in n for n in o2.view_model.notices)
+
+
+# --- §6.20: a noisy transcript is confirmed, never guessed (Task 4.2 gap) ---
+
+
+async def test_a_noisy_transcript_is_confirmed_before_it_ever_reaches_job1(make):
+    """Spec §6.20. The check runs above Job 1 on purpose: a noisy utterance must not be
+    guessed at, and on a 500-call day it should not cost a model call either."""
+    orch, s = make([j1(edits=[ConstraintEdit("localities", "add", "Koramangala")])])
+
+    o = await orch.handle_text(s, "two BHK in Koramangala", confidence=0.3)
+
+    assert isinstance(o, NeedsInput)
+    assert o.field == "heard"
+    assert "two BHK in Koramangala" in o.question, "it must quote what was heard, not paraphrase"
+    assert o.options == ["yes", "no"]
+    assert len(orch.job1.results) == 1, "Job 1 was called on a transcript we did not trust"
+    assert s.constraints.is_empty(), "a noisy transcript was applied before confirmation"
+
+
+async def test_confirming_a_noisy_transcript_replays_the_original_words(make):
+    """Saying yes must act on what was HEARD, not on the word "yes"."""
+    orch, s = make(
+        [j1(intent="confirm_yes"), j1(edits=[ConstraintEdit("localities", "add", "Koramangala")])]
+    )
+    await orch.handle_text(s, "two BHK in Koramangala", confidence=0.3)
+
+    await orch.handle_text(s, "yes")
+
+    assert s.constraints.localities == ("Koramangala",)
+    assert s.pending is None or not isinstance(s.pending, ConfirmHeard)
+
+
+async def test_rejecting_a_noisy_transcript_asks_for_it_again(make):
+    orch, s = make([j1(intent="confirm_no")])
+    await orch.handle_text(s, "mrrbl fnnn", confidence=0.2)
+
+    o = await orch.handle_text(s, "no")
+
+    assert isinstance(o, NeedsInput) and o.field == "heard"
+    assert "again" in o.question
+    assert not isinstance(s.pending, ConfirmHeard)
+
+
+async def test_a_confident_transcript_is_never_confirmed_for_noise(make):
+    """The check has to be a check. Confirming every turn would double the length of every
+    conversation and make the readback meaningless."""
+    orch, s = make(
+        [j1(edits=[ConstraintEdit("localities", "add", "Koramangala")]), j1(intent="confirm_yes")]
+    )
+    o = await orch.handle_text(s, "two BHK in Koramangala", confidence=0.95)
+    assert not (isinstance(o, NeedsInput) and o.field == "heard")
+
+
+async def test_a_noisy_answer_to_a_question_we_asked_is_not_re_confirmed(make):
+    """A one-word "yes" scores low on its own. Re-confirming an answer we are already
+    waiting on would loop the renter forever, so the check stands down while pending."""
+    orch, s = make(
+        [j1(edits=[ConstraintEdit("localities", "add", "Koramangala")]), j1(intent="confirm_yes")]
+    )
+    await orch.handle_text(s, "Koramangala")
+    assert s.pending is not None
+
+    o = await orch.handle_text(s, "yes", confidence=0.2)
+
+    assert isinstance(o, Answered), "a low-confidence answer to our own question was re-asked"
 
 
 # --- §6 walkthrough rows: guards that were read but not executed (Task 4.2) ---

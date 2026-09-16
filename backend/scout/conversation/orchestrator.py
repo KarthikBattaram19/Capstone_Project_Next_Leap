@@ -12,7 +12,7 @@ from scout.contract.viewmodels import AnsweredViewModel
 from scout.conversation.booking_flow import BookingFlow, BookingNotWired
 from scout.conversation.job1 import Job1, Job1Down, Job1Result
 from scout.conversation.router import classify_turn, parse_ordinal
-from scout.conversation.session import ConfirmConstraints, Session
+from scout.conversation.session import ConfirmConstraints, ConfirmHeard, Session
 from scout.conversation.speaker import Speaker, split_sentences
 from scout.domain.constraints import ConstraintEdit
 from scout.domain.money import rupees
@@ -42,6 +42,12 @@ CONVERSATIONAL_REPLIES: dict[str, str] = {
         "The only contact I hold is the demo placeholder 999999999 — no real owner details "
         "exist in this system."
     ),
+    "confirm_heard": (
+        # Spec §6.20: read back what was actually heard, so a noisy transcript is confirmed
+        # rather than acted on. Quoting it is the point - paraphrasing would hide the noise.
+        'I heard "{heard}" — is that right?'
+    ),
+    "heard_wrong": "Sorry — could you say that again?",
     "no_constraints": (
         "Tell me a budget and a locality to start — for example, 'a 2BHK in Koramangala "
         "under 35,000'."
@@ -109,13 +115,33 @@ class TurnOrchestrator:
 
     # ---- public
 
-    async def handle_text(self, session: Session, text: str) -> TurnOutcome:
+    async def handle_text(
+        self, session: Session, text: str, confidence: float = 1.0
+    ) -> TurnOutcome:
+        """`confidence` is Deepgram's for the utterance (spec §6.20); 1.0 for typed input.
+
+        The low-confidence check is here rather than in LiveSession because the orchestrator
+        owns `session.pending`, and it runs BEFORE Job 1 so a noisy utterance costs no model
+        call - which matters on a 500-call day.
+        """
         session.touch()
+        if self._too_noisy(session, text, confidence):
+            session.pending = ConfirmHeard(text)
+            q = CONVERSATIONAL_REPLIES["confirm_heard"].format(heard=text)
+            return NeedsInput(question=q, field="heard", options=["yes", "no"], spoken=q)
         turn_type = classify_turn(text, has_shortlist=not session.shortlist.is_empty())
         if telemetry.current() is None:
             with telemetry.trace(turn_type=turn_type):
                 return await self._dispatch(session, text, turn_type)
         return await self._dispatch(session, text, turn_type)
+
+    def _too_noisy(self, session: Session, text: str, confidence: float) -> bool:
+        """Spec §6.20. Not applied to an answer we are already waiting on: a one-word "yes"
+        scores low on its own, and re-asking it would loop the renter forever."""
+        threshold = self.settings.stt_min_confidence
+        if threshold <= 0 or confidence >= threshold or not text.strip():
+            return False
+        return session.pending is None
 
     async def aclose(self) -> None:
         """Close the provider clients on the loop that used them (app shutdown, eval run)."""
@@ -309,6 +335,24 @@ class TurnOrchestrator:
             return await self._shortlist_turn(
                 session, provisional=True, unknown_fields=[a.field for a in res.ambiguities]
             )
+
+        if isinstance(session.pending, ConfirmHeard):
+            heard = session.pending.text
+            session.pending = None
+            if res.intent == "confirm_yes":
+                # Replay the confirmed words as an ordinary turn, re-entering the LANE
+                # rather than `handle_text`. `_dispatch` is already holding `session.lock`
+                # and `asyncio.Lock` is not re-entrant, so recursing through `handle_text`
+                # deadlocks the turn forever - which is exactly what it did until a test
+                # sat on it for 560 s. Re-classifying keeps a replayed "why ...?" on lane B.
+                if classify_turn(heard, has_shortlist=not session.shortlist.is_empty()) == "B":
+                    return await self._lane_b(session, heard)
+                return await self._lane_a(session, heard)
+            if res.intent == "confirm_no":
+                q = CONVERSATIONAL_REPLIES["heard_wrong"]
+                return NeedsInput(question=q, field="heard", spoken=q)
+            # Anything else is the renter simply saying it again: fall through and treat
+            # this turn as the real one rather than asking a second time.
 
         if res.intent == "confirm_yes" and isinstance(session.pending, ConfirmConstraints):
             session.constraints = confirm_all(session.constraints)

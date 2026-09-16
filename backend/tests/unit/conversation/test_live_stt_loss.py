@@ -68,7 +68,7 @@ class TypedOrch:
     def __init__(self):
         self.heard = []
 
-    async def handle_text(self, session, text):
+    async def handle_text(self, session, text, confidence=1.0):
         self.heard.append(text)
         return Answered(view_model=AnsweredViewModel(), spoken="ok")
 

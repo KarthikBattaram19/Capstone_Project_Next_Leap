@@ -24,6 +24,7 @@ from websockets.exceptions import ConnectionClosedError
 
 from scout.config import Settings
 from scout.platform import faults, telemetry
+from scout.platform.retry import RATE_LIMITED, retry_once_on_rate_limit
 
 Handler = Callable[[str], Awaitable[None]]
 
@@ -72,6 +73,14 @@ def _injected_on_connect(mode: str) -> Exception:
     if mode == "timeout":
         return TimeoutError("fault injected: timed out opening the Deepgram stream")
     status = 429 if mode == "429" else 503
+    return _api_error(status)
+
+
+def _is_rate_limited(e: BaseException) -> bool:
+    return isinstance(e, ApiError) and e.status_code == RATE_LIMITED
+
+
+def _api_error(status: int) -> ApiError:
     return ApiError(
         status_code=status,
         body="fault injected: Unexpected error when initializing websocket connection.",
@@ -100,8 +109,16 @@ class DeepgramStream:
         self._conn = None
         self._listener: asyncio.Task | None = None
         self._segments: list[str] = []  # finalised segments of the utterance in progress
+        self._confidences: list[float] = []  # one per finalised segment (spec §6.20)
 
     async def start(self) -> None:
+        # Spec §6.54: one retry on a 429, and only on a 429. A refused connection is §6.23,
+        # which LiveSession already answers with exactly one transparent reconnect — retrying
+        # it here as well would double that and delay "speech is unavailable". This runs at
+        # session open, not inside a turn, so the backoff costs nothing against Gate L.
+        await retry_once_on_rate_limit(self._connect, _is_rate_limited)
+
+    async def _connect(self) -> None:
         if mode := faults.active("deepgram"):
             raise _injected_on_connect(mode)
         self._cm = self._client.listen.v1.connect(
@@ -133,7 +150,8 @@ class DeepgramStream:
             await self._flush()
             await self._on_utterance_end()
         elif kind == "Results":
-            text = msg.channel.alternatives[0].transcript
+            alt = msg.channel.alternatives[0]
+            text = alt.transcript
             if not text:
                 return
             if msg.is_final:
@@ -144,6 +162,10 @@ class DeepgramStream:
                 # started a fresh turn mid-sentence — fourteen turns from two spoken
                 # utterances on the deployed service, each with its own TTS audio.
                 self._segments.append(text)
+                # Spec §6.20. Kept per segment because the utterance's confidence is the
+                # WORST of its parts: one clean segment must not average away a noisy one
+                # that carried the locality or the budget.
+                self._confidences.append(float(getattr(alt, "confidence", 1.0)))
                 # NOT even speech_final ends the turn. Measured on real speech
                 # 2026-09-06: a 700 ms mid-sentence pause — an ordinary breath before
                 # a number — makes Deepgram endpoint and set speech_final, so
@@ -164,9 +186,14 @@ class DeepgramStream:
         if not self._segments:
             return
         text = " ".join(self._segments)
+        # The utterance is only as trustworthy as its worst segment (spec §6.20). An
+        # utterance with no scored segment is 1.0: absent evidence of noise is not evidence
+        # of noise, and treating it as 0 would confirm every turn.
+        confidence = min(self._confidences, default=1.0)
         self._segments = []
+        self._confidences = []
         telemetry.mark(telemetry.STT_FINAL)
-        await self._on_final(text)
+        await self._on_final(text, confidence)
 
     async def send_audio(self, pcm16: bytes) -> None:
         if faults.active("deepgram"):

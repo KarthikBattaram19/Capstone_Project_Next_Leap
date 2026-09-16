@@ -18,6 +18,14 @@ class ConfirmConstraints:
 
 
 @dataclass
+class ConfirmHeard:
+    """A transcript Deepgram was not confident about (spec §6.20). `text` is replayed as a
+    fresh turn if the renter says yes, so a noisy utterance is confirmed, never guessed."""
+
+    text: str
+
+
+@dataclass
 class AwaitSlotChoice:
     listing_id: str
     slots: list  # list[Slot] (Task 3.1)
@@ -41,7 +49,9 @@ class ConfirmCancel:
     code: str
 
 
-PendingAction = ConfirmConstraints | AwaitSlotChoice | AwaitEmail | ConfirmEmail | ConfirmCancel
+PendingAction = (
+    ConfirmConstraints | ConfirmHeard | AwaitSlotChoice | AwaitEmail | ConfirmEmail | ConfirmCancel
+)
 
 
 @dataclass
