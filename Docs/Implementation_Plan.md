@@ -286,7 +286,8 @@ Both gates have cleared. 1.1–1.3 (the knowledge layer) and 1.4–1.6 (store, c
 - **Done when:** unit tests pass.
 - Detail: addendum → Task 2.3.
 
-### Task 2.4 — Job 1: extraction and edit routing on Groq
+### Task 2.4 — Job 1: extraction and edit routing (built on Groq; **moved to Gemini 2026-09-10**)
+- **Provider moved, 2026-09-10.** Job 1 now answers on Gemini `gemini-3.5-flash-lite` at `thinking = MINIMAL`; Groq `openai/gpt-oss-120b` is kept as a one-line fallback (`job1_provider`, `backend/scout/config.py`). The switch was measured on one probe set, not assumed: Gemini 6/6 correct at **0.99 s** median and 399 tokens a call, against Groq 5/5 at **1.50 s** and 886. It also changed the eval economics — see "Where the suites stand" below. Everything else in this task (schema, prompt, retry, normalisation) is provider-independent and unchanged.
 - **Status: done, 2026-09-09.** 5 unit tests plus 3 live utterances against `openai/gpt-oss-120b`, which held strict JSON mode, so the Gate L fallback to a lighter Groq tier is **not** triggered. The system prompt was strengthened twice after watching real extractions: report ALL of what a sentence changes (it was dropping a stated budget), and "2BHK apartment" is two facts, not one.
 - **Delivers:** the strict output schema for Job 1 (intent, a list of one-field edits, ambiguities with the question to ask, a reference like "the second one", email, code, slot choice); the system prompt; retry once on a schema violation, then treat Job 1 as down; amounts normalised here; a locality outside the dataset becomes a question ("not covered; nearest covered is …"), never a silent substitution.
 - **Why now:** it is the first real model call in the pipeline.
@@ -400,11 +401,25 @@ evening also found the Anthropic key revoked: a full pass ran with every Job 2 c
 and nothing said so - the harness now pings both providers before spending a call, and a Job
 2 outage is logged and carried on the outcome (`1bb5ed1`).
 
-**What is left is one day's allowance per run.** At ~154K per run the free plan affords one
-run per calendar day, so the three consecutive runs sign-off requires take three days.
-Groq's pay-as-you-go tier ($0.15/M in, $0.60/M out — about **$0.09 for the whole three-run
-sign-off**) would remove the daily cap and let all three run in one sitting; that remains an
-account decision, not a code change.
+**The daily allowance is no longer the constraint — Job 1 left Groq on 2026-09-10.** Job 1
+runs on Gemini `gemini-3.5-flash-lite` (`job1_provider = "gemini"`, `backend/scout/config.py`),
+chosen on a measured probe: 6/6 correct at 0.99 s median against `gpt-oss-120b`'s 5/5 at
+1.50 s. Groq stays a one-line fallback. On the Gemini free tier — 15 requests a minute and
+**500 a day per project per model** — one 60-case pass costs **146 Job 1 calls**, so the
+three consecutive passes sign-off requires are **438 of 500 and fit inside a single day**.
+That is measured, not projected: the 2026-09-15 sign-off passes spent exactly 438, counted
+from the `external.gemini` spans (`Docs/JOB2_SCORES.md`). The Groq token arithmetic this
+paragraph used to carry (~154K a run, one run a calendar day, a $0.09 pay-as-you-go upgrade
+that would collapse three days into one sitting) described the pre-2026-09-10 pipeline and
+has not applied since.
+
+**Decided 2026-09-16: buy nothing.** Groq's Developer tier is not purchasable on this
+account, and nothing needs it. The whole remaining risk is the 62 calls of headroom above
+438: a failed CI pass cannot be re-run the same day, and the 500 is per *project*, so a
+debugging run spends the same budget as a sign-off run. Task 4.3's three CI passes are
+therefore run on a clean day with no other Gemini traffic against the project. The free-tier
+quota resets at midnight Pacific — **12:30 IST** — and if a pass fails, the fix and all three
+fresh passes wait for that reset.
 ---
 
 ## Phase 3 — Completing the product
