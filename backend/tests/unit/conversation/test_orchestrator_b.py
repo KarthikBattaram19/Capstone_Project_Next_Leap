@@ -224,3 +224,67 @@ async def test_resolving_facts_does_not_stall_the_event_loop(make, monkeypatch):
     await orch.handle_text(session, "why did you pick this one?")
     t.cancel()
     assert ticks >= 8, f"the loop only ticked {ticks} times during a 0.3 s resolve"
+
+
+class RecordingJob2(ScriptedJob2):
+    """Says what the scripted sentences say and keeps the facts it was handed."""
+
+    def __init__(self, make_sentences):
+        super().__init__([])
+        self.make_sentences = make_sentences
+        self.bundles: list = []
+
+    async def explain(self, bundle, question):
+        self.bundles.append(bundle)
+        for s in self.make_sentences(bundle.listing_id):
+            yield s
+
+
+async def test_does_it_have_a_nearby_hospital_is_answered_about_the_listing_in_focus(make):
+    """A2, heard on production (2026-09-17) with a shortlist on screen: "Does it have a nearby
+    hospital?" went to Job 1, became a "with hospital" requirement and an empty result. It is a
+    question about the listing last referred to, answered from its facts."""
+    from scout.domain.shortlist import Shortlist, ShortlistEntry
+
+    job2 = RecordingJob2(
+        lambda lid: [
+            Job2Sentence(
+                "The nearest hospital is about 600 m away.", [f"osm:{lid}:nearest_hospital"]
+            )
+        ]
+    )
+    orch, session, speaker, _ = make(job2)  # no Job 1 answers scripted: Job 1 must not run
+    session.last_read_order = ["kor-001", "kor-002"]
+    session.shortlist = Shortlist(
+        matched=(ShortlistEntry("kor-001", 1), ShortlistEntry("kor-002", 2))
+    )
+    session.focus_listing_id = "kor-001"
+
+    out = await orch.handle_text(session, "Does it have a nearby hospital?")
+    await session.speaking
+
+    assert isinstance(out, Answered), f"got {out.kind}: {out.spoken}"
+    assert out.view_model.explanation.listing_id == "kor-001"
+    hospital = job2.bundles[0].facts["osm:kor-001:nearest_hospital"]
+    assert hospital.value.metres == 600
+    assert "600 m" in out.spoken
+    assert "The nearest hospital is about 600 m away." in speaker.said
+
+
+async def test_this_2nd_listing_is_explained_not_selected(make):
+    """A2: "So what is so special about this 2nd listing?" was read back as a selection."""
+    from scout.domain.shortlist import Shortlist, ShortlistEntry
+
+    job2 = RecordingJob2(lambda lid: [])
+    orch, session, _speaker, _ = make(job2)
+    session.last_read_order = ["kor-001", "kor-002"]
+    session.shortlist = Shortlist(
+        matched=(ShortlistEntry("kor-001", 1), ShortlistEntry("kor-002", 2))
+    )
+
+    out = await orch.handle_text(session, "So what is so special about this 2nd listing?")
+    await session.speaking
+
+    assert isinstance(out, Answered), f"got {out.kind}: {out.spoken}"
+    assert out.view_model.explanation.listing_id == "kor-002"
+    assert session.focus_listing_id == "kor-002"
