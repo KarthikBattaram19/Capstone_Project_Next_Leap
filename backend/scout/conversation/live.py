@@ -125,6 +125,18 @@ class LiveSession:
             self.state = transition(self.state, TurnState.CAPTURING)
         await self._finalize()
 
+    async def stop(self) -> None:
+        """The page's Stop control (contract StopIn, D2 2026-09-17): stop the rest of the reply.
+
+        The page has already stopped playing and un-muted the mic. SPEAKING is a turn's reply;
+        IDLE covers the greeting, which is spoken without leaving IDLE, and a reply the server
+        has finished sending while the page still plays it. Any other state is the renter's
+        next sentence already in flight, and a late tap must not cancel that turn.
+        """
+        if self.state in (TurnState.SPEAKING, TurnState.IDLE):
+            self._log_barge_in("stop")
+            await self.orch.cancel_speech(self.session)
+
     def _keepalive_due(self) -> bool:
         """IDLE and SPEAKING as before, and ANY state once no frame has flowed for a while.
 

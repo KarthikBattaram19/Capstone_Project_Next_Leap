@@ -434,3 +434,30 @@ async def test_every_barge_in_is_logged_with_its_trigger_and_no_text(live, capsy
     assert "Whitefield" not in err
     if session._turn:
         session._turn.cancel()
+
+
+async def test_the_stop_control_stops_the_reply_and_is_logged(live, capsys):
+    """D2, 2026-09-17: the renter could not interrupt by voice, because the page mutes the mic
+    for the whole reply ("I asked you to stop"). The page's Stop control sends `stop`."""
+    session, _ = live()
+    session.state = TurnState.SPEAKING
+    await session.stop()
+    assert session.orch.cancelled == 1
+    assert "barge-in trigger=stop state=speaking" in capsys.readouterr().err
+
+    # The greeting is spoken without leaving IDLE, and it can be stopped too.
+    session.state = TurnState.IDLE
+    await session.stop()
+    assert session.orch.cancelled == 2
+    assert "barge-in trigger=stop state=idle" in capsys.readouterr().err
+
+
+async def test_a_late_stop_never_cancels_the_next_turn(live):
+    # The page may still be playing buffered audio after the server has moved on to the
+    # renter's next sentence; a Stop tapped then must not cancel that new turn.
+    session, _ = live()
+    for state in (TurnState.CAPTURING, TurnState.TYPE_A, TurnState.TYPE_B):
+        session.state = state
+        await session.stop()
+        assert session.orch.cancelled == 0, state
+        assert session.state is state

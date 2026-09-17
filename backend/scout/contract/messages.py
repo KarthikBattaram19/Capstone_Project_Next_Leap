@@ -29,6 +29,13 @@ class TextIn(Msg):
     text: str
 
 
+class StopIn(Msg):
+    """The renter tapped Stop while she was speaking: stop the rest of the reply (D2,
+    2026-09-17). The mic stays muted during playback, so this is the way to interrupt."""
+
+    type: Literal["stop"] = "stop"
+
+
 class TranscriptMsg(Msg):
     type: Literal["transcript"] = "transcript"
     text: str

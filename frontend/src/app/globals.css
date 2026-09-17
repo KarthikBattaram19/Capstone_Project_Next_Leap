@@ -427,6 +427,10 @@ b {
   color: var(--text);
 }
 
+.voice__stop {
+  margin-top: 20px;
+}
+
 .voice__end {
   margin-top: 28px;
 }

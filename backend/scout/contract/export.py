@@ -25,6 +25,7 @@ from scout.contract.messages import (
     HelloIn,
     HelloOut,
     OutcomeMsg,
+    StopIn,
     TextIn,
     TranscriptMsg,
 )
@@ -38,6 +39,7 @@ class Contract(BaseModel):
     hello_in: HelloIn
     hello_out: HelloOut
     text_in: TextIn
+    stop_in: StopIn
     transcript: TranscriptMsg
     ack: AckMsg
     audio_out: AudioOutMsg

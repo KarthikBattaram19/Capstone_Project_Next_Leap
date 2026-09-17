@@ -1,5 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
+import type { StopIn } from "@/lib/viewmodels/contract";
+
 import { ContractMismatchError, WsClient } from "./ws";
 
 /** A WebSocket double that lets the test drive open / message / close by hand. */
@@ -173,5 +175,15 @@ describe("WsClient outcome frames", () => {
     const outcome = { kind: "answered", spoken: "I found 3 listings.", view_model: { notices: [] } };
     FakeSocket.instances[0].onmessage?.({ data: JSON.stringify({ type: "outcome", outcome }) });
     expect(seen).toEqual([outcome]);
+  });
+
+  it("the Stop control's frame is the contract's StopIn", async () => {
+    const c = new WsClient("ws://x/ws");
+    const p = c.connect();
+    FakeSocket.instances[0].serverOpens();
+    await p;
+    c.sendStop();
+    const frame: StopIn = JSON.parse(FakeSocket.instances[0].sent.at(-1) ?? "{}");
+    expect(frame).toEqual({ type: "stop" });
   });
 });

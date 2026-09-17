@@ -22,6 +22,8 @@ export interface WorkspaceHandlers {
   onRetry: () => void;
   onReconnect: () => void;
   onSendText: (text: string) => void;
+  /** The Stop control while Nakshatra speaks: stop playback, un-mute, tell the server (D2). */
+  onStopSpeaking: () => void;
   onEnableVoice: () => void;
   onWhy: (card: CardVM) => void;
   onBook: (listingId: string) => void;
@@ -98,6 +100,13 @@ export function Workspace({
           {orbCaption(s.listening)}
         </p>
         <TranscriptLine transcript={s.transcript} final={s.transcriptFinal} reply={s.reply} />
+        {/* The mic is muted while she speaks (so her voice never reaches speech recognition),
+            which means the renter cannot interrupt by voice; this is how they interrupt. */}
+        {s.listening === "speaking" ? (
+          <button type="button" className="btn btn--accent btn--pill voice__stop" onClick={h.onStopSpeaking}>
+            Stop speaking
+          </button>
+        ) : null}
         <button type="button" className="btn btn--ghost btn--pill voice__end" onClick={h.onEnd}>
           <EndCallIcon className="btn__icon" />
           End conversation

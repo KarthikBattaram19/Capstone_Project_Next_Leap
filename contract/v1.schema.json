@@ -1035,6 +1035,20 @@
       "title": "SnapshotVM",
       "type": "object"
     },
+    "StopIn": {
+      "additionalProperties": false,
+      "description": "The renter tapped Stop while she was speaking: stop the rest of the reply (D2,\n2026-09-17). The mic stays muted during playback, so this is the way to interrupt.",
+      "properties": {
+        "type": {
+          "const": "stop",
+          "default": "stop",
+          "title": "Type",
+          "type": "string"
+        }
+      },
+      "title": "StopIn",
+      "type": "object"
+    },
     "TextIn": {
       "additionalProperties": false,
       "properties": {
@@ -1175,6 +1189,9 @@
     "slots_response": {
       "$ref": "#/$defs/SlotsResponse"
     },
+    "stop_in": {
+      "$ref": "#/$defs/StopIn"
+    },
     "text_in": {
       "$ref": "#/$defs/TextIn"
     },
@@ -1186,6 +1203,7 @@
     "hello_in",
     "hello_out",
     "text_in",
+    "stop_in",
     "transcript",
     "ack",
     "audio_out",

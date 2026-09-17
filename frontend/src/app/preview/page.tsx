@@ -18,6 +18,7 @@ const h: WorkspaceHandlers = {
   onRetry: noop,
   onReconnect: noop,
   onSendText: noop,
+  onStopSpeaking: noop,
   onEnableVoice: noop,
   onWhy: noop,
   onBook: noop,

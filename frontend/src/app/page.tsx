@@ -293,6 +293,21 @@ export default function Page() {
 
   useEffect(() => () => stopSession(), [stopSession]);
 
+  /**
+   * The Stop control (D2, 2026-09-17): the mic stays muted during playback, so this is how the
+   * renter interrupts. Stop playing now, drop any chunks of this reply still in flight (the
+   * next `audio_out start` clears that), un-mute, and tell the server to stop sending.
+   */
+  const stopSpeaking = useCallback(() => {
+    clearTimeout(stallTimer.current);
+    clearTimeout(unmuteTimer.current);
+    stalled.current = true;
+    player.current?.stop();
+    mic.current?.unmute();
+    dispatch({ type: "speaking", on: false });
+    ws.current?.sendStop();
+  }, []);
+
   const sendText = useCallback((text: string) => {
     ws.current?.sendText(text);
     dispatch({ type: "transcript", text, final: true });
@@ -499,6 +514,7 @@ export default function Page() {
             onRetry: () => sendText(s.transcript),
             onReconnect: startSession,
             onSendText: sendText,
+            onStopSpeaking: stopSpeaking,
             onEnableVoice,
             onWhy,
             onBook,

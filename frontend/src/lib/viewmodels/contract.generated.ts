@@ -115,11 +115,12 @@ export type SlotStartIst1 = string;
 export type ListingId6 = string;
 export type Slots = SlotVM[];
 export type Spoken10 = string;
+export type Type5 = "stop";
 export type Text2 = string;
-export type Type5 = "text";
+export type Type6 = "text";
 export type Final = boolean;
 export type Text3 = string;
-export type Type6 = "transcript";
+export type Type7 = "transcript";
 
 /**
  * A root model whose fields pull every message and body into one $defs table.
@@ -138,6 +139,7 @@ export interface ScoutContractV1 {
   reschedule_request: RescheduleRequest;
   slots_request: SlotsRequest;
   slots_response: SlotsResponse;
+  stop_in: StopIn;
   text_in: TextIn;
   transcript: TranscriptMsg;
 }
@@ -323,12 +325,19 @@ export interface SlotsResponse {
   slots: Slots;
   spoken: Spoken10;
 }
+/**
+ * The renter tapped Stop while she was speaking: stop the rest of the reply (D2,
+ * 2026-09-17). The mic stays muted during playback, so this is the way to interrupt.
+ */
+export interface StopIn {
+  type?: Type5;
+}
 export interface TextIn {
   text: Text2;
-  type?: Type5;
+  type?: Type6;
 }
 export interface TranscriptMsg {
   final: Final;
   text: Text3;
-  type?: Type6;
+  type?: Type7;
 }

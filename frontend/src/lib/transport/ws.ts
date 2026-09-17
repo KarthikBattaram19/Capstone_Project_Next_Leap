@@ -1,3 +1,5 @@
+import type { StopIn } from "@/lib/viewmodels/contract";
+
 export const CONTRACT_VERSION = "1";
 
 export class ContractMismatchError extends Error {}
@@ -128,6 +130,12 @@ export class WsClient {
 
   sendText(text: string) {
     if (this.ws?.readyState === WebSocket.OPEN) this.ws.send(JSON.stringify({ type: "text", text }));
+  }
+
+  /** The Stop control: the server stops the rest of the reply (contract `stop_in`). */
+  sendStop() {
+    const frame: StopIn = { type: "stop" };
+    if (this.ws?.readyState === WebSocket.OPEN) this.ws.send(JSON.stringify(frame));
   }
 
   close() {

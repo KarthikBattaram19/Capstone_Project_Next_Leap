@@ -82,6 +82,8 @@ async def ws_endpoint(ws: WebSocket) -> None:
                 msg = json.loads(frame["text"])
                 if msg.get("type") == "text":  # typed fallback (spec §6.13)
                     await session_handler.text(msg["text"])
+                elif msg.get("type") == "stop":  # the page's Stop control (StopIn)
+                    await session_handler.stop()
             elif frame.get("type") == "websocket.disconnect":
                 break
     except WebSocketDisconnect:
