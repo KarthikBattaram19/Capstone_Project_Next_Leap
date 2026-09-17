@@ -37,31 +37,22 @@ DOMAIN_TERMS = ["BHK", "lakh", "deposit", "maintenance", "semi furnished", "full
 # which is why no voice turn could start on the first Phase 2 deploy. The limit is not
 # documented in the SDK and did not track count, characters or words cleanly (150 one-word
 # terms and 40 four-word terms both opened), so the budget below sits well inside every
-# passing point rather than at the edge.
+# passing point rather than at the edge. Since 2026-09-17 only the domain terms are sent;
+# the budget stays as a guard for anyone who adds terms.
 MAX_KEYTERMS = 60
 MAX_KEYTERM_CHARS = 900
 
 
-def build_keyterms(localities: dict[str, int] | list[str]) -> list[str]:
-    """Generated from the dataset's locality field — never typed by hand (spec §5.1).
+def build_keyterms() -> list[str]:
+    """The domain terms only — no locality names (spec §5.1, amended 2026-09-17).
 
-    Given the manifest's ``{locality: listing_count}`` the localities with the most
-    listings come first, so the budget is spent where the renter is most likely to look;
-    a plain list is taken in sorted order. The domain terms are always included.
+    Until 2026-09-17 the 54 best-populated locality names were primed as well. In conv 2
+    that day "Dommasandra" (primed) beat "Domlur" (not primed) three times: the renter said
+    Domlur and Deepgram heard "I mentioned Dommasandra." (the user's decision 1 in
+    Docs/VOICE_FIX_BATCH_2026-09-17.md). Locality names are resolved after the transcript by
+    name matching (Job1 ``_covered`` / ``_not_covered`` and the pending locality question).
     """
-    if isinstance(localities, dict):
-        ranked = sorted(localities, key=lambda name: (-localities[name], name))
-    else:
-        ranked = sorted(set(localities))
-    room = MAX_KEYTERMS - len(DOMAIN_TERMS)
-    out: list[str] = []
-    used = sum(len(t) for t in DOMAIN_TERMS)
-    for name in ranked:
-        if len(out) >= room or used + len(name) > MAX_KEYTERM_CHARS:
-            break
-        out.append(name)
-        used += len(name)
-    return out + DOMAIN_TERMS
+    return list(DOMAIN_TERMS)
 
 
 def _injected_on_connect(mode: str) -> Exception:
@@ -133,7 +124,7 @@ class DeepgramStream:
             vad_events=True,
             endpointing=self._s.deepgram_endpointing_ms,  # P3: 400, no shorter
             utterance_end_ms=self._s.utterance_end_ms,  # P3b hard stop ~1.5 s
-            keyterm=self._keyterms,  # every locality name
+            keyterm=self._keyterms,  # the domain terms (build_keyterms)
         )
         self._conn = await self._cm.__aenter__()
         self._conn.on(EventType.MESSAGE, self._on_message)

@@ -191,7 +191,8 @@ Futuristic real-estate theme. Required components:
 ## 5. Technical Architecture
 
 ### 5.1 Voice Pipeline
-- **STT:** Deepgram — **required configuration:** keyterm/keyword boosting for **every locality name in the final curated set** (Koramangala, Indiranagar, HSR Layout, Whitefield, Marathahalli, BTM Layout, and whatever else the dataset yields — the keyterm list is generated from the dataset's locality field, not hand-written) and normalization of Indian-English amounts ("35k" → 35000; "1.2 lakh" → 120000). *This is the single most likely real-world failure mode; it is a first-class requirement, not a polish item.*
+- **STT:** Deepgram — **required configuration:** keyterm boosting for the **domain terms only** (BHK, lakh, deposit, maintenance, semi furnished, fully furnished) and normalization of Indian-English amounts ("35k" → 35000; "1.2 lakh" → 120000). *This is the single most likely real-world failure mode; it is a first-class requirement, not a polish item.*
+  - **Amended 2026-09-17 (user's decision): locality names are no longer keyterms.** This section used to require boosting every locality name, generated from the dataset's locality field. Deepgram refuses the stream above ~80 terms (measured 2026-09-10), so only part of the 464 names could ever be primed. On 2026-09-17 (conversation 2) "Dommasandra", a primed locality, was heard three times when the renter meant "Domlur", which was not in the list (the 60-term budget held 54 names out of 464). Locality names are now resolved after the transcript, by name matching against the dataset (closest names offered, spellings of one place treated as one place).
 - **LLM: two models from two providers, because the two jobs have opposite requirements.** Job 1 runs on **Groq** for speed; Job 2 runs on **Anthropic's Claude Sonnet** for grounding discipline. Structured (JSON) outputs everywhere, so evals assert on fields rather than prose; `temperature=0` on Job 1. *This means two vendors and two API keys — Claude models are not served by Groq. The tradeoff is deliberate: the second key buys the model that decides whether §7.2's zero-hallucination bar is met.*
 
 | Role | Model | What it does | Why this model |
@@ -526,7 +527,7 @@ These two tracks share no dependencies and should run at the same time. Each end
 ### Phase 2 — The conversation
 
 **9.5 — Voice pipeline (Job 1)**
-- Deepgram with **keyterms generated from the dataset's locality field** and Indian-English amount normalisation; endpointing set explicitly at 400 ms with the content-aware hold (P3, P3b); turn-type routing by pattern matching before Job 1 (§5.1)
+- Deepgram with **domain-term keyterms** (locality names dropped 2026-09-17, see §5.1) and Indian-English amount normalisation; endpointing set explicitly at 400 ms with the content-aware hold (P3, P3b); turn-type routing by pattern matching before Job 1 (§5.1)
 - Job 1 structured extraction on Groq at `temperature=0`; streaming TTS starting on the first sentence (P4)
 - **Job 1 latency check against Gate L's measured numbers** — if `gpt-oss-120b` misses L1/L2, drop to a lighter Groq tier now (§5.1). Job 1 only has to emit valid JSON
 

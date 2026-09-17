@@ -96,7 +96,7 @@ All amenity/transit/POI claims come from the OpenStreetMap MCP, resolved **once 
 ## 5. Architecture
 
 ### 5.1 Voice pipeline
-- **STT — Deepgram.** Keyterm boosting for **every locality in the curated set**, generated from the dataset rather than hand-written, plus Indian-English amount normalisation ("35k" → 35000, "1.2 lakh" → 120000). This is the single most likely real-world failure mode.
+- **STT — Deepgram.** Keyterm boosting for the **domain terms only** (BHK, lakh, deposit, …) — locality names were dropped on 2026-09-17 because a primed "Dommasandra" was heard three times for an unprimed "Domlur"; names are matched after the transcript instead — plus Indian-English amount normalisation ("35k" → 35000, "1.2 lakh" → 120000). This is the single most likely real-world failure mode.
 - **LLM — two models, two providers**, because the jobs have opposite requirements:
 
 | Role | Model | Why |
@@ -212,7 +212,7 @@ Login/accounts · post-visit feedback · cross-session history · mobile app · 
 
 **Phase 2 — The conversation**
 
-- **9.5 Voice pipeline (Job 1)** — Deepgram with dataset-generated keyterms, 400 ms endpointing and the content-aware hold (P3, P3b); pattern-matched turn routing; extraction at `temperature=0`; streaming TTS. **Job 1 latency check against Gate L's numbers**; drop to a lighter Groq tier if it misses.
+- **9.5 Voice pipeline (Job 1)** — Deepgram with domain-term keyterms (§5.1), 400 ms endpointing and the content-aware hold (P3, P3b); pattern-matched turn routing; extraction at `temperature=0`; streaming TTS. **Job 1 latency check against Gate L's numbers**; drop to a lighter Groq tier if it misses.
 - **9.6 Shortlist and refinement** — filtering and edits in application code, not the LLM. **Suites A and B green.**
 - **9.7 Grounded explanation (Job 2)** — citations, gap declarations, commute labels at all three layers; the fact-led opener before Job 2's first token (P8), each Job 2 sentence spoken only once its citation resolves. **Suite C green; model ID pinned with its scores and `effort` recorded.**
 

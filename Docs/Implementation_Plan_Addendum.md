@@ -2192,6 +2192,8 @@ Run `git add backend/scout/conversation backend/tests/unit/conversation` then `g
 
 ### Task 2.3: Deepgram keyterms from the dataset, and Indian-English amount normalisation
 
+> **Amended 2026-09-17.** `build_keyterms() -> list[str]` returns the domain terms only (a copy of `DOMAIN_TERMS`); no locality names. On 2026-09-17 (conversation 2) "Dommasandra", a primed locality, was heard three times when the renter meant "Domlur", which was not in the list (the 60-term budget held 54 names out of 464). Spec §5.1 was amended in the same commit. The locality-name version below is kept as the record of what was first built; `test_keyterms.py` now asserts the domain terms only and that no manifest locality is primed.
+
 **Files:**
 - Create: `backend/scout/engines/__init__.py`, `backend/scout/engines/amounts.py`
 - Modify: `backend/scout/providers/deepgram_stt.py` (add `build_keyterms`)

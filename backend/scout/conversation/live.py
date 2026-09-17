@@ -47,7 +47,7 @@ class LiveSession:
     def _make_stt(self) -> DeepgramStream:
         return DeepgramStream(
             self.s,
-            build_keyterms(self.orch.store.manifest.localities),  # {name: listing count}
+            build_keyterms(),  # domain terms only (spec §5.1, amended 2026-09-17)
             on_interim=self._interim,
             on_final=self._final,
             on_speech_started=self._speech_started,

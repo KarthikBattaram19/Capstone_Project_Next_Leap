@@ -154,21 +154,16 @@ async def test_both_calendars_exist_are_writable_and_are_on_ist():
 
 async def test_deepgram_opens_a_stream_with_the_production_keyterm_list():
     """The check that would have caught the first Phase 2 deploy: every locality as a keyterm
-    made Deepgram refuse the socket (400) before a word was heard."""
-    import json
-    import pathlib
-
+    made Deepgram refuse the socket (400) before a word was heard. Since 2026-09-17 the
+    production list is the domain terms only (spec §5.1)."""
     from scout.providers.deepgram_stt import DeepgramStream, build_keyterms
-
-    manifest = pathlib.Path("../data/bundle/manifest.json").read_text(encoding="utf-8")
-    counts = json.loads(manifest)["localities"]
 
     async def noop(*a, **k):
         pass
 
     st = DeepgramStream(
         _S,
-        build_keyterms(counts),
+        build_keyterms(),
         on_interim=noop,
         on_final=noop,
         on_speech_started=noop,
