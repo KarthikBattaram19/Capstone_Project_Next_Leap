@@ -54,6 +54,17 @@ _DIGIT_WORDS = {"two": "2", "three": "3", "four": "4", "five": "5"}
 _DIGIT_WORDS |= {"six": "6", "seven": "7", "eight": "8", "nine": "9"}
 # Capitals and digit-words that are not a code: "2BHK", "40K", "11 AM", "the 3rd".
 _NOT_CODE = re.compile(r"^(?:\d+(?:BHK|RK|K|KM|AM|PM|ST|ND|RD|TH)|BHK|RK|PG|AM|PM|KM|SQ|FT)$")
+# Numbers that are something else, taken out before the words are read: an amount, a bedroom
+# count, a time, a date, a size. Batch review, 2026-09-17: after the code question "A 3 BHK
+# in HSR Layout under 45,000" read as the characters "345" and was asked for the code again.
+_MONTH = r"(?:jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)[a-z]*"
+_NOT_CODE_NUMBER = re.compile(
+    r"\d{1,3}(?:,\d{2,3})+|(?:₹|\brs\.?)\s*\d[\d,]*|\b\d{2,}\s*k\b|"
+    r"\b\d+(?:\.\d+)?\s*(?:lakhs?|thousand|rupees|crores?|sq|square|bhk|rk)\b|"
+    r"\b\d{1,2}(?::\d{2})?\s*(?:am|pm|a\.m\.|p\.m\.|o'?clock)|"
+    rf"\b\d{{1,2}}(?:st|nd|rd|th)?\s+(?:of\s+)?{_MONTH}\b|\b{_MONTH}\s+\d{{1,2}}(?:st|nd|rd|th)?\b",
+    re.IGNORECASE,
+)
 
 
 def spoken_code(text: str, place_words: set[str] = frozenset()) -> str:
@@ -66,7 +77,7 @@ def spoken_code(text: str, place_words: set[str] = frozenset()) -> str:
     only help in English"; "I was saying 9BRJ or 7JP." became "9BRJ isn't covered".
     """
     chars: list[str] = []
-    for tok in _TOKEN.findall(text):
+    for tok in _TOKEN.findall(_NOT_CODE_NUMBER.sub(" ", text)):
         if "'" in tok:
             continue
         if tok.lower() in _DIGIT_WORDS:

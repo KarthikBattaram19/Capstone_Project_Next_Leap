@@ -413,3 +413,28 @@ async def test_a_slot_time_is_read_before_job1_so_an_unclear_reading_cannot_swal
 
     assert isinstance(o2, NeedsInput) and o2.field == "email"
     assert orch.job1.results == [j1(intent="unclear")]
+
+
+@pytest.mark.parametrize(
+    "said",
+    [
+        "A 3 BHK in HSR Layout under 45,000",
+        "Show me a 2BHK under 25,000 rupees instead",
+        "Book the second one on 25 September at 11 AM",
+        "Actually move it to 25 September at 2 PM",
+        "Make it 1.5 lakh and 3 BHK",
+    ],
+)
+async def test_a_new_request_after_the_code_question_is_not_read_as_a_code(make, said):
+    """Batch review, 2026-09-17: the digits of an amount, a bedroom count, a date or a time
+    are not characters of a code. "A 3 BHK in HSR Layout under 45,000" read as "345" and got
+    "Please say the six characters one at a time." - and would again on every such sentence,
+    because the question stays pending."""
+    orch, s, _cal, _ = make([j1(intent="cancel"), j1(intent="goodbye")])
+    await orch.handle_text(s, "cancel my visit")
+
+    o = await orch.handle_text(s, said)
+
+    assert o.spoken != "Please say the six characters one at a time."
+    assert orch.job1.results == [], "Job 1 reads an ordinary sentence"
+    assert s.pending is None
