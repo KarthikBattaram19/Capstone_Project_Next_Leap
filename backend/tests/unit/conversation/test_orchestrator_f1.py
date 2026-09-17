@@ -199,3 +199,47 @@ async def test_a_better_listing_with_a_requirement_is_a_search(make):
     await orch.handle_text(s, "show me better listings under 30,000")
     assert len(job1.calls) == 3
     assert s.constraints.rent_max == 30000
+
+
+async def _city_readback(make, extra=()):
+    orch, s, job1 = make([BUDGET, *extra])
+    await orch.handle_text(s, SENTENCE)
+    rb = await orch.handle_text(s, "anywhere")
+    assert isinstance(rb, NeedsInput) and rb.field == "constraints_readback"
+    return orch, s, job1, rb
+
+
+async def test_better_listings_during_the_readback_says_the_order_and_asks_again(make):
+    """Production replay (2026-09-17, after 3c69bbf): the readback "rent up to ₹1,00,000;
+    anywhere in Bengaluru. Is that right?" was answered "Are there not any better listings?"
+    and she said "Sorry, I didn't follow that." The order is said, the readback is asked
+    again with its buttons, and "yes" still searches."""
+    orch, s, job1, rb = await _city_readback(make, extra=[j1(intent="confirm_yes")])
+    o = await orch.handle_text(s, "Are there not any better listings?")
+    assert isinstance(o, NeedsInput), f"got {o.kind}: {o.spoken}"
+    assert "didn't follow" not in o.spoken
+    assert "no rating or review" in o.spoken and "cheapest first" in o.spoken, o.spoken
+    assert "largest first" in o.spoken and "nearest the metro" in o.spoken, o.spoken
+    assert o.spoken.endswith(rb.question), o.spoken
+    assert o.field == "constraints_readback" and o.options == ["yes", "no"]
+    assert o.question == o.spoken
+    assert isinstance(s.pending, ConfirmConstraints)
+    assert len(job1.calls) == 1  # read in code, not by Job 1
+    assert s.shortlist.is_empty()
+
+    done = await orch.handle_text(s, "yes")
+    assert isinstance(done, Answered), f"got {done.kind}: {done.spoken}"
+    assert "across Bengaluru, cheapest first" in done.spoken
+
+
+async def test_an_unclear_turn_during_the_readback_keeps_it_pending(make):
+    """Any other off-script turn while the readback waits leaves it waiting: "yes" after it
+    still runs the search."""
+    orch, s, _, _ = await _city_readback(
+        make, extra=[j1(intent="unclear"), j1(intent="confirm_yes")]
+    )
+    o = await orch.handle_text(s, "hmm what was that")
+    assert isinstance(o, NeedsInput) and o.field == "unclear"
+    assert isinstance(s.pending, ConfirmConstraints)
+    done = await orch.handle_text(s, "yes")
+    assert isinstance(done, Answered), f"got {done.kind}: {done.spoken}"

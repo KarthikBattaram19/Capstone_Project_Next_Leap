@@ -722,12 +722,7 @@ class TurnOrchestrator:
                 return NeedsInput(question=q, field="locality", spoken=q)
             # First shortlist: read everything back and wait for a yes (spec §2.1)
             session.pending = ConfirmConstraints()
-            parts = c.readback() + (["anywhere in Bengaluru"] if whole_city else [])
-            rb = "; ".join(parts)
-            q = CONVERSATIONAL_REPLIES["readback"].format(readback=rb)
-            return NeedsInput(
-                question=q, field="constraints_readback", options=["yes", "no"], spoken=q
-            )
+            return self._readback(session)
 
         # Refinement on an existing shortlist: apply immediately, preserving order (spec §2.2)
         return await self._shortlist_turn(session)
@@ -738,15 +733,34 @@ class TurnOrchestrator:
         """F1: "largest first" re-orders the shortlist; "any better listings?" says how it is
         ordered and what else it can be ordered by. Read in code, before either lane: "nearest
         metro first" would otherwise be explained, and "better" is not a requirement."""
-        if session.shortlist.is_empty() or session.pending is not None:
+        readback = session.shortlist.is_empty() and isinstance(session.pending, ConfirmConstraints)
+        if not readback and (session.shortlist.is_empty() or session.pending is not None):
             return None
         if re.search(r"\d", text) or mentions_requirement(text) or self._names_place(text):
             return None  # "better ones under 30,000 in HSR" is a search
+        if readback:
+            # Production replay (2026-09-17): "Are there not any better listings?" while the
+            # readback waited for a yes got "Sorry, I didn't follow that." The order is said
+            # and the readback asked again; it stays pending, so "yes" still searches.
+            if not _BETTER.search(text):
+                return None
+            said, _ = self._better_listings(session)
+            again = self._readback(session)
+            q = f"{said} {again.question}"
+            return again.model_copy(update={"question": q, "spoken": q})
         asked = next((k for k, rx in _ORDER_WORDS.items() if rx.search(text)), None)
         if asked is not None:
             return self._reordered(session, asked)
         if not _BETTER.search(text):
             return None
+        q, others = self._better_listings(session)
+        return NeedsInput(
+            question=q, field="order", options=[_ORDER_BUTTON[k] for k in others], spoken=q
+        )
+
+    @staticmethod
+    def _better_listings(session: Session) -> tuple[str, list[str]]:
+        """F1: why none is "better", the order the shortlist is in, and the other orders."""
         kinds = ["cheapest", "largest", "metro"] + (
             ["commute"] if session.constraints.commute else []
         )
@@ -756,9 +770,16 @@ class TurnOrchestrator:
         q = CONVERSATIONAL_REPLIES["better_listings"].format(
             order=_ORDER_SAID[session.order_by], offers=said
         )
-        return NeedsInput(
-            question=q, field="order", options=[_ORDER_BUTTON[k] for k in others], spoken=q
-        )
+        return q, others
+
+    @staticmethod
+    def _readback(session: Session) -> NeedsInput:
+        """The §2.1 readback before the first shortlist, waiting for a yes."""
+        c = session.constraints
+        whole_city = not c.localities and c.commute is None
+        parts = c.readback() + (["anywhere in Bengaluru"] if whole_city else [])
+        q = CONVERSATIONAL_REPLIES["readback"].format(readback="; ".join(parts))
+        return NeedsInput(question=q, field="constraints_readback", options=["yes", "no"], spoken=q)
 
     def _names_place(self, text: str) -> bool:
         said = squash(text)
