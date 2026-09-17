@@ -8,6 +8,7 @@ from datetime import datetime, timedelta
 
 from scout.api.http import NOT_FOUND_TELL
 from scout.booking.service import (
+    ALPHABET,
     AlreadyStarted,
     Booked,
     Cancelled,
@@ -22,6 +23,7 @@ from scout.contract.outcome import Answered, NeedsInput, TurnOutcome
 from scout.conversation.booking_flow import BOOKING_INTENTS
 from scout.conversation.job1 import Job1Result
 from scout.conversation.session import (
+    AwaitCode,
     AwaitEmail,
     AwaitSlotChoice,
     ConfirmCancel,
@@ -45,6 +47,38 @@ def _asks_to_cancel(res: Job1Result, text: str) -> bool:
     if len((res.code or "").upper().replace(" ", "")) == 6:
         return True
     return bool(_CANCEL_WORD.search(text) and _BOOKING_WORD.search(text))
+
+
+_TOKEN = re.compile(r"[A-Za-z0-9']+")
+_DIGIT_WORDS = {"two": "2", "three": "3", "four": "4", "five": "5"}
+_DIGIT_WORDS |= {"six": "6", "seven": "7", "eight": "8", "nine": "9"}
+# Capitals and digit-words that are not a code: "2BHK", "40K", "11 AM", "the 3rd".
+_NOT_CODE = re.compile(r"^(?:\d+(?:BHK|RK|K|KM|AM|PM|ST|ND|RD|TH)|BHK|RK|PG|AM|PM|KM|SQ|FT)$")
+
+
+def spoken_code(text: str, place_words: set[str] = frozenset()) -> str:
+    """The characters of a confirmation code in what was said, joined; "" when none.
+
+    A word counts when every character is in the code alphabet and it has a digit, or is
+    written in capitals ("9VR7JP", "9 V R 7 J P"), or is a digit said as a word ("nine").
+    Capitals that name a place ("HSR", "BTM") and "2BHK"-like words do not. Production,
+    2026-09-17: "9VR7JP." after the code question was read by Job 1 cold and answered "I can
+    only help in English"; "I was saying 9BRJ or 7JP." became "9BRJ isn't covered".
+    """
+    chars: list[str] = []
+    for tok in _TOKEN.findall(text):
+        if "'" in tok:
+            continue
+        if tok.lower() in _DIGIT_WORDS:
+            chars.append(_DIGIT_WORDS[tok.lower()])
+            continue
+        up = tok.upper()
+        if len(up) > 6 or any(c not in ALPHABET for c in up) or _NOT_CODE.match(up):
+            continue
+        has_digit = any(c.isdigit() for c in up)
+        if has_digit or (tok.isupper() and up not in place_words):
+            chars.append(up)
+    return "".join(chars)
 
 
 _WORD_NUMBERS = {
@@ -147,6 +181,15 @@ class VoiceBookingFlow:
         self.vm = vm
         self.sender = sender
         self._view = orchestrator_view
+
+    def names_offered_slot(self, session: Session, text: str) -> bool:
+        """Whether a pending slot question is answered by a day or time in the words, read
+        before Job 1 so that Job 1's reading of "11 am" (unclear, a goodbye) cannot take the
+        turn. `handle` then matches the time itself. "The second one" still goes to Job 1."""
+        p = session.pending
+        return isinstance(p, AwaitSlotChoice) and (
+            match_offered(text, p.slots, self.booking.now()) is not None
+        )
 
     async def handle(self, session: Session, res: Job1Result, text: str) -> TurnOutcome | None:
         p = session.pending
@@ -283,6 +326,7 @@ class VoiceBookingFlow:
             session.reschedule_code = None
             code = (res.code or "").upper().replace(" ", "")
             if len(code) != 6:
+                session.pending = AwaitCode("cancel")
                 return NeedsInput(
                     question="What's the six-character confirmation code?",
                     field="code",
@@ -304,6 +348,7 @@ class VoiceBookingFlow:
         if res.intent == "reschedule":
             code = (res.code or "").upper().replace(" ", "")
             if len(code) != 6:
+                session.pending = AwaitCode("reschedule")
                 return NeedsInput(
                     question="What's the confirmation code?",
                     field="code",

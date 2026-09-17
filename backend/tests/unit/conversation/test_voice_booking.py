@@ -344,3 +344,72 @@ def test_match_offered_reads_days_and_leaves_distances_and_budgets_alone():
     assert match_offered("September 2nd at eleven a.m.", offered, NOW) == offered[1]
     for not_a_time in ("anything at 5 km from the metro", "at 40k please", "the first one", ""):
         assert match_offered(not_a_time, offered, NOW) is None
+
+
+# --- B1 (voice fix batch 2026-09-17): the answer to "What's the code?" is read in code ---
+
+
+async def _booked_code(orch, s):
+    await _drive_to_email_confirm(orch, s)
+    return (await orch.handle_text(s, "yes")).view_model.booking.code
+
+
+@pytest.mark.parametrize("shape", ["{c}.", "{spaced}", "It's {c}", "the code is {c} please"])
+async def test_a_code_said_after_we_asked_for_it_continues_the_cancel(make, shape):
+    """Production 2026-09-17 16:45 IST: code question -> "9VR7JP." -> "I can only help in
+    English". Job 1 is not asked: the code is read from the words."""
+    orch, s, _cal, _ = make(BOOK_SCRIPT + [j1(intent="cancel")])
+    code = await _booked_code(orch, s)
+    o = await orch.handle_text(s, "cancel my visit")
+    assert isinstance(o, NeedsInput) and o.field == "code"
+
+    said = shape.format(c=code, spaced=" ".join(code))
+    o2 = await orch.handle_text(s, said)
+
+    assert isinstance(o2, NeedsInput) and o2.field == "cancel_confirm", o2
+    assert "Cancel it?" in o2.spoken
+    assert orch.job1.results == []
+
+
+async def test_a_code_said_after_we_asked_for_it_continues_the_reschedule(make):
+    orch, s, _cal, _ = make(BOOK_SCRIPT + [j1(intent="reschedule")])
+    code = await _booked_code(orch, s)
+    await orch.handle_text(s, "I want to move my visit")
+
+    o = await orch.handle_text(s, f"{code}.")
+
+    assert isinstance(o, NeedsInput) and o.field == "slot"
+    assert s.reschedule_code == code
+
+
+@pytest.mark.parametrize("said", ["I was saying 9BRJ or 7JP.", "9VR7", "9 V R 7 J P Q"])
+async def test_code_like_words_that_do_not_make_six_ask_for_the_characters(make, said):
+    orch, s, _cal, _ = make([j1(intent="cancel")])
+    await orch.handle_text(s, "cancel my visit")
+
+    o = await orch.handle_text(s, said)
+
+    assert isinstance(o, NeedsInput) and o.field == "code"
+    assert o.spoken == "Please say the six characters one at a time."
+    assert "isn't covered" not in o.spoken and "English" not in o.spoken
+    assert orch.job1.results == []
+
+
+async def test_no_code_at_all_is_an_ordinary_sentence_and_drops_the_question(make):
+    orch, s, _cal, _ = make([j1(intent="cancel"), j1(intent="goodbye")])
+    await orch.handle_text(s, "cancel my visit")
+
+    o = await orch.handle_text(s, "Okay, I don't have it, bye.")
+
+    assert "bye" in o.spoken.lower()
+    assert s.pending is None and orch.job1.results == []
+
+
+async def test_a_slot_time_is_read_before_job1_so_an_unclear_reading_cannot_swallow_it(make):
+    orch, s, _cal, _ = make([j1(intent="book", reference=2), j1(intent="unclear")])
+    o1 = await orch.handle_text(s, "book the second one")
+
+    o2 = await orch.handle_text(s, o1.options[1])
+
+    assert isinstance(o2, NeedsInput) and o2.field == "email"
+    assert orch.job1.results == [j1(intent="unclear")]

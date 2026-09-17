@@ -23,7 +23,7 @@ class BookingNotWired:
             res.intent in BOOKING_INTENTS
             or res.slot_choice is not None
             or session.pending.__class__.__name__.startswith(
-                ("Await", "ConfirmEmail", "ConfirmCancel")
+                ("AwaitSlot", "AwaitEmail", "AwaitCode", "ConfirmEmail", "ConfirmCancel")
             )
         ):
             return Failed(

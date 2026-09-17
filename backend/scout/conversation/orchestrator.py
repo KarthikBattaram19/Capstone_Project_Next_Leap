@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 import asyncio
+import difflib
+import re
 import sys
 from collections.abc import Callable
 
@@ -12,10 +14,18 @@ from scout.contract.viewmodels import AnsweredViewModel
 from scout.conversation.booking_flow import BookingFlow, BookingNotWired
 from scout.conversation.job1 import Job1, Job1Down, Job1Result
 from scout.conversation.router import classify_turn, normalise_ordinals, parse_ordinal
-from scout.conversation.session import ConfirmConstraints, ConfirmHeard, ConfirmLocality, Session
+from scout.conversation.session import (
+    AwaitCode,
+    AwaitLocalityChoice,
+    ConfirmConstraints,
+    ConfirmHeard,
+    ConfirmLocality,
+    Session,
+)
 from scout.conversation.speaker import Speaker, split_sentences
+from scout.conversation.voice_booking import spoken_code
 from scout.domain.constraints import ConstraintEdit, ConstraintSet
-from scout.domain.locality_names import one_per_place
+from scout.domain.locality_names import one_per_place, squash, variant_key
 from scout.domain.money import rupees
 from scout.domain.shortlist import Shortlist
 from scout.engines import shortlist as engine
@@ -70,6 +80,12 @@ CONVERSATIONAL_REPLIES: dict[str, str] = {
     # A5: a close, never a cancel. Nothing booked is touched.
     "goodbye": "Thank you for talking with me — goodbye, and good luck with the flat hunt.",
     "locality_in_english": "Okay. Which locality would you like? Please say it in English.",
+    # B1: a bare yes or no to "Did you mean A, B or C?" names none of them.
+    "which_of_these": "Which one do you mean — {names}?",
+    # B1: code-like words that do not make a six-character code.
+    "code_again": "Please say the six characters one at a time.",
+    # B3: the last locality was removed, or none of the names offered was the one.
+    "which_locality": "Which locality would you like instead?",
     "no_constraints": (
         "Tell me a budget and a locality to start — for example, 'a 2BHK in Koramangala "
         "under 35,000'."
@@ -120,6 +136,27 @@ def _wanted(c: ConstraintSet) -> str:
     if c.localities:
         words.append("in " + " or ".join(one_per_place(c.localities)))
     return " ".join(words)
+
+
+_BARE_YES = re.compile(
+    r"^\W*(?:yes|yeah|yep|yup|ya|sure|ok(?:ay)?|correct|right|that'?s right|haan)\W*$",
+    re.IGNORECASE,
+)
+_BARE_NO = re.compile(r"^\W*(?:no|nope|nah|not that)\W*$", re.IGNORECASE)
+_NONE_OF_THEM = re.compile(
+    r"^\W*(?:no\W*)?(?:neither|none)(?: of (?:them|those|these))?\W*$", re.IGNORECASE
+)
+_NOT = re.compile(r"\bnot\b|n't\b", re.IGNORECASE)
+_BOTH = re.compile(r"\b(?:both|all of them|all three|any of them)\b", re.IGNORECASE)
+_BARE_ORDINAL = {"first": 1, "second": 2, "third": 3, "last": -1}
+_BARE_ORDINAL |= {f"the {k}": v for k, v in _BARE_ORDINAL.items()}
+
+
+def _result(intent: str, **fields) -> Job1Result:
+    """What Job 1 would have returned, built in code for an answer read before Job 1 (B1)."""
+    base = {"edits": [], "ambiguities": [], "reference": None, "email": None, "code": None}
+    base["slot_choice"] = None
+    return Job1Result(intent=intent, **(base | fields))
 
 
 def _plain(v: object) -> str:
@@ -360,15 +397,23 @@ class TurnOrchestrator:
         return out
 
     async def _lane_a(self, session: Session, text: str) -> TurnOutcome:
-        try:
-            res: Job1Result = await self.job1.extract(text, session.constraints)
-        except Job1Down:
-            return Failed(
-                capability="understanding",
-                tell_renter="I didn't catch that — one moment, please say it again.",
-                retry_worth_it=True,
-                spoken="I didn't catch that. Could you say it again?",
-            )
+        # B1: an answer to a question she was just asked is read in code, before Job 1,
+        # which is not told what was asked and read "The 2nd 1, T C" and "9VR7JP." cold.
+        answered = self._answer_to_pending(session, text)
+        if isinstance(answered, NeedsInput):
+            return answered
+        if answered is not None:
+            res: Job1Result = answered
+        else:
+            try:
+                res = await self.job1.extract(text, session.constraints)
+            except Job1Down:
+                return Failed(
+                    capability="understanding",
+                    tell_renter="I didn't catch that — one moment, please say it again.",
+                    retry_worth_it=True,
+                    spoken="I didn't catch that. Could you say it again?",
+                )
 
         if res.intent == "out_of_scope":
             return self._say(session, CONVERSATIONAL_REPLIES["out_of_scope"])
@@ -420,6 +465,8 @@ class TurnOrchestrator:
             if session.clarifying_asked < self.settings.max_clarifying_questions:
                 session.clarifying_asked += 1
                 a = res.ambiguities[0]
+                if a.field == "locality" and a.options:
+                    session.pending = AwaitLocalityChoice(options=list(a.options), heard=a.heard)
                 return NeedsInput(
                     question=a.question, field=a.field, options=a.options, spoken=a.question
                 )
@@ -470,15 +517,28 @@ class TurnOrchestrator:
 
         if res.intent == "confirm_no" and isinstance(session.pending, ConfirmConstraints):
             session.pending = None
-            q = CONVERSATIONAL_REPLIES["what_should_i_change"]
-            return NeedsInput(question=q, field="constraints", spoken=q)
+            if not res.edits:
+                q = CONVERSATIONAL_REPLIES["what_should_i_change"]
+                return NeedsInput(question=q, field="constraints", spoken=q)
+            # B2: "No. I mentioned Koramangala." carries its own correction: apply it and
+            # read back again below, rather than asking what to change.
 
         if res.edits:
             applied = self._applied(session, res.edits)
             if isinstance(applied, NeedsInput):
                 session.clarifying_asked += 1
                 return applied
+            lost_place = (
+                bool(session.constraints.localities)
+                and not applied.localities
+                and any(e.field == "localities" and e.op == "remove" for e in res.edits)
+            )
             session.constraints = applied
+            # B3: taking away the only locality is not a request to search the whole city.
+            if lost_place and session.clarifying_asked < self.settings.max_clarifying_questions:
+                session.clarifying_asked += 1
+                session.pending = None
+                return self._which_locality()
 
         if session.constraints.is_empty():
             q = CONVERSATIONAL_REPLIES["no_constraints"]
@@ -518,6 +578,89 @@ class TurnOrchestrator:
                 question=applied.question, field=applied.field, spoken=applied.question
             )
         return applied
+
+    def _answer_to_pending(self, session: Session, text: str) -> Job1Result | NeedsInput | None:
+        """What the words alone answer to the question pending, standing in for Job 1's
+        result; a question to ask again; or None to run Job 1 as usual."""
+        p = session.pending
+        if isinstance(p, AwaitLocalityChoice):
+            return self._locality_choice(session, p, text)
+        if isinstance(p, AwaitCode):
+            place_words = {w.upper() for loc in self.store.localities for w in loc.split()}
+            code = spoken_code(text, place_words)
+            if len(code) == 6:
+                session.pending = None
+                return _result(p.action, code=code)
+            if len(code) >= 3:
+                q = CONVERSATIONAL_REPLIES["code_again"]
+                return NeedsInput(question=q, field="code", spoken=q)
+            session.pending = None  # not an answer: an ordinary sentence
+            return None
+        names_slot = getattr(self.booking_flow, "names_offered_slot", None)
+        if names_slot is not None and names_slot(session, text):
+            return _result("set_preferences")  # the booking flow reads the time from the words
+        return None
+
+    def _locality_choice(
+        self, session: Session, p: AwaitLocalityChoice, text: str
+    ) -> Job1Result | NeedsInput | None:
+        """The names offered that the words pick: by name (spaces and dots ignored, or a
+        close spelling), "both", "the second one", or a bare yes to a single name."""
+        options = p.options
+        said = squash(text)
+        if _NOT.search(text):  # "not TC Palya" names a place to leave out: Job 1 reads it
+            session.pending = None
+            return None
+        chosen = [o for o in options if squash(o) and squash(o) in said]
+        if not chosen:
+            words = re.findall(r"[a-z0-9]+", text.lower())
+            windows = {"".join(words[i : i + k]) for k in (1, 2, 3) for i in range(len(words))}
+            by_squash = {squash(o): o for o in options}
+            close = {
+                by_squash[m]
+                for w in windows
+                if len(w) >= 3
+                for m in difflib.get_close_matches(w, by_squash, 1, 0.8)
+            }
+            chosen = [o for o in options if o in close]
+        if not chosen and _BOTH.search(text):
+            chosen = list(options)
+        if not chosen:
+            n = parse_ordinal(text) or _BARE_ORDINAL.get(text.strip(" .!?,").lower())
+            if n == -1:
+                n = len(options)
+            if n is not None and 1 <= n <= len(options):
+                chosen = [options[n - 1]]
+        if not chosen and _BARE_YES.match(text) and len(options) == 1:
+            chosen = list(options)
+        if chosen:
+            session.pending = None
+            residue = said
+            for o in chosen:
+                residue = residue.replace(squash(o), "")
+            if re.search(r"\d", residue) or len(text.split()) > 8:
+                return None  # more than a choice ("Koramangala, under 40,000"): Job 1 reads it
+            covered = self.store.localities
+            names = [  # C1: every spelling of the place chosen
+                loc
+                for o in chosen
+                for loc in ([n for n in covered if variant_key(n) == variant_key(o)] or [o])
+            ]
+            edits = [ConstraintEdit("localities", "add", n) for n in dict.fromkeys(names)]
+            return _result("set_preferences", edits=edits)
+        if len(options) > 1 and (_BARE_YES.match(text) or _BARE_NO.match(text)):
+            names = ", ".join(options[:-1]) + f" or {options[-1]}"
+            q = CONVERSATIONAL_REPLIES["which_of_these"].format(names=names)
+            return NeedsInput(question=q, field="locality", options=list(options), spoken=q)
+        session.pending = None
+        if _BARE_NO.match(text) or _NONE_OF_THEM.match(text):
+            return self._which_locality()
+        return None
+
+    @staticmethod
+    def _which_locality() -> NeedsInput:
+        q = CONVERSATIONAL_REPLIES["which_locality"]
+        return NeedsInput(question=q, field="locality", spoken=q)
 
     @staticmethod
     def _not_followed() -> NeedsInput:

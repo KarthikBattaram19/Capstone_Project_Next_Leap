@@ -619,3 +619,186 @@ async def test_replay_tcpalya_is_read_back_as_tc_palya_with_no_question(make):
     assert isinstance(o, NeedsInput) and o.field == "constraints_readback", o
     assert "in TC Palya;" in o.question and "T.C Palya" not in o.question, o.question
     assert set(s.constraints.localities) == {"T.C Palya", "TC Palya"}
+
+
+# --- B1, B2, B3 (voice fix batch 2026-09-17): remembering her own questions ---
+
+TC_OPTIONS = ["T.C Palya", "TC Palya", "S.G Palya"]
+
+
+def _did_you_mean(options, heard="TCPalya"):
+    from scout.conversation.job1 import Ambiguity
+
+    names = ", ".join(options[:-1]) + f" or {options[-1]}" if len(options) > 1 else options[0]
+    return Ambiguity(
+        field="locality",
+        heard=heard,
+        question=f"{heard} isn't covered. Did you mean {names}?",
+        options=list(options),
+    )
+
+
+def _with_places(orch, *names):
+    for n in names:
+        orch.store.manifest.localities[n] = 1
+
+
+async def _asked_which(make, options, *later, first_edits=()):
+    orch, s = make(
+        [
+            j1(
+                edits=[ConstraintEdit("bhk_type", "set", "2BHK"), *first_edits],
+                ambiguities=[_did_you_mean(options)],
+            ),
+            *later,
+        ]
+    )
+    _with_places(orch, "T.C Palya", "TC Palya", "S.G Palya")
+    o = await orch.handle_text(s, "2 BHK in TCPalya")
+    assert isinstance(o, NeedsInput) and o.field == "locality" and o.options == list(options)
+    return orch, s
+
+
+@pytest.mark.parametrize("said", ["The 2nd 1, T C", "the second one", "TC Palya", "T C Palya."])
+async def test_an_answer_to_did_you_mean_picks_from_the_names_offered(make, said):
+    """B1, production 2026-09-17: "The 2nd 1, T C" after "Did you mean T.C Palya, TC Palya or
+    S.G Palya?" got "Which one do you mean?"."""
+    orch, s = await _asked_which(make, TC_OPTIONS)
+    asked = s.clarifying_asked
+
+    o = await orch.handle_text(s, said)
+
+    assert isinstance(o, NeedsInput) and o.field == "constraints_readback", o
+    assert "in TC Palya;" in o.question and "2BHK" in o.question, o.question
+    assert set(s.constraints.localities) == {"T.C Palya", "TC Palya"}
+    assert orch.job1.results == [], "Job 1 was not needed to read an answer to our own question"
+    assert s.clarifying_asked == asked
+
+
+async def test_a_name_that_was_not_offered_is_read_by_job1_as_usual(make):
+    """B1: "I mentioned Dommasandra." after "Did you mean Domluru or Domlur?" matches no offer,
+    so it is a sentence like any other; the pending question is dropped."""
+    orch, s = await _asked_which(
+        make,
+        ["Domluru", "Domlur"],
+        j1(edits=[ConstraintEdit("localities", "add", "Dommasandra")]),
+    )
+
+    o = await orch.handle_text(s, "I mentioned Dommasandra.")
+
+    assert orch.job1.results == []
+    assert s.constraints.localities == ("Dommasandra",)
+    assert isinstance(o, NeedsInput) and o.field == "constraints_readback"
+
+
+@pytest.mark.parametrize("said", ["yes", "Yes.", "no"])
+async def test_a_bare_yes_or_no_to_several_names_asks_again_with_the_same_names(make, said):
+    orch, s = await _asked_which(make, TC_OPTIONS)
+
+    o = await orch.handle_text(s, said)
+
+    assert isinstance(o, NeedsInput) and o.field == "locality"
+    assert o.options == TC_OPTIONS
+    assert all(n in o.spoken for n in TC_OPTIONS)
+    assert not s.constraints.localities
+
+
+async def test_a_bare_yes_to_one_name_takes_it(make):
+    orch, s = await _asked_which(make, ["TC Palya"])
+
+    o = await orch.handle_text(s, "yes")
+
+    assert isinstance(o, NeedsInput) and o.field == "constraints_readback"
+    assert "TC Palya" in o.question and s.pending is not None
+
+
+async def test_the_pending_choice_is_dropped_once_answered(make):
+    orch, s = await _asked_which(make, TC_OPTIONS, j1(intent="confirm_yes"))
+    await orch.handle_text(s, "the second one")
+
+    o = await orch.handle_text(s, "yes")
+
+    assert isinstance(o, (Answered, Empty))
+    assert s.pending is None
+
+
+async def test_no_with_a_correction_to_the_readback_applies_it_and_reads_back_again(make):
+    """B2, production 2026-09-17: "No. I mentioned Dommasandra." -> "What should I change?"."""
+    orch, s = make(
+        [
+            j1(edits=[ConstraintEdit("localities", "add", "HSR Layout")]),
+            j1(
+                intent="confirm_no",
+                edits=[
+                    ConstraintEdit("localities", "remove", "HSR Layout"),
+                    ConstraintEdit("localities", "add", "Koramangala"),
+                ],
+            ),
+        ]
+    )
+    await orch.handle_text(s, "in HSR Layout")
+
+    o = await orch.handle_text(s, "No. I mentioned Koramangala.")
+
+    assert isinstance(o, NeedsInput) and o.field == "constraints_readback", o
+    assert "Koramangala" in o.question and "HSR" not in o.question
+    assert s.constraints.localities == ("Koramangala",)
+
+
+async def test_a_bare_no_to_the_readback_still_asks_what_to_change(make):
+    orch, s = make(
+        [j1(edits=[ConstraintEdit("localities", "add", "HSR Layout")]), j1(intent="confirm_no")]
+    )
+    await orch.handle_text(s, "in HSR Layout")
+    o = await orch.handle_text(s, "no")
+    assert isinstance(o, NeedsInput) and o.question == "What should I change?"
+
+
+async def test_removing_the_only_locality_asks_which_locality(make):
+    """B3, production 2026-09-17: "Not Domesandra." -> "Just to confirm — a 3BHK; rent up to
+    ₹70,000." — a whole-city search she never asked for."""
+    orch, s = make(
+        [
+            j1(
+                edits=[
+                    ConstraintEdit("localities", "add", "HSR Layout"),
+                    ConstraintEdit("bhk_type", "set", "3BHK"),
+                ]
+            ),
+            j1(edits=[ConstraintEdit("localities", "remove", "HSR Layout")]),
+        ]
+    )
+    await orch.handle_text(s, "3 BHK in HSR Layout")
+
+    o = await orch.handle_text(s, "Not HSR Layout.")
+
+    assert isinstance(o, NeedsInput) and o.field == "locality", o
+    assert "locality" in o.spoken.lower() and "Just to confirm" not in o.spoken
+    assert s.clarifying_asked == 1
+    assert not s.constraints.localities and s.constraints.bhk_type is not None
+    assert s.pending is None
+
+
+@pytest.mark.parametrize(
+    "said", ["TC Palya, and make it under 40,000", "Not TC Palya, S.G Palya is wrong too."]
+)
+async def test_more_than_a_choice_is_left_to_job1(make, said):
+    orch, s = await _asked_which(make, TC_OPTIONS, j1(edits=[]))
+
+    await orch.handle_text(s, said)
+
+    assert orch.job1.results == [], "Job 1 was skipped for a sentence that says more"
+    assert type(s.pending).__name__ != "AwaitLocalityChoice"
+
+
+async def test_clearing_every_locality_on_purpose_is_not_asked_about(make):
+    """B3 is about removing the last place; "anywhere" (a clear) belongs to F1."""
+    orch, s = make(
+        [
+            j1(edits=[ConstraintEdit("localities", "add", "HSR Layout")]),
+            j1(edits=[ConstraintEdit("localities", "clear", None)]),
+        ]
+    )
+    await orch.handle_text(s, "in HSR Layout")
+    o = await orch.handle_text(s, "anywhere is fine")
+    assert not (isinstance(o, NeedsInput) and o.field == "locality")

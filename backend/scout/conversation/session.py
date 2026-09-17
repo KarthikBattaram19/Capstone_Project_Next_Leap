@@ -35,6 +35,24 @@ class ConfirmLocality:
 
 
 @dataclass
+class AwaitLocalityChoice:
+    """ "Did you mean A, B or C?" was asked (spec §6.24). The answer is matched against
+    `options` in code before Job 1, which would otherwise read "the 2nd one" or a name cold
+    (B1, production 2026-09-17)."""
+
+    options: list[str]
+    heard: str
+
+
+@dataclass
+class AwaitCode:
+    """ "What's the six-character confirmation code?" was asked for `action` ("cancel" or
+    "reschedule"). The code is read from the words in code before Job 1 (B1)."""
+
+    action: str
+
+
+@dataclass
 class AwaitSlotChoice:
     listing_id: str
     slots: list  # list[Slot] (Task 3.1)
@@ -62,6 +80,8 @@ PendingAction = (
     ConfirmConstraints
     | ConfirmHeard
     | ConfirmLocality
+    | AwaitLocalityChoice
+    | AwaitCode
     | AwaitSlotChoice
     | AwaitEmail
     | ConfirmEmail
