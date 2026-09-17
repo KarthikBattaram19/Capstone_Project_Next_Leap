@@ -353,6 +353,14 @@ class TurnOrchestrator:
 
         # Clarifying questions — ambiguities from Job 1 (spec §6.26, §6.24, §6.6)
         if res.ambiguities:
+            # What the sentence said clearly is kept while the rest is asked about. Production,
+            # 2026-09-17: "2 BHK in Khyakpuram" asked which locality and dropped the 2 BHK.
+            # Job 1 has already left the unclear field out of `edits`. If the clear part would
+            # itself need a question, it waits: a second question would bury the first.
+            if res.edits:
+                applied = self._applied(session, res.edits)
+                if not isinstance(applied, NeedsInput):
+                    session.constraints = applied
             if session.clarifying_asked < self.settings.max_clarifying_questions:
                 session.clarifying_asked += 1
                 a = res.ambiguities[0]
@@ -410,24 +418,10 @@ class TurnOrchestrator:
             return NeedsInput(question=q, field="constraints", spoken=q)
 
         if res.edits:
-            resolved: list[ConstraintEdit] = []
-            for e in res.edits:
-                if e.field == "commute" and e.op == "set":
-                    point = self.store.place(str(e.value))  # build-time table, no geocoding (A3)
-                    if point is None:
-                        session.clarifying_asked += 1
-                        known = ", ".join(self.store.place_names()[:6])
-                        q = f"Where do you commute to? I know {known}."
-                        return NeedsInput(question=q, field="commute", spoken=q)
-                    e = ConstraintEdit("commute", "set", point)
-                resolved.append(e)
-            res.edits = resolved
-            applied = apply_edits(session.constraints, res.edits)
-            if isinstance(applied, Contradiction):
+            applied = self._applied(session, res.edits)
+            if isinstance(applied, NeedsInput):
                 session.clarifying_asked += 1
-                return NeedsInput(
-                    question=applied.question, field=applied.field, spoken=applied.question
-                )
+                return applied
             session.constraints = applied
 
         if session.constraints.is_empty():
@@ -449,6 +443,25 @@ class TurnOrchestrator:
         return await self._shortlist_turn(session)
 
     # ---- helpers
+
+    def _applied(self, session: Session, edits: list[ConstraintEdit]):
+        """The constraints with `edits` applied, or the question that has to come first."""
+        resolved: list[ConstraintEdit] = []
+        for e in edits:
+            if e.field == "commute" and e.op == "set":
+                point = self.store.place(str(e.value))  # build-time table, no geocoding (A3)
+                if point is None:
+                    known = ", ".join(self.store.place_names()[:6])
+                    q = f"Where do you commute to? I know {known}."
+                    return NeedsInput(question=q, field="commute", spoken=q)
+                e = ConstraintEdit("commute", "set", point)
+            resolved.append(e)
+        applied = apply_edits(session.constraints, resolved)
+        if isinstance(applied, Contradiction):
+            return NeedsInput(
+                question=applied.question, field=applied.field, spoken=applied.question
+            )
+        return applied
 
     def _say(self, session: Session, sentence: str) -> Answered:
         return Answered(view_model=self._view(session, notices=[sentence]), spoken=sentence)

@@ -442,3 +442,45 @@ async def test_a_locality_question_carries_its_candidate_names_as_options(make):
     o = await orch.handle_text(s, "2 BHK in Khyakpuram")
     assert isinstance(o, NeedsInput) and o.field == "locality"
     assert o.options == ["KR Puram", "Shampura", "Sagayapuram"]
+
+
+async def test_the_clear_parts_of_a_sentence_survive_a_question_about_the_rest(make):
+    """Production, 2026-09-17: "2 BHK in Khyakpuram" asked which locality was meant and threw
+    the 2 BHK away, so the readback was "in KR Puram" alone and the first result a 3BHK."""
+    from scout.conversation.job1 import Ambiguity
+
+    amb = Ambiguity(
+        field="locality",
+        heard="Koramangla",
+        question="Koramangla isn't covered. Did you mean Koramangala?",
+        options=["Koramangala"],
+    )
+    orch, s = make(
+        [
+            j1(
+                edits=[
+                    ConstraintEdit("bhk_type", "set", "2BHK"),
+                    ConstraintEdit("rent_max", "set", 40000),
+                ],
+                ambiguities=[amb],
+            ),
+            j1(edits=[ConstraintEdit("localities", "add", "Koramangala")]),
+        ]
+    )
+    o1 = await orch.handle_text(s, "2 BHK in Koramangla under forty thousand")
+    assert isinstance(o1, NeedsInput) and o1.field == "locality"
+
+    o2 = await orch.handle_text(s, "Koramangala")
+    assert isinstance(o2, NeedsInput) and o2.field == "constraints_readback"
+    assert "2BHK" in o2.question and "40,000" in o2.question and "Koramangala" in o2.question
+
+
+async def test_a_spent_question_budget_still_keeps_the_clear_parts(make):
+    from scout.conversation.job1 import Ambiguity
+
+    amb = Ambiguity(field="locality", heard="Koramangla", question="Did you mean Koramangala?")
+    orch, s = make([j1(edits=[ConstraintEdit("bhk_type", "set", "2BHK")], ambiguities=[amb])])
+    s.constraints = s.constraints.with_(localities=("Koramangala",))
+    s.clarifying_asked = orch.settings.max_clarifying_questions
+    await orch.handle_text(s, "2 BHK in Koramangla")
+    assert "2BHK" in "; ".join(s.constraints.readback())
