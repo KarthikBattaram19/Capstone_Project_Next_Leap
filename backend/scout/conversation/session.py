@@ -101,6 +101,8 @@ class Session:
     email: str | None = None
     focus_listing_id: str | None = None
     reschedule_code: str | None = None
+    # E2: "the listings don't state the kind of parking" is said once per conversation.
+    parking_kind_explained: bool = False
     speaker_factory: Callable[[], object] | None = None  # set per live session (Task 2.10)
     speaker: object | None = None
     speaking: asyncio.Task | None = None

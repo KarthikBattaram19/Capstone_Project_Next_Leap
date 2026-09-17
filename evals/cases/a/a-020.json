@@ -5,12 +5,21 @@
   "yes"
  ],
  "expect": {
-  "kind": "empty",
+  "kind": "answered",
+  "readback_contains": [
+   "Koramangala",
+   "parking"
+  ],
   "extracted": {
    "parking_required": "four_wheeler"
   },
-  "suggestions_contain": [
-   "not stated"
+  "matched_ids": [
+   "koramangala-06651"
+  ],
+  "excluded_ids": [
+   "koramangala-06655",
+   "koramangala-06662"
   ]
- }
+ },
+ "note": "Voice fix batch E2 (2026-09-17): a parking requirement means parking_available is true. No listing states the kind of parking, so the kind is kept for the readback and said once not to be searchable."
 }

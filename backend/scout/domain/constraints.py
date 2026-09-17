@@ -36,7 +36,9 @@ class ConstraintSet:
     deposit_max: int | None = None
     furnishing: Furnishing | None = None
     property_type: PropertyType | None = None
-    parking_required: Parking | None = None
+    # True: any parking. A Parking kind: the kind she named, searched as any parking because
+    # no listing in the dataset states the kind (voice fix batch E2, 2026-09-17).
+    parking_required: Parking | bool | None = None
     lift_required: bool | None = None
     amenities_required: frozenset[str] = field(default_factory=frozenset)
     square_footage_min: int | None = None
@@ -86,7 +88,7 @@ class ConstraintSet:
         if self.property_type:
             out.append(_text(self.property_type).replace("_", " "))
         if self.parking_required:
-            out.append(f"{_text(self.parking_required).replace('_', '-')} parking")
+            out.append("with parking")
         if self.lift_required:
             out.append("with a lift")
         for a in sorted(self.amenities_required):

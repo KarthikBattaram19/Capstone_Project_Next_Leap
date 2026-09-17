@@ -99,3 +99,49 @@ def test_a_number_in_the_wrong_field_is_a_question_not_a_guess():
     # "3BHK" landing in a size field is a mis-extraction; 3 sq ft would be worse than asking.
     r = apply_edit(ConstraintSet(), ConstraintEdit("square_footage_min", "set", "3BHK"))
     assert isinstance(r, Contradiction) and r.field == "square_footage_min"
+
+
+# --- E2 (voice fix batch 2026-09-17): parking means "parking available" ---
+
+
+def test_a_plain_parking_requirement_is_any_parking_not_a_question():
+    """Production, 2026-09-17: "...with a parking facility." -> "I didn't follow the parking
+    required — I heard 'true'."; "I'm saying I need parking also." -> the same with 'yes'."""
+    for said in ("true", "yes", "True", "parking", "parking facility", "any", "required"):
+        c = apply_edit(ConstraintSet(), ConstraintEdit("parking_required", "set", said))
+        assert isinstance(c, ConstraintSet), f"{said!r} became {c}"
+        assert c.parking_required is True, said
+
+
+def test_no_parking_needed_asks_for_nothing():
+    for said in ("no", "false", "none", "not needed"):
+        c = apply_edit(ConstraintSet(), ConstraintEdit("parking_required", "set", said))
+        assert isinstance(c, ConstraintSet), f"{said!r} became {c}"
+        assert not c.parking_required, said
+
+
+def test_a_named_kind_of_parking_is_kept():
+    c = apply_edit(ConstraintSet(), ConstraintEdit("parking_required", "set", "car parking"))
+    assert c.parking_required is Parking.FOUR_WHEELER
+    assert c.readback() == ["with parking"]
+
+
+def test_a_question_about_an_unusable_value_names_no_field_and_no_raw_value():
+    bad = {
+        "bhk_type": "penthouse",
+        "furnishing": "luxurious",
+        "property_type": "castle",
+        "parking_required": "helipad",
+        "rent_max": "whatever",
+        "rent_min": "whatever",
+        "deposit_max": "whatever",
+        "square_footage_min": "3BHK",
+        "available_by": "whenever",
+    }
+    for field, value in bad.items():
+        r = apply_edit(ConstraintSet(), ConstraintEdit(field, "set", value))
+        assert isinstance(r, Contradiction), field
+        q = r.question
+        assert "_" not in q, q
+        assert "_" not in field or field.replace("_", " ") not in q, q  # "parking required"
+        assert value not in q and "heard" not in q, q

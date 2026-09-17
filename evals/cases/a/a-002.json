@@ -5,18 +5,27 @@
   "yes"
  ],
  "expect": {
-  "kind": "empty",
+  "kind": "answered",
   "readback_contains": [
    "HSR Layout",
-   "20,000"
+   "20,000",
+   "lift"
   ],
   "extracted": {
    "bhk_type": "1BHK",
    "rent_max": 20000,
-   "lift_required": true
+   "lift_required": null
   },
-  "suggestions_contain": [
-   "not stated"
-  ]
- }
+  "matched_ids": [
+   "hsr-layout-08134"
+  ],
+  "all_matched_satisfy": {
+   "bhk_type": "1BHK",
+   "rent_max": 20000,
+   "localities": [
+    "HSR Layout"
+   ]
+  }
+ },
+ "note": "Voice fix batch E2 (2026-09-17): no listing states a lift, so a lift requirement is said to be unsearchable and left out, rather than emptying the shortlist."
 }

@@ -39,7 +39,7 @@ _LISTING_FIELD = {
     "rent_max": "rent",
     "rent_min": "rent",
     "deposit_max": "deposit",
-    "parking_required": "parking",
+    "parking_required": "parking_available",
     "lift_required": "lift",
     "square_footage_min": "square_footage",
     "available_by": "available_from",
@@ -62,8 +62,8 @@ def _is_constrained(c: ConstraintSet, field: str) -> bool:
     v = getattr(c, field)
     if v is None or v == () or v == frozenset():
         return False
-    # An explicit "I don't need a lift" constrains nothing.
-    return not (field == "lift_required" and v is False)
+    # An explicit "I don't need a lift" (or parking) constrains nothing.
+    return not (field in ("lift_required", "parking_required") and v is False)
 
 
 def evaluate(listing: Listing, c: ConstraintSet) -> Verdict:
@@ -76,7 +76,10 @@ def evaluate(listing: Listing, c: ConstraintSet) -> Verdict:
         ("deposit_max", lambda: _le(f("deposit").value, c.deposit_max)),
         ("furnishing", lambda: _eq(f("furnishing").value, c.furnishing)),
         ("property_type", lambda: _eq(f("property_type").value, c.property_type)),
-        ("parking_required", lambda: _parking(f("parking").value, c.parking_required)),
+        (
+            "parking_required",
+            lambda: _parking(f("parking").value, f("parking_available").value, c.parking_required),
+        ),
         ("lift_required", lambda: _lift(f("lift").value, c.lift_required)),
         ("square_footage_min", lambda: _ge(f("square_footage").value, c.square_footage_min)),
         ("available_by", lambda: _le(f("available_from").value, c.available_by)),
@@ -119,10 +122,19 @@ def _ge(value, floor) -> bool | None:
     return value >= floor
 
 
-def _parking(value, need) -> bool | None:
-    if need is None or value is None:
+def _parking(kind, available, need) -> bool | None:
+    """A parking requirement means parking is available (E2, decision 3).
+
+    A listing that states its kind is read by kind when she named one; otherwise whether
+    parking is available decides. `kind` is null on every listing in today's dataset.
+    """
+    if not need:
         return None
-    return _parking_ok(value, need)
+    if kind is not None:
+        if kind is Parking.NONE:
+            return False
+        return True if need is True else _parking_ok(kind, need)
+    return available
 
 
 def _lift(value, need) -> bool | None:

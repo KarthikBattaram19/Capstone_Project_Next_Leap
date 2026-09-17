@@ -25,6 +25,7 @@ from scout.conversation.session import (
 from scout.conversation.speaker import Speaker, split_sentences
 from scout.conversation.voice_booking import spoken_code
 from scout.domain.constraints import ConstraintEdit, ConstraintSet
+from scout.domain.listing import Parking
 from scout.domain.locality_names import one_per_place, squash, variant_key
 from scout.domain.money import rupees
 from scout.domain.shortlist import Shortlist
@@ -84,6 +85,12 @@ CONVERSATIONAL_REPLIES: dict[str, str] = {
     "which_of_these": "Which one do you mean — {names}?",
     # B1: code-like words that do not make a six-character code.
     "code_again": "Please say the six characters one at a time.",
+    # E2: requirements the dataset cannot answer, said instead of emptying the shortlist.
+    "lift_not_stated": "The listings don't say whether there's a lift, so I can't search on that.",
+    "parking_kind_not_stated": (
+        "The listings say only whether there's parking, not whether it's for a car or a bike, "
+        "so I'll look for any parking."
+    ),
     # B3: the last locality was removed, or none of the names offered was the one.
     "which_locality": "Which locality would you like instead?",
     "no_constraints": (
@@ -111,6 +118,26 @@ class NullSpeaker:
         return None
 
 
+# Intents that are answered before any requirement is read: nothing to note about them.
+_NO_EDITS_INTENTS = frozenset(
+    {"out_of_scope", "owner_contact", "feedback", "goodbye", "unclear", "other_language"}
+)
+
+
+def _with_notes(out: TurnOutcome, notes: list[str]) -> TurnOutcome:
+    """The outcome with notes said first: a requirement that could not be searched as asked."""
+    if not notes or isinstance(out, Failed):
+        return out
+    said = " ".join(notes)
+    update: dict = {"spoken": f"{said} {out.spoken}"}
+    if isinstance(out, NeedsInput):
+        update["question"] = f"{said} {out.question}"
+    if isinstance(out, (Answered, Degraded)):
+        vm = out.view_model
+        update["view_model"] = vm.model_copy(update={"notices": [*notes, *vm.notices]})
+    return out.model_copy(update=update)
+
+
 def _wanted(c: ConstraintSet) -> str:
     """What was not found, in plain words: "3BHK under ₹70,000 in Indiranagar"."""
     noun = [_plain(c.furnishing), _plain(c.bhk_type), _plain(c.property_type)]
@@ -124,7 +151,7 @@ def _wanted(c: ConstraintSet) -> str:
     if c.deposit_max is not None:
         words.append(f"with a deposit up to {rupees(c.deposit_max)}")
     if c.parking_required:
-        words.append(f"with {_plain(c.parking_required).replace(' ', '-')} parking")
+        words.append("with parking")
     if c.lift_required:
         words.append("with a lift")
     if c.amenities_required:
@@ -415,6 +442,32 @@ class TurnOrchestrator:
                     spoken="I didn't catch that. Could you say it again?",
                 )
 
+        if res.intent in _NO_EDITS_INTENTS:
+            return await self._act(session, res, text)
+        notes = self._unsearchable(res)
+        if (
+            notes
+            and not res.edits
+            and res.intent in ("set_preferences", "refine")
+            and session.pending is None
+            and not session.shortlist.is_empty()
+        ):
+            return self._say(session, " ".join(notes))  # "only ones with a lift": nothing to redo
+        parking_before = session.constraints.parking_required
+        out = await self._act(session, res, text)
+        kind = session.constraints.parking_required
+        if (
+            isinstance(kind, Parking)
+            and kind != parking_before
+            and not session.parking_kind_explained
+            and self._nobody_states("parking")
+        ):
+            session.parking_kind_explained = True
+            notes.append(CONVERSATIONAL_REPLIES["parking_kind_not_stated"])
+        return _with_notes(out, notes)
+
+    async def _act(self, session: Session, res: Job1Result, text: str) -> TurnOutcome:
+        """Lane A once the words are understood: Job 1's result, or the answer read in code."""
         if res.intent == "out_of_scope":
             return self._say(session, CONVERSATIONAL_REPLIES["out_of_scope"])
         if res.intent == "owner_contact":
@@ -559,6 +612,18 @@ class TurnOrchestrator:
         return await self._shortlist_turn(session)
 
     # ---- helpers
+
+    def _nobody_states(self, name: str) -> bool:
+        return all(x.field(name).value is None for x in self.store.listings.values())
+
+    def _unsearchable(self, res: Job1Result) -> list[str]:
+        """Take out a requirement no listing can answer, and say so (E2). No listing in the
+        dataset states a lift, so searching on one could only ever empty the shortlist."""
+        lift = [e for e in res.edits if e.field == "lift_required" and e.op in ("set", "add")]
+        if not lift or not self._nobody_states("lift"):
+            return []
+        res.edits = [e for e in res.edits if e not in lift]
+        return [CONVERSATIONAL_REPLIES["lift_not_stated"]]
 
     def _applied(self, session: Session, edits: list[ConstraintEdit]):
         """The constraints with `edits` applied, or the question that has to come first."""

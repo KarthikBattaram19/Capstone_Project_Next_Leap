@@ -802,3 +802,126 @@ async def test_clearing_every_locality_on_purpose_is_not_asked_about(make):
     await orch.handle_text(s, "in HSR Layout")
     o = await orch.handle_text(s, "anywhere is fine")
     assert not (isinstance(o, NeedsInput) and o.field == "locality")
+
+
+# --- E2 (voice fix batch 2026-09-17): parking and lift ---
+
+
+def _job1_hearing(*edits):
+    """The real Job 1 over a model that returns these edits, as production's Gemini did."""
+    from scout.conversation.job1 import Job1
+
+    class Model:
+        async def complete_json(self, system, user, name, schema):
+            return {
+                "intent": "set_preferences",
+                "edits": [{"field": f, "op": op, "value": v} for f, op, v in edits],
+                "ambiguities": [],
+                "reference": None,
+                "email": None,
+                "code": None,
+                "slot_choice": None,
+            }
+
+    return Job1(Model(), ["Koramangala", "HSR Layout"])
+
+
+def _kinds_not_stated(orch):
+    """The real bundle: no listing states the kind of parking, only whether there is any."""
+    from dataclasses import replace
+
+    for lid, listing in list(orch.store.listings.items()):
+        facts = dict(listing.facts)
+        facts["parking"] = replace(facts["parking"], value=None)
+        orch.store.listings[lid] = replace(listing, facts=facts)
+
+
+async def test_replay_a_parking_facility_is_read_back_with_no_question(make):
+    """Production, 2026-09-17: "...with a parking facility." -> "I didn't follow the parking
+    required — I heard 'true'. What should I use?"; "I'm saying I need parking also." -> the
+    same with 'yes', a loop."""
+    orch, s = make([])
+    orch.job1 = _job1_hearing(
+        ("bhk_type", "set", "2BHK"),
+        ("localities", "add", "HSR Layout"),
+        ("rent_max", "set", "50,000"),
+        ("parking_required", "set", "true"),
+    )
+    o = await orch.handle_text(s, "2 BHK in HSR Layout under 50,000 with a parking facility")
+    assert isinstance(o, NeedsInput) and o.field == "constraints_readback", o
+    assert "with parking" in o.question, o.question
+    assert "didn't follow" not in o.question
+
+    orch.job1 = _job1_hearing(("parking_required", "set", "yes"))
+    o2 = await orch.handle_text(s, "I'm saying I need parking also.")
+    assert isinstance(o2, NeedsInput) and o2.field == "constraints_readback", o2
+    assert "with parking" in o2.question and "didn't follow" not in o2.question
+
+
+async def test_parking_finds_listings_that_say_parking_is_available(make):
+    orch, s = make([j1(intent="confirm_yes")])
+    _kinds_not_stated(orch)
+    orch.job1 = _job1_hearing(
+        ("localities", "add", "Koramangala"), ("parking_required", "set", "yes")
+    )
+    await orch.handle_text(s, "in Koramangala with parking")
+    orch.job1 = ScriptedJob1([j1(intent="confirm_yes")])
+    o = await orch.handle_text(s, "yes")
+    assert isinstance(o, Answered), o
+    assert o.view_model.shortlist.order == ["kor-001"]
+
+
+async def test_a_named_kind_of_parking_is_explained_once_when_no_listing_states_kinds(make):
+    orch, s = make([])
+    _kinds_not_stated(orch)
+    orch.job1 = _job1_hearing(
+        ("localities", "add", "Koramangala"), ("parking_required", "set", "car parking")
+    )
+    o = await orch.handle_text(s, "in Koramangala with car parking")
+    assert isinstance(o, NeedsInput) and o.field == "constraints_readback", o
+    assert "car or a bike" in o.spoken and "with parking" in o.spoken, o.spoken
+
+    orch.job1 = _job1_hearing(("parking_required", "set", "bike parking"))
+    o2 = await orch.handle_text(s, "bike parking actually")
+    assert "car or a bike" not in o2.spoken, "said once, not every turn"
+
+
+async def test_a_named_kind_is_not_explained_when_listings_state_kinds(make):
+    orch, s = make([])
+    orch.job1 = _job1_hearing(
+        ("localities", "add", "Koramangala"), ("parking_required", "set", "car parking")
+    )
+    o = await orch.handle_text(s, "in Koramangala with car parking")
+    assert "car or a bike" not in o.spoken
+
+
+async def test_a_lift_is_said_to_be_unstated_rather_than_filtering_everything_out(make):
+    """Production, 2026-09-17: "does this have a lift facility?" -> Empty. No listing states a
+    lift, so a lift requirement can only ever empty the shortlist."""
+    orch, s = make([])
+    orch.job1 = _job1_hearing(
+        ("localities", "add", "Koramangala"), ("lift_required", "set", "true")
+    )
+    o = await orch.handle_text(s, "in Koramangala with a lift")
+    assert isinstance(o, NeedsInput) and o.field == "constraints_readback", o
+    assert "don't say" in o.spoken and "lift" in o.spoken, o.spoken
+    assert "with a lift" not in o.question
+    assert not s.constraints.lift_required
+
+    orch.job1 = ScriptedJob1([j1(intent="confirm_yes")])
+    first = await orch.handle_text(s, "yes")
+    assert isinstance(first, Answered), first
+
+    orch.job1 = _job1_hearing(("lift_required", "set", "yes"))
+    o2 = await orch.handle_text(s, "only ones with a lift")
+    assert isinstance(o2, Answered), o2
+    assert "lift" in o2.spoken and "don't say" in o2.spoken, o2.spoken
+    assert s.shortlist.order == first.view_model.shortlist.order
+
+
+async def test_a_lift_alone_on_a_first_turn_still_asks_for_a_start(make):
+    orch, s = make([])
+    orch.job1 = _job1_hearing(("lift_required", "set", "true"))
+    o = await orch.handle_text(s, "with a lift")
+    assert isinstance(o, NeedsInput) and o.field == "constraints", o
+    assert "lift" in o.spoken

@@ -57,7 +57,6 @@ _SYNONYMS: dict[str, dict[str, str]] = {
         "scooter": "TWO_WHEELER",
         "two_wheeler_parking": "TWO_WHEELER",
         "car_and_bike": "BOTH",
-        "any": "BOTH",
     },
     "property_type": {
         "flat": "APARTMENT",
@@ -93,24 +92,48 @@ def _number(field: str, value) -> int:
     return int(m.group(1).replace(",", ""))
 
 
+# E2, decision 3: a parking requirement means "parking available". The dataset states
+# whether a listing has parking (`parking_available`) but never which kind (`parking` is
+# null on all 2,370 listings), so "parking", "a parking facility", "yes" and "true" are
+# one requirement, and a named kind ("car parking") is kept only to be read back honestly.
+_ANY_PARKING = {"true", "yes", "1", "any", "parking", "required", "needed", "available", "must"}
+_NO_PARKING = {"false", "no", "0", "none", "no_parking", "not_needed", "not_required"}
+
+
+def _parking(value) -> Parking | bool | None:
+    said = str(value).strip().lower().replace(" ", "_").replace("-", "_")
+    token = said.removeprefix("any_")
+    for suffix in ("_facility", "_facilities", "_space", "_available", "_required", "_needed"):
+        token = token.removesuffix(suffix)
+    if said in _NO_PARKING or token in _NO_PARKING:
+        return None  # "no parking needed" asks for nothing
+    if said in _ANY_PARKING or token in _ANY_PARKING:
+        return True
+    return _enum("parking_required", token)
+
+
+def _enum(field: str, value) -> object:
+    cls = _ENUMS[field]
+    # Hyphen as well as space: the model says "semi-furnished" as often as "semi
+    # furnished", and only one of them used to resolve.
+    token = str(value).strip().lower().replace(" ", "_").replace("-", "_")
+    bare = token.replace("_", "")  # "2 BHK" -> "2bhk"
+    for m in cls:
+        if token in (m.value.lower(), m.name.lower()) or bare == m.value.lower().replace("_", ""):
+            return m
+    name = _SYNONYMS.get(field, {}).get(token)
+    if name is not None:
+        return cls[name]
+    raise ValueError(f"{field}: {value!r} is not one of {[m.value for m in cls]}")
+
+
 def _coerce(field: str, value) -> object:
     if value is None:
         return None
+    if field == "parking_required":
+        return _parking(value)
     if field in _ENUMS:
-        cls = _ENUMS[field]
-        # Hyphen as well as space: the model says "semi-furnished" as often as "semi
-        # furnished", and only one of them used to resolve.
-        token = str(value).strip().lower().replace(" ", "_").replace("-", "_")
-        bare = token.replace("_", "")  # "2 BHK" -> "2bhk"
-        for m in cls:
-            if token in (m.value.lower(), m.name.lower()) or bare == m.value.lower().replace(
-                "_", ""
-            ):
-                return m
-        name = _SYNONYMS.get(field, {}).get(token)
-        if name is not None:
-            return cls[name]
-        raise ValueError(f"{field}: {value!r} is not one of {[m.value for m in cls]}")
+        return _enum(field, value)
     if field in ("rent_max", "rent_min", "deposit_max", "square_footage_min"):
         return _number(field, value)
     if field == "lift_required":
@@ -127,8 +150,29 @@ def _coerce(field: str, value) -> object:
     return str(value)
 
 
-def _unusable(field: str, value) -> str:
-    return f"I didn't follow the {field.replace('_', ' ')} — I heard {value!r}. What should I use?"
+# How a field is named in a question. Never the field name, and never the raw value the
+# model handed over: production, 2026-09-17, said "I didn't follow the parking required —
+# I heard 'true'."
+_ASKED_AS = {
+    "localities": "the area",
+    "bhk_type": "the number of bedrooms",
+    "rent_max": "the budget",
+    "rent_min": "the lowest rent",
+    "deposit_max": "the deposit",
+    "furnishing": "the furnishing",
+    "property_type": "the type of home",
+    "parking_required": "parking",
+    "lift_required": "the lift",
+    "amenities_required": "what should be nearby",
+    "square_footage_min": "the size",
+    "available_by": "the move-in date",
+    "commute": "where you travel to",
+}
+
+
+def _unusable(field: str) -> str:
+    what = _ASKED_AS.get(field, "that")
+    return f"Sorry, I didn't catch what you want for {what}. Could you say it another way?"
 
 
 def _check(c: ConstraintSet, field: str) -> Contradiction | None:
@@ -182,7 +226,7 @@ def apply_edit(current: ConstraintSet, edit: ConstraintEdit) -> ReducerResult:
                 }
             )
     except (ValueError, TypeError, OverflowError, AttributeError):
-        return Contradiction(f, _unusable(f, edit.value))
+        return Contradiction(f, _unusable(f))
     return _check(nxt, f) or nxt
 
 

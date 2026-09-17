@@ -6,12 +6,15 @@
  ],
  "edit_turn": "only ones with a lift",
  "expect": {
-  "kind": "empty",
+  "kind": "answered",
   "extracted": {
-   "lift_required": true
+   "lift_required": null
   },
-  "suggestions_contain": [
-   "not stated"
+  "matched_ids": [
+   "hsr-layout-08134",
+   "koramangala-06651",
+   "hsr-layout-08220"
   ]
- }
+ },
+ "note": "Voice fix batch E2 (2026-09-17): no listing states a lift, so the edit is said to be unsearchable and the shortlist stays as it was."
 }

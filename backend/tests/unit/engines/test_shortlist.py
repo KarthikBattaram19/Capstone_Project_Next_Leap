@@ -147,3 +147,24 @@ def test_a_not_stated_detail_is_offered_in_plain_words():
     tips = suggest_relaxations(s, c, nearby=[], not_stated={"amenities_required": 2})
     assert tips == ["leave out hospital - 2 listings there don't mention it"]
     assert suggest_relaxations(s, c, nearby=[]) == [], "offered only when it would show some"
+
+
+def test_parking_is_read_from_whether_parking_is_available():
+    """E2: `parking` (the kind) is null on all 2,370 listings; `parking_available` is set on
+    every one. Reading only the kind matched no listing for any parking requirement."""
+    from dataclasses import replace
+
+    def with_available(id, available):
+        listing = L(id, parking=None)
+        facts = dict(listing.facts)
+        facts["parking_available"] = replace(facts["parking_available"], value=available)
+        return replace(listing, facts=facts)
+
+    yes, no, unsaid = with_available("y", True), with_available("n", False), L("u", parking=None)
+    for need in (True, Parking.FOUR_WHEELER):
+        s = build([yes, no, unsaid], ConstraintSet(parking_required=need), AVAIL)
+        assert s.order == ["y"], need
+        assert s.unknown == {"parking_required": ("u",)}, need
+        assert [(x.listing_id, x.field) for x in s.excluded] == [("n", "parking_required")]
+    no_need = build([yes, no], ConstraintSet(parking_required=False), AVAIL)
+    assert set(no_need.order) == {"y", "n"}, "parking not needed constrains nothing"
