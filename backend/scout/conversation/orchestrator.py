@@ -356,7 +356,9 @@ class TurnOrchestrator:
             if session.clarifying_asked < self.settings.max_clarifying_questions:
                 session.clarifying_asked += 1
                 a = res.ambiguities[0]
-                return NeedsInput(question=a.question, field=a.field, spoken=a.question)
+                return NeedsInput(
+                    question=a.question, field=a.field, options=a.options, spoken=a.question
+                )
             # Budget exhausted: proceed on what was confirmed, and say so (spec §6.29)
             return await self._shortlist_turn(
                 session, provisional=True, unknown_fields=[a.field for a in res.ambiguities]

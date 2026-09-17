@@ -180,3 +180,30 @@ async def test_an_unrelated_place_gets_a_short_answer_with_a_few_examples():
     assert "464" in q, "say how many localities are covered rather than naming them all"
     assert "Koramangala" in q
     assert len(q.split()) <= 40, q
+
+
+_PURAMS = _MANY + ["KR Puram", "Shampura", "Sagayapuram", "V.V Puram"]
+
+
+async def test_a_misheard_locality_offers_the_three_closest_names_as_options():
+    """Production, 2026-09-17: the renter said "KR Puram", Deepgram wrote "Khyakpuram", and
+    no single name cleared the bar (KR Puram 0.71, two others 0.67), so she named
+    Koramangala, HSR Layout and Indiranagar instead. The three closest are offered to choose
+    from - a question, never a substitution."""
+    bad = dict(GOOD, edits=[{"field": "localities", "op": "add", "value": "Khyakpuram"}])
+    res = await Job1(FakeGroq([bad]), localities=_PURAMS).extract("2BHK", ConstraintSet())
+
+    assert not any(e.field == "localities" for e in res.edits), "never substitute"
+    a = res.ambiguities[0]
+    assert a.options[0] == "KR Puram" and len(a.options) == 3
+    assert "Khyakpuram isn't covered" in a.question
+    assert all(o in a.question for o in a.options)
+    assert "Koramangala" not in a.question
+
+
+async def test_a_locality_that_differs_only_in_spaces_or_dots_is_that_locality():
+    said = dict(GOOD, edits=[{"field": "localities", "op": "add", "value": "K.R. Puram"}])
+    res = await Job1(FakeGroq([said]), localities=_PURAMS).extract("K.R. Puram", ConstraintSet())
+
+    assert res.ambiguities == []
+    assert [(e.field, e.value) for e in res.edits] == [("localities", "KR Puram")]

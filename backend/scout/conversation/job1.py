@@ -141,6 +141,7 @@ class Ambiguity(BaseModel):
     field: str
     heard: str
     question: str
+    options: list[str] = []  # tap-able answers; never in the model's schema, set in code
 
 
 class _RawEdit(BaseModel):
@@ -202,40 +203,64 @@ def split_localities(value: str, covered: list[str]) -> list[str]:
     return [part.strip() for part in _LOCALITY_SEPARATORS.split(whole) if part.strip()]
 
 
-# How close a heard name must be to a covered one to be offered as "the closest name".
-# Measured on the real 464 names: "Khoermangara" -> Koramangala 0.78, "Indira Nagar" ->
-# Indiranagar 0.96, but "Chennai" -> Hennagara 0.62, which must not be offered.
-_NEAREST_CUTOFF = 0.75
+# How close a heard name must be to a covered one to be offered, compared with spaces and
+# dots removed. Measured on the real 464 names: "Khyakpuram" (said "KR Puram") -> KR Puram
+# 0.71, Shampura 0.67, Sagayapuram 0.67; "Khoermangara" -> Koramangala 0.78; but "Chennai"
+# -> Hennagara 0.62, which must not be offered. Only a question is ever built from these.
+_NEAREST_CUTOFF = 0.65
+_MAX_OFFERED = 3
 _EXAMPLE_LOCALITIES = ("Koramangala", "HSR Layout", "Indiranagar", "Whitefield", "BTM Layout")
 
 
-class Job1:
-    def _not_covered(self, unknown: list[str]) -> str:
-        """Spec §6.24: say it is not covered and offer the nearest covered locality.
+def _squash(name: str) -> str:
+    """ "K.R. Puram", "K R Puram" and "KR Puram" are one name."""
+    return re.sub(r"[^a-z0-9]", "", name.lower())
 
+
+class Job1:
+    def _not_covered(self, unknown: list[str]) -> tuple[str, list[str]]:
+        """Spec §6.24: say it is not covered and offer the nearest covered localities.
+
+        Deepgram is primed with only 60 of the 464 names, so a real one is often misheard
+        and no single candidate is clearly right: up to three are offered, as options.
         Never the whole covered list: it is spoken, and 464 names is a monologue
-        (production, 2026-09-17). Never a substitution either - the renter says the name.
+        (production, 2026-09-17). Never a substitution either - the renter picks.
         """
-        by_lower = {loc.lower(): loc for loc in self._localities}
-        nearest = [
-            by_lower[m[0]]
-            for part in unknown
-            if (m := difflib.get_close_matches(part.lower(), by_lower, 1, _NEAREST_CUTOFF))
-        ]
+        offered = list(
+            dict.fromkeys(
+                name
+                for part in unknown
+                for key in difflib.get_close_matches(
+                    _squash(part), self._by_squash, _MAX_OFFERED, _NEAREST_CUTOFF
+                )
+                for name in self._by_squash[key]
+            )
+        )[:_MAX_OFFERED]
         heard = ", ".join(unknown)
-        if nearest:
-            names = " or ".join(dict.fromkeys(nearest))
-            return f"{heard} isn't covered. The closest name I have is {names} - say it if that is the one."
+        if offered:
+            names = offered[0] if len(offered) == 1 else ", ".join(offered[:-1])
+            names += "" if len(offered) == 1 else f" or {offered[-1]}"
+            return f"{heard} isn't covered. Did you mean {names}?", offered
         examples = [loc for loc in _EXAMPLE_LOCALITIES if loc in self._localities][:3]
         examples = examples or self._localities[:3]
         return (
             f"{heard} isn't covered. I have listings in {len(self._localities)} Bengaluru "
             f"localities, such as {', '.join(examples)} - which would you like?"
-        )
+        ), []
+
+    def _covered(self, part: str) -> str | None:
+        exact = next((loc for loc in self._localities if loc.lower() == part.lower()), None)
+        if exact is not None:
+            return exact
+        same = self._by_squash.get(_squash(part), [])
+        return same[0] if len(same) == 1 else None  # two names squash alike: ask
 
     def __init__(self, client, localities: list[str]) -> None:
         self.client = client
         self._localities = localities
+        self._by_squash: dict[str, list[str]] = {}
+        for loc in localities:
+            self._by_squash.setdefault(_squash(loc), []).append(loc)
 
     async def extract(self, transcript: str, current: ConstraintSet) -> Job1Result:
         user = (
@@ -281,17 +306,16 @@ class Job1:
                 continue
             if e.field == "localities" and e.op in ("add", "set") and e.value is not None:
                 named = split_localities(e.value, self._localities)
-                matched = [
-                    next((loc for loc in self._localities if loc.lower() == part.lower()), None)
-                    for part in named
-                ]
+                matched = [self._covered(part) for part in named]
                 unknown = [part for part, m in zip(named, matched, strict=True) if m is None]
                 if unknown:
+                    question, offered = self._not_covered(unknown)
                     ambiguities.append(
                         Ambiguity(
                             field="locality",
                             heard=", ".join(unknown),
-                            question=self._not_covered(unknown),
+                            question=question,
+                            options=offered,
                         )
                     )
                     continue

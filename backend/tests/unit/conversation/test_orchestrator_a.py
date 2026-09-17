@@ -108,13 +108,9 @@ async def test_contradiction_asks_and_counts_against_the_budget(make):
 
 
 async def test_budget_exhausted_proceeds_provisionally_and_says_so(make):
-    amb = [
-        type(
-            "A",
-            (),
-            {"field": "rent_max", "heard": "thirty five", "question": "Did you mean ₹35,000?"},
-        )
-    ]
+    from scout.conversation.job1 import Ambiguity
+
+    amb = [Ambiguity(field="rent_max", heard="thirty five", question="Did you mean ₹35,000?")]
     # Six ambiguous turns: the first five ask, the sixth finds the budget spent and goes
     # ahead on what was confirmed, saying so (spec §6.29).
     orch, s = make([j1(ambiguities=amb)] * 6)
@@ -430,3 +426,19 @@ async def test_job1_hears_digit_ordinals_as_words(make):
     orch.job1.extract = recording
     await orch.handle_text(session, "Book a visit for the 1st 1.")
     assert seen == ["Book a visit for the first one."]
+
+
+async def test_a_locality_question_carries_its_candidate_names_as_options(make):
+    from scout.conversation.job1 import Ambiguity
+
+    q = "Khyakpuram isn't covered. Did you mean KR Puram, Shampura or Sagayapuram?"
+    amb = Ambiguity(
+        field="locality",
+        heard="Khyakpuram",
+        question=q,
+        options=["KR Puram", "Shampura", "Sagayapuram"],
+    )
+    orch, s = make([j1(ambiguities=[amb])])[:2]
+    o = await orch.handle_text(s, "2 BHK in Khyakpuram")
+    assert isinstance(o, NeedsInput) and o.field == "locality"
+    assert o.options == ["KR Puram", "Shampura", "Sagayapuram"]
