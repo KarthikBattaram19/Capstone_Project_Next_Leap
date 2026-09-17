@@ -50,3 +50,29 @@ def test_opener_is_built_from_facts_and_names_methods():
 def test_opener_never_states_a_null_distance():
     o = build_opener(bundle(metro=False), None)
     assert "metro" not in o.lower() or "don't have" in o.lower()
+
+
+def test_opener_never_ends_on_a_heading():
+    """E1: "On the neighbourhood —" is said only before a neighbourhood claim, by lane B."""
+    from scout.domain.guides import GuideChunk
+
+    b = bundle()
+    b.chunks.append(
+        Provenanced(
+            GuideChunk(
+                id="koramangala-0-1",
+                locality="Koramangala",
+                title="Koramangala",
+                url="https://en.wikipedia.org/wiki/Koramangala",
+                text="A neighbourhood in south Bengaluru.",
+                position=1,
+                fetched_on=date(2026, 9, 2),
+            ),
+            Source.GUIDE,
+            Timing.PRECOMPUTED,
+            citation_ref="guide:koramangala-0-1",
+        )
+    )
+    o = build_opener(b, None)
+    assert not o.rstrip().endswith("—"), o
+    assert "On the neighbourhood" not in o, o

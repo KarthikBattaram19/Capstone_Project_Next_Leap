@@ -385,7 +385,11 @@ class TurnOrchestrator:
         from scout.contract.viewmodels import ClaimVM, ExplanationVM, SnapshotVM
         from scout.conversation.job2 import Job2Down
         from scout.grounding.assembler import ClaimAssembler, worth_saying
-        from scout.grounding.opener import build_opener
+        from scout.grounding.opener import (
+            build_opener,
+            is_neighbourhood_claim,
+            with_neighbourhood_heading,
+        )
         from scout.grounding.resolvers import ResolverRegistry
         from scout.grounding.retrieval import Retrieval
 
@@ -455,6 +459,7 @@ class TurnOrchestrator:
         spoken_claims: list[str] = []
         seen: set[str] = set()
         summary: str | None = None
+        headed = False
         try:
             session.job2_task = asyncio.current_task()
             async for s in self.job2.explain(bundle, text):
@@ -468,8 +473,13 @@ class TurnOrchestrator:
                 claims.append(ClaimVM(text=claim.text, citation_refs=claim.refs))
                 bound_facts.update(claim.facts)
                 if len(spoken_claims) < max_spoken and worth_saying(claim, lid):
-                    spoken_claims.append(claim.text)
-                    await queue.put(claim.text)  # released only once its citation resolved
+                    said = claim.text
+                    # E1: the heading is said only when a neighbourhood claim follows it.
+                    if not headed and is_neighbourhood_claim(claim.refs, bundle):
+                        headed = True
+                        said = with_neighbourhood_heading(said)
+                    spoken_claims.append(said)
+                    await queue.put(said)  # released only once its citation resolved
             summary = assembler.gap_summary(text, getattr(self.job2, "last_gaps", []))
             if summary is not None and len(spoken_claims) < 3:
                 await queue.put(summary)

@@ -362,3 +362,82 @@ async def test_why_the_first_one_is_a_short_answer_with_no_field_names(make):
     assert sum("maintenance" in g for g in exp.gaps) == 1, exp.gaps
     assert any("lift" in g for g in exp.gaps), exp.gaps
     assert any("restaurants" in g for g in exp.gaps), exp.gaps
+
+
+class NeighbourhoodJob2(RecordingJob2):
+    """A listing claim, optionally a guide claim, and gaps: what production answered with."""
+
+    def __init__(self, with_guide: bool):
+        def sentences(lid):
+            out = [Job2Sentence("It has 2 bathrooms.", [f"dataset:{lid}:bathrooms"])]
+            if with_guide:
+                out.append(
+                    Job2Sentence(
+                        "The guide describes the blocks near Forum Mall as the noisiest at night.",
+                        ["guide:koramangala-0-1"],
+                    )
+                )
+            return out
+
+        super().__init__(sentences)
+
+    async def explain(self, bundle, question):
+        async for s in super().explain(bundle, question):
+            yield s
+        self.last_gaps = ["maintenance_charges", "parking"]
+
+
+def _dangling(spoken: str) -> list[str]:
+    from scout.conversation.speaker import split_sentences
+
+    return [s for s in split_sentences(spoken) if s.rstrip().endswith("—")]
+
+
+async def test_no_neighbourhood_heading_when_no_neighbourhood_claim_follows(make):
+    """E1 replay on production (2026-09-17, after 3c69bbf): "It's ₹33,000 a month for a 2BHK,
+    about 4.0 km by route to the metro. On the neighbourhood — I don't have some details for
+    this listing, like the maintenance and parking." The heading led into the gap line."""
+    job2 = NeighbourhoodJob2(with_guide=False)
+    orch, session, speaker, _ = make(job2)
+
+    out = await orch.handle_text(session, "why did you pick this one?")
+    await session.speaking
+
+    assert isinstance(out, Answered), f"got {out.kind}: {out.spoken}"
+    assert job2.bundles[0].chunks, "the fixture must have guide passages for this to test"
+    assert "On the neighbourhood" not in out.spoken, out.spoken
+    assert not _dangling(out.spoken), out.spoken
+    assert all(not s.rstrip().endswith("—") for s in speaker.said), speaker.said
+    assert "On the neighbourhood" not in out.view_model.explanation.opener
+    assert "I don't have" in out.spoken
+    assert " ".join(speaker.said) == out.spoken
+
+
+async def test_the_neighbourhood_heading_leads_into_a_neighbourhood_claim(make):
+    job2 = NeighbourhoodJob2(with_guide=True)
+    orch, session, speaker, _ = make(job2)
+
+    out = await orch.handle_text(session, "why did you pick this one?")
+    await session.speaking
+
+    assert isinstance(out, Answered), f"got {out.kind}: {out.spoken}"
+    assert (
+        "On the neighbourhood — The guide describes the blocks near Forum Mall" in out.spoken
+        or "On the neighbourhood — the guide describes the blocks near Forum Mall" in out.spoken
+    ), out.spoken
+    assert out.spoken.count("On the neighbourhood") == 1, out.spoken
+    assert not _dangling(out.spoken), out.spoken
+    assert "_" not in out.spoken
+    assert " ".join(speaker.said) == out.spoken
+    # On screen the claim is shown as Job 2 wrote it.
+    texts = [c.text for c in out.view_model.explanation.claims]
+    assert any(t.startswith("The guide describes") for t in texts), texts
+
+
+async def test_job2_down_leaves_no_dangling_heading(make):
+    orch, session, speaker, _lid = make(ScriptedJob2([], raises=Job2Down("provider down")))
+    out = await orch.handle_text(session, "why did you pick this one?")
+    await session.speaking
+    assert isinstance(out, Degraded)
+    assert "On the neighbourhood" not in out.spoken, out.spoken
+    assert not _dangling(" ".join(speaker.said)), speaker.said

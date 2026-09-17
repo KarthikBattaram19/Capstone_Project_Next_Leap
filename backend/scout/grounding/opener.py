@@ -35,9 +35,21 @@ def build_opener(bundle: FactBundle, commute_point_name: str | None) -> str:
         )
 
     first = ", ".join(parts) + "." if parts else "Here's what I have on this listing."
-    tail = (
-        " On the neighbourhood —"
-        if bundle.chunks
-        else " I have limited neighbourhood data for this locality."
-    )
+    # E1: the neighbourhood heading is not said here. Ended on "On the neighbourhood —", the
+    # opener led straight into the gap line on production (2026-09-17) when no neighbourhood
+    # claim followed; lane B says it before the first neighbourhood claim it speaks.
+    tail = "" if bundle.chunks else " I have limited neighbourhood data for this locality."
     return first + tail
+
+
+NEIGHBOURHOOD_HEADING = "On the neighbourhood —"
+
+
+def is_neighbourhood_claim(refs: list[str], bundle: FactBundle) -> bool:
+    """Whether a claim cites a guide passage: the only kind the neighbourhood heading leads."""
+    passages = {c.citation_ref for c in bundle.chunks}
+    return any(r in passages for r in refs)
+
+
+def with_neighbourhood_heading(text: str) -> str:
+    return f"{NEIGHBOURHOOD_HEADING} {text}"
