@@ -147,10 +147,15 @@ _QUESTION_START = re.compile(
 
 
 def _states_requirements(text: str) -> bool:
-    """A requirement marker in a sentence that is not itself a question."""
+    """A requirement marker in a sentence that is not itself a question.
+
+    A sentence that says "why" or "explain" itself is asking, with or without a "?": "Explain
+    why the first one is fully furnished." is not a request for fully furnished flats (batch
+    review, 2026-09-17). Only a "why" in ANOTHER sentence loses to the requirements (A3).
+    """
     for sentence in re.findall(r"[^.?!]+[.?!]?", text):
         body = sentence.strip()
-        if not body or body.endswith("?") or _QUESTION_START.match(body):
+        if not body or body.endswith("?") or _QUESTION_START.match(body) or _EXPLAIN.search(body):
             continue
         if _REQUIREMENT.search(body):
             return True

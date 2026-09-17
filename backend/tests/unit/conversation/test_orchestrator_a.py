@@ -932,3 +932,43 @@ async def test_a_lift_alone_on_a_first_turn_still_asks_for_a_start(make):
     o = await orch.handle_text(s, "with a lift")
     assert isinstance(o, NeedsInput) and o.field == "constraints", o
     assert "lift" in o.spoken
+
+
+async def test_the_a3_sentence_with_a_shortlist_on_screen_applies_its_requirements(make):
+    """A3 replay, end to end (batch review, 2026-09-17: only its routing was tested). With a
+    shortlist on screen the heard sentence reaches Job 1 and its requirements are applied;
+    it is not explained (lane B, which this orchestrator cannot even run: job2=None)."""
+    orch, s = make(
+        [
+            j1(edits=[ConstraintEdit("localities", "add", "Koramangala")]),
+            j1(intent="confirm_yes"),
+            j1(
+                intent="refine",
+                edits=[
+                    ConstraintEdit("square_footage_min", "set", "1500"),
+                    ConstraintEdit("furnishing", "set", "fully furnished"),
+                    ConstraintEdit("bhk_type", "set", "3BHK"),
+                    ConstraintEdit("parking_required", "set", "parking facility"),
+                    ConstraintEdit("lift_required", "set", "true"),
+                ],
+            ),
+        ]
+    )
+    await orch.handle_text(s, "in Koramangala")
+    shown = await orch.handle_text(s, "yes")
+    assert isinstance(shown, Answered) and not s.shortlist.is_empty()
+
+    heard = (
+        "I don't know why you did not listen to me when I asked you to stop. Anyways, here "
+        "I'm giving you a further filtering options. The size should be at least 1,500 "
+        "square feet. It should be fully furnished. 3 BHK or more. Should be having a "
+        "parking facility. And it should have lift facility."
+    )
+    o = await orch.handle_text(s, heard)
+
+    assert orch.job1.results == [], "Job 1 read the requirements"
+    assert not (isinstance(o, Failed) and o.capability == "explanation"), o
+    c = s.constraints
+    assert c.square_footage_min == 1500 and c.furnishing is not None and c.bhk_type is not None
+    assert c.parking_required is True and not c.lift_required
+    assert "lift" in o.spoken and "_" not in o.spoken, o.spoken

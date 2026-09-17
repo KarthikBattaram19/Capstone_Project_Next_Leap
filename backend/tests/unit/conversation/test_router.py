@@ -188,3 +188,22 @@ def test_a_why_question_that_mentions_a_requirement_word_stays_type_b(text):
 )
 def test_parse_ordinal_reads_an_ordinal_listing(text, n):
     assert parse_ordinal(text) == n
+
+
+@pytest.mark.parametrize(
+    "text",
+    [
+        # Batch review, 2026-09-17: A3 sent these to lane A because they state no "?" and
+        # start with no question word, yet the requirement word sits in the same sentence as
+        # "why" / "explain" - they ask about a listing, and Job 1 would have turned
+        # "fully furnished" into a new requirement. All were lane B before the batch.
+        "Explain why the first one is fully furnished.",
+        "Explain the parking for the second listing.",
+        "I'd like to know why it has no parking",
+        "The first one should be closer to the metro, why isn't it",
+        "Please explain how far the metro is from the 3 BHK",
+        "Tell me why you showed me a 3BHK",
+    ],
+)
+def test_a_why_or_explain_sentence_with_a_requirement_word_stays_type_b(text):
+    assert classify_turn(text, has_shortlist=True) == "B"
