@@ -22,3 +22,9 @@ def test_readback_lists_only_set_fields():
     c = ConstraintSet().with_(localities=("Koramangala",), rent_max=35000, bhk_type="2BHK")
     rb = c.readback()
     assert any("Koramangala" in x for x in rb) and any("35,000" in x for x in rb) and len(rb) == 3
+
+
+def test_the_readback_names_a_place_once_however_many_spellings_are_searched():
+    """C1, 2026-09-17: "TCPalya" searches T.C Palya and TC Palya; she hears one name."""
+    c = ConstraintSet().with_(localities=("Domlur", "Domluru", "T.C Palya", "TC Palya"))
+    assert c.readback() == ["in Domlur or TC Palya"]

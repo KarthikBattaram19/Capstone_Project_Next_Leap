@@ -540,3 +540,82 @@ async def test_a_spent_question_budget_still_keeps_the_clear_parts(make):
     s.clarifying_asked = orch.settings.max_clarifying_questions
     await orch.handle_text(s, "2 BHK in Koramangla")
     assert "2BHK" in "; ".join(s.constraints.readback())
+
+
+async def _empty(make, edits):
+    orch, s = make([j1(edits=edits), j1(intent="confirm_yes")])
+    await orch.handle_text(s, "requirements")
+    o = await orch.handle_text(s, "yes")
+    assert isinstance(o, Empty)
+    return o
+
+
+async def test_an_empty_result_names_what_was_not_found_and_nearby_places_that_have_it(make):
+    """Production, 2026-09-17: "I found nothing matching your localities in Indiranagar"."""
+    o = await _empty(
+        make,
+        [
+            ConstraintEdit("localities", "add", "Koramangala"),
+            ConstraintEdit("bhk_type", "set", "3BHK"),
+            ConstraintEdit("rent_max", "set", 70000),
+        ],
+    )
+    assert o.spoken.startswith("No 3BHK under ₹70,000 in Koramangala."), o.spoken
+    assert "matching your" not in o.spoken
+    assert "HSR Layout" in o.spoken, "the 3BHK at ₹55,000 is in HSR Layout: locality binds"
+
+
+async def test_nearby_places_are_not_suggested_when_the_place_is_not_what_binds(make):
+    o = await _empty(
+        make,
+        [
+            ConstraintEdit("localities", "add", "Koramangala"),
+            ConstraintEdit("bhk_type", "set", "2BHK"),
+            ConstraintEdit("rent_max", "set", 30000),
+        ],
+    )
+    assert o.spoken.startswith("No 2BHK under ₹30,000 in Koramangala."), o.spoken
+    assert "HSR Layout" not in o.spoken and "nearby" not in o.spoken
+    assert "₹36,000" in o.spoken
+
+
+async def test_listings_that_do_not_mention_a_detail_are_offered_in_plain_words(make):
+    """Production, 2026-09-17: "...or include the listings where that detail is not stated."
+    for a hospital requirement."""
+    o = await _empty(
+        make,
+        [
+            ConstraintEdit("localities", "add", "Koramangala"),
+            ConstraintEdit("amenities_required", "add", "hospital"),
+        ],
+    )
+    assert "not stated" not in o.spoken and "that detail" not in o.spoken
+    assert "hospital" in o.spoken and "2 listings there don't mention it" in o.spoken, o.spoken
+
+
+async def test_replay_tcpalya_is_read_back_as_tc_palya_with_no_question(make):
+    """Production, 2026-09-17, conv 3: "I'm in TCPalya." -> "TCPalya isn't covered"."""
+    from scout.conversation.job1 import Job1
+
+    class Model:
+        async def complete_json(self, system, user, name, schema):
+            return {
+                "intent": "set_preferences",
+                "edits": [
+                    {"field": "bhk_type", "op": "set", "value": "2BHK"},
+                    {"field": "localities", "op": "add", "value": "TCPalya"},
+                    {"field": "rent_max", "op": "set", "value": "50,000"},
+                ],
+                "ambiguities": [],
+                "reference": None,
+                "email": None,
+                "code": None,
+                "slot_choice": None,
+            }
+
+    orch, s = make([])
+    orch.job1 = Job1(Model(), ["Koramangala", "S.G Palya", "T.C Palya", "TC Palya"])
+    o = await orch.handle_text(s, "2 BHK in TCPalya under 50,000")
+    assert isinstance(o, NeedsInput) and o.field == "constraints_readback", o
+    assert "in TC Palya;" in o.question and "T.C Palya" not in o.question, o.question
+    assert set(s.constraints.localities) == {"T.C Palya", "TC Palya"}

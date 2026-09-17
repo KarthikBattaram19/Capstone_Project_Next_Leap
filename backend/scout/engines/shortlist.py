@@ -8,6 +8,7 @@ from dataclasses import dataclass
 from scout.contract.outcome import UnmetConstraint
 from scout.domain.constraints import ConstraintSet
 from scout.domain.listing import Listing, Parking
+from scout.domain.locality_names import one_per_place, variant_key
 from scout.domain.money import rupees
 from scout.domain.shortlist import Exclusion, Shortlist, ShortlistEntry
 from scout.pipeline.dedupe import haversine_m
@@ -216,27 +217,72 @@ def nearest_localities(
     centres = [places[n] for n in chosen if n in places]
     if not centres:
         return []
-    taken = set(chosen)
+    # Another spelling of a chosen place is that place, not a neighbour ("nearby Domluru"
+    # for a search in Domlur); and each neighbour is named once, in its plainest spelling.
+    taken = {variant_key(n) for n in chosen}
     scored = []
     for name in covered:
-        if name in taken or name not in places:
+        if variant_key(name) in taken or name not in places:
             continue
         p = places[name]
         d = min(haversine_m(c["lat"], c["lng"], p["lat"], p["lng"]) for c in centres)
         scored.append((d, name))
-    return [name for _, name in sorted(scored)[:k]]
+    return one_per_place(name for _, name in sorted(scored))[:k]
 
 
-def suggest_relaxations(s: Shortlist, c: ConstraintSet, nearby: list[str]) -> list[str]:
-    """Suggest only. `nearby` comes from nearest_localities - never from list order, which
-    once offered the alphabetically first names as "nearby" (production, 2026-09-17)."""
+def without(c: ConstraintSet, field: str) -> ConstraintSet:
+    """The same requirements with one of them dropped."""
+    empty = {"localities": (), "amenities_required": frozenset()}
+    return c.with_(**{field: empty.get(field)})
+
+
+# How a dropped requirement is named aloud. Never a field name (production, 2026-09-17).
+_DROP_LABELS = {
+    "localities": "the area",
+    "bhk_type": "the BHK",
+    "rent_max": "the budget",
+    "rent_min": "the minimum rent",
+    "deposit_max": "the deposit limit",
+    "furnishing": "furnishing",
+    "property_type": "the property type",
+    "parking_required": "parking",
+    "lift_required": "the lift",
+    "square_footage_min": "the size",
+    "available_by": "the move-in date",
+}
+
+
+def suggest_relaxations(
+    s: Shortlist,
+    c: ConstraintSet,
+    nearby: list[str],
+    not_stated: dict[str, int] | None = None,
+) -> list[str]:
+    """Suggest only, in plain words.
+
+    `nearby` comes from nearest_localities - never from list order, which once offered the
+    alphabetically first names as "nearby" (production, 2026-09-17) - and the caller passes
+    it only when the place is what rules everything out. `not_stated` maps a requirement to
+    how many listings would appear if it were dropped that do not mention it; the offer is
+    made only when that number is known and above zero.
+    """
     tips: list[str] = []
     if any(x.field == "rent_max" for x in s.excluded) and c.rent_max:
-        tips.append(f"try {rupees(int(c.rent_max * 1.2 // 1000 * 1000))}")
+        tips.append(f"go up to {rupees(int(c.rent_max * 1.2 // 1000 * 1000))}")
     if any(x.field == "localities" for x in s.excluded):
-        others = [loc for loc in nearby if loc not in c.localities][:2]
+        others = one_per_place(loc for loc in nearby if loc not in c.localities)[:2]
         if others:
-            tips.append("or nearby " + " / ".join(others))
-    if s.unknown:
-        tips.append("or include the listings where that detail is not stated")
+            tips.append("look nearby in " + " or ".join(others))
+    there = " there" if c.localities else ""
+    for field, n in (not_stated or {}).items():
+        if n <= 0 or field not in s.unknown:
+            continue
+        if field == "amenities_required":
+            label = " and ".join(sorted(c.amenities_required))
+        else:
+            label = _DROP_LABELS.get(field, "that requirement")
+        verb = "don't" if n > 1 else "doesn't"
+        tips.append(
+            f"leave out {label} - {n} listing{'s' if n > 1 else ''}{there} {verb} mention it"
+        )
     return tips

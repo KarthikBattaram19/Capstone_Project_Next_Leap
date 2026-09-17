@@ -11,6 +11,7 @@ from typing import Literal
 from pydantic import BaseModel, ConfigDict, ValidationError
 
 from scout.domain.constraints import ConstraintEdit, ConstraintSet
+from scout.domain.locality_names import plainest, squash, variant_key
 from scout.domain.money import rupees
 from scout.engines.amounts import Ambiguous, Amount, normalise_amount
 
@@ -226,11 +227,6 @@ _MAX_OFFERED = 3
 _EXAMPLE_LOCALITIES = ("Koramangala", "HSR Layout", "Indiranagar", "Whitefield", "BTM Layout")
 
 
-def _squash(name: str) -> str:
-    """ "K.R. Puram", "K R Puram" and "KR Puram" are one name."""
-    return re.sub(r"[^a-z0-9]", "", name.lower())
-
-
 class Job1:
     def _not_covered(self, unknown: list[str]) -> tuple[str, list[str]]:
         """Spec §6.24: say it is not covered and offer the nearest covered localities.
@@ -240,12 +236,16 @@ class Job1:
         Never the whole covered list: it is spoken, and 464 names is a monologue
         (production, 2026-09-17). Never a substitution either - the renter picks.
         """
+        # One name per place: "Did you mean Domluru or Domlur?" offered one place twice
+        # (production, 2026-09-17). Closeness is still measured on the squashed spelling,
+        # the scale the cutoff was measured on; more candidates are drawn than offered so
+        # that two spellings of one place do not crowd out a third place.
         offered = list(
             dict.fromkeys(
-                name
+                plainest(self._by_place[variant_key(name)])
                 for part in unknown
                 for key in difflib.get_close_matches(
-                    _squash(part), self._by_squash, _MAX_OFFERED, _NEAREST_CUTOFF
+                    squash(part), self._by_squash, 3 * _MAX_OFFERED, _NEAREST_CUTOFF
                 )
                 for name in self._by_squash[key]
             )
@@ -262,19 +262,28 @@ class Job1:
             f"localities, such as {', '.join(examples)} - which would you like?"
         ), []
 
-    def _covered(self, part: str) -> str | None:
+    def _covered(self, part: str) -> list[str] | None:
+        """Every covered spelling of the place named, or None.
+
+        The data holds some places under two spellings (T.C Palya / TC Palya, Domlur /
+        Domluru). They are one place, so all of them are searched; asking "which one?"
+        about two spellings of one name is a question she cannot answer (production,
+        2026-09-17: "TCPalya isn't covered", three times).
+        """
         exact = next((loc for loc in self._localities if loc.lower() == part.lower()), None)
-        if exact is not None:
-            return exact
-        same = self._by_squash.get(_squash(part), [])
-        return same[0] if len(same) == 1 else None  # two names squash alike: ask
+        same = self._by_place.get(variant_key(exact if exact is not None else part))
+        if not same:
+            return None
+        return ([exact] if exact is not None else []) + [n for n in same if n != exact]
 
     def __init__(self, client, localities: list[str]) -> None:
         self.client = client
         self._localities = localities
         self._by_squash: dict[str, list[str]] = {}
+        self._by_place: dict[str, list[str]] = {}
         for loc in localities:
-            self._by_squash.setdefault(_squash(loc), []).append(loc)
+            self._by_squash.setdefault(squash(loc), []).append(loc)
+            self._by_place.setdefault(variant_key(loc), []).append(loc)
 
     async def extract(self, transcript: str, current: ConstraintSet) -> Job1Result:
         user = (
@@ -335,9 +344,16 @@ class Job1:
                     continue
                 # The first keeps the model's op so a "set" still replaces; the rest add, or
                 # a compound "only A or B" would keep just B.
-                for i, loc in enumerate(matched):
+                places = [loc for group in matched if group for loc in group]
+                for i, loc in enumerate(places):
                     edits.append(ConstraintEdit("localities", e.op if i == 0 else "add", loc))
                 continue
+            if e.field == "localities" and e.op == "remove" and e.value is not None:
+                # "Not TC Palya" drops every spelling, or T.C Palya would stay searched.
+                group = self._covered(str(e.value))
+                if group:
+                    edits.extend(ConstraintEdit("localities", "remove", loc) for loc in group)
+                    continue
             edits.append(ConstraintEdit(e.field, e.op, e.value))
         return Job1Result(
             intent=raw.intent,

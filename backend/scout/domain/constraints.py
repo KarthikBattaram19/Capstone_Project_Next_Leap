@@ -7,6 +7,7 @@ from datetime import date
 from typing import ClassVar, Literal
 
 from scout.domain.listing import BhkType, Furnishing, Parking, PropertyType
+from scout.domain.locality_names import one_per_place
 from scout.domain.money import rupees
 
 
@@ -70,7 +71,8 @@ class ConstraintSet:
     def readback(self) -> list[str]:
         out: list[str] = []
         if self.localities:
-            out.append("in " + " or ".join(self.localities))
+            # One name per place: "TCPalya" searches T.C Palya and TC Palya (C1).
+            out.append("in " + " or ".join(one_per_place(self.localities)))
         if self.bhk_type:
             out.append(f"a {_text(self.bhk_type)}")
         if self.rent_max is not None:

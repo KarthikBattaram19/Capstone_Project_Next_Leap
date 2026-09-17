@@ -14,7 +14,8 @@ from scout.conversation.job1 import Job1, Job1Down, Job1Result
 from scout.conversation.router import classify_turn, normalise_ordinals, parse_ordinal
 from scout.conversation.session import ConfirmConstraints, ConfirmHeard, ConfirmLocality, Session
 from scout.conversation.speaker import Speaker, split_sentences
-from scout.domain.constraints import ConstraintEdit
+from scout.domain.constraints import ConstraintEdit, ConstraintSet
+from scout.domain.locality_names import one_per_place
 from scout.domain.money import rupees
 from scout.domain.shortlist import Shortlist
 from scout.engines import shortlist as engine
@@ -92,6 +93,37 @@ class NullSpeaker:
 
     async def cancel(self) -> None:
         return None
+
+
+def _wanted(c: ConstraintSet) -> str:
+    """What was not found, in plain words: "3BHK under ₹70,000 in Indiranagar"."""
+    noun = [_plain(c.furnishing), _plain(c.bhk_type), _plain(c.property_type)]
+    words = [w for w in noun if w] or ["listings"]
+    if c.rent_min is not None and c.rent_max is not None:
+        words.append(f"between {rupees(c.rent_min)} and {rupees(c.rent_max)}")
+    elif c.rent_max is not None:
+        words.append(f"under {rupees(c.rent_max)}")
+    elif c.rent_min is not None:
+        words.append(f"from {rupees(c.rent_min)}")
+    if c.deposit_max is not None:
+        words.append(f"with a deposit up to {rupees(c.deposit_max)}")
+    if c.parking_required:
+        words.append(f"with {_plain(c.parking_required).replace(' ', '-')} parking")
+    if c.lift_required:
+        words.append("with a lift")
+    if c.amenities_required:
+        words.append("with " + " and ".join(sorted(c.amenities_required)))
+    if c.square_footage_min:
+        words.append(f"of at least {c.square_footage_min} sq ft")
+    if c.available_by:
+        words.append(f"available by {c.available_by.isoformat()}")
+    if c.localities:
+        words.append("in " + " or ".join(one_per_place(c.localities)))
+    return " ".join(words)
+
+
+def _plain(v: object) -> str:
+    return str(getattr(v, "value", v)).replace("_", " ") if v else ""
 
 
 class TurnOrchestrator:
@@ -359,7 +391,7 @@ class TurnOrchestrator:
             places = [e for e in res.edits if e.field == "localities" and e.op in ("add", "set")]
             if places:
                 session.pending = ConfirmLocality(edits=places)
-                names = " and ".join(str(e.value) for e in places)
+                names = " and ".join(one_per_place(str(e.value) for e in places))
                 q = CONVERSATIONAL_REPLIES["english_only_locality"].format(localities=names)
                 return NeedsInput(question=q, field="locality", options=["yes", "no"], spoken=q)
             q = CONVERSATIONAL_REPLIES["english_only"]
@@ -570,27 +602,28 @@ class TurnOrchestrator:
                 session.shortlist = Shortlist()
                 msg = CONVERSATIONAL_REPLIES["all_withdrawn"]
                 return Empty(unmet=[], suggestions=[], spoken=msg)
-            unmet = engine.binding_constraints(new, session.constraints)
-            nearby = engine.nearest_localities(
-                session.constraints.localities, self.store.places, self.store.localities
-            )
-            tips = engine.suggest_relaxations(new, session.constraints, nearby)
-            binding = unmet[0] if unmet else None
-            where = (
-                " in " + " or ".join(session.constraints.localities)
-                if session.constraints.localities
-                else ""
-            )
-            if binding and binding.field == "rent_max":
-                what = f"nothing under {rupees(session.constraints.rent_max)}"
-            elif binding:
-                what = f"nothing matching your {binding.field.replace('_', ' ')}"
-            else:
-                what = "nothing"
-            spoken = f"I found {what}{where}"
+            c = session.constraints
+            available = self.availability.is_available
+            unmet = engine.binding_constraints(new, c)
+            # The place binds only when the rest of what she asked for exists elsewhere;
+            # then the neighbours offered are ones that have it. Production, 2026-09-17:
+            # "nothing matching your localities" was said whatever ruled everything out,
+            # because every listing elsewhere counts as excluded by the locality.
+            nearby: list[str] = []
+            if c.localities:
+                elsewhere = engine.build(listings, engine.without(c, "localities"), available)
+                if elsewhere.order:
+                    having = sorted({self.store.listings[i].locality for i in elsewhere.order})
+                    nearby = engine.nearest_localities(c.localities, self.store.places, having)
+            not_stated = {}
+            for fld, ids in new.unknown.items():
+                shown = engine.build(listings, engine.without(c, fld), available).order
+                not_stated[fld] = len(set(shown) & set(ids))
+            tips = engine.suggest_relaxations(new, c, nearby, not_stated)
+            spoken = f"No {_wanted(c)}."
             if tips:
-                spoken += " — " + ", ".join(tips)
-            spoken += ". I won't relax anything myself; tell me what to change."
+                spoken += " You could " + ", or ".join(tips) + "."
+            spoken += " I won't relax anything myself; tell me what to change."
             session.last_read_order = []
             return Empty(unmet=unmet, suggestions=tips, spoken=spoken)
 

@@ -116,5 +116,34 @@ def test_a_locality_relaxation_is_only_suggested_from_computed_neighbours():
 
     s = Shortlist(excluded=(Exclusion("x", "locality HSR Layout", "localities"),))
     c = ConstraintSet(localities=("Indiranagar",))
-    assert suggest_relaxations(s, c, nearby=["Domlur"]) == ["or nearby Domlur"]
+    assert suggest_relaxations(s, c, nearby=["Domlur"]) == ["look nearby in Domlur"]
     assert suggest_relaxations(s, c, nearby=[]) == [], "never name a place as nearby unmeasured"
+
+
+def test_nearby_names_each_place_once_and_never_another_spelling_of_the_chosen_one():
+    """Production, 2026-09-17: "nearby Austin Town / Domluru" - and Domlur/Domluru are one
+    place, so a search in Domlur must not offer Domluru as nearby, nor offer it twice."""
+    from scout.engines.shortlist import nearest_localities
+
+    places = {
+        "Domlur": {"lat": 12.961, "lng": 77.638},
+        "Domluru": {"lat": 12.9611, "lng": 77.6381},
+        "T.C Palya": {"lat": 12.962, "lng": 77.639},
+        "TC Palya": {"lat": 12.9621, "lng": 77.6391},
+        "Indiranagar": {"lat": 12.971, "lng": 77.641},
+        "Whitefield": {"lat": 12.970, "lng": 77.750},
+    }
+    covered = sorted(places)
+    assert nearest_localities(["Domlur"], places, covered, k=2) == ["TC Palya", "Indiranagar"]
+
+
+def test_a_not_stated_detail_is_offered_in_plain_words():
+    """Production, 2026-09-17: "or include the listings where that detail is not stated"."""
+    from scout.domain.shortlist import Shortlist
+    from scout.engines.shortlist import suggest_relaxations
+
+    s = Shortlist(unknown={"amenities_required": ("x", "y")})
+    c = ConstraintSet(localities=("TC Palya",), amenities_required=frozenset({"hospital"}))
+    tips = suggest_relaxations(s, c, nearby=[], not_stated={"amenities_required": 2})
+    assert tips == ["leave out hospital - 2 listings there don't mention it"]
+    assert suggest_relaxations(s, c, nearby=[]) == [], "offered only when it would show some"

@@ -232,3 +232,60 @@ async def test_a_locality_that_differs_only_in_spaces_or_dots_is_that_locality()
 
     assert res.ambiguities == []
     assert [(e.field, e.value) for e in res.edits] == [("localities", "KR Puram")]
+
+
+_VARIANTS = _MANY + ["T.C Palya", "TC Palya", "S.G Palya", "N.S Palya", "Domlur", "Domluru"]
+
+
+async def test_a_place_spelt_several_ways_in_the_data_is_one_place_and_needs_no_question():
+    """Production, 2026-09-17, conv 3: "I'm in TCPalya." was answered "TCPalya isn't
+    covered" three times, because T.C Palya and TC Palya both squash to "tcpalya"."""
+    said = dict(
+        GOOD,
+        edits=[
+            {"field": "bhk_type", "op": "set", "value": "2BHK"},
+            {"field": "localities", "op": "add", "value": "TCPalya"},
+            {"field": "rent_max", "op": "set", "value": "50,000"},
+        ],
+    )
+    res = await Job1(FakeGroq([said]), localities=_VARIANTS).extract(
+        "2 BHK in TCPalya under 50,000", ConstraintSet()
+    )
+    assert res.ambiguities == []
+    places = [e for e in res.edits if e.field == "localities"]
+    assert sorted(e.value for e in places) == ["T.C Palya", "TC Palya"]
+    assert places[0].op == "add" and all(e.op == "add" for e in places)
+
+
+async def test_a_name_with_a_kannada_ending_in_the_data_brings_both_spellings():
+    """Domlur has 2 listings and Domluru 8: saying Domlur searches all ten."""
+    said = dict(GOOD, edits=[{"field": "localities", "op": "set", "value": "Domlur"}])
+    res = await Job1(FakeGroq([said]), localities=_VARIANTS).extract("Domlur", ConstraintSet())
+    assert res.ambiguities == []
+    assert [(e.op, e.value) for e in res.edits] == [("set", "Domlur"), ("add", "Domluru")]
+
+
+async def test_removing_a_place_removes_every_spelling_of_it():
+    said = dict(GOOD, edits=[{"field": "localities", "op": "remove", "value": "TC Palya"}])
+    res = await Job1(FakeGroq([said]), localities=_VARIANTS).extract(
+        "not TC Palya", ConstraintSet()
+    )
+    assert sorted((e.op, e.value) for e in res.edits) == [
+        ("remove", "T.C Palya"),
+        ("remove", "TC Palya"),
+    ]
+
+
+async def test_a_misheard_place_is_offered_once_not_once_per_spelling():
+    """Production, 2026-09-17: "Did you mean Domluru or Domlur?" and "Did you mean T.C Palya,
+    TC Palya or N.S Palya?" - the same place offered twice."""
+    said = dict(GOOD, edits=[{"field": "localities", "op": "add", "value": "Domlor"}])
+    res = await Job1(FakeGroq([said]), localities=_VARIANTS).extract("Domlor", ConstraintSet())
+    options = res.ambiguities[0].options
+    assert len([o for o in options if o in ("Domlur", "Domluru")]) == 1, options
+
+    said = dict(GOOD, edits=[{"field": "localities", "op": "add", "value": "TKPalya"}])
+    res = await Job1(FakeGroq([said]), localities=_VARIANTS).extract("TKPalya", ConstraintSet())
+    options = res.ambiguities[0].options
+    assert len([o for o in options if o in ("T.C Palya", "TC Palya")]) == 1, options
+    assert len(options) == len(set(options))
