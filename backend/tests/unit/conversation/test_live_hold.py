@@ -390,3 +390,47 @@ async def test_a_keepalive_is_due_whenever_no_audio_has_flowed_whatever_the_stat
     session.state = TurnState.IDLE
     await session.audio(bytes(320))
     assert session._keepalive_due(), "IDLE keeps its keepalive, as before"
+
+
+async def test_a_sound_onset_alone_does_not_stop_the_reply_but_words_do(live, capsys):
+    """D1, production 2026-09-17: `audio_out stop` 0.9-1.3 s after the renter's last words, no
+    TTS bytes, and no renter words for 5-9 s after (conv 1-4). Likely cause, not confirmed: the
+    server is SPEAKING from the moment the outcome is sent, before the page mutes the mic, so
+    a trailing noise's onset stopped the reply. While SPEAKING only words barge in."""
+    session, _ = live()
+    session.state = TurnState.SPEAKING
+
+    await session._speech_started()  # a breath after "...in Domlur."
+    assert session.orch.cancelled == 0, "an onset alone stopped the reply"
+    assert session.state is TurnState.SPEAKING
+    assert "barge-in" not in capsys.readouterr().err
+
+    await session._interim("stop please")  # real words: the renter wins
+    assert session.orch.cancelled == 1
+    assert session.state is TurnState.CAPTURING
+    err = capsys.readouterr().err
+    assert "barge-in trigger=words state=speaking" in err
+    assert "stop" not in err.replace("barge-in", ""), "logs carry no transcript text"
+
+
+async def test_every_barge_in_is_logged_with_its_trigger_and_no_text(live, capsys):
+    async def slow(session, text):
+        await asyncio.sleep(5)
+        return Answered(view_model=AnsweredViewModel(), spoken="too late")
+
+    session, _ = live(slow)
+    await session._final("two BHK in Koramangala")
+    await asyncio.sleep(0.05)
+    await session._interim("actually Domlur")  # words while thinking
+    err = capsys.readouterr().err
+    assert "barge-in trigger=words state=type_a" in err
+    assert "Domlur" not in err and "Koramangala" not in err
+
+    session.state = TurnState.SPEAKING
+    await session.text("three BHK in Whitefield")  # typed over the reply
+    await asyncio.sleep(0.01)
+    err = capsys.readouterr().err
+    assert "barge-in trigger=typed state=speaking" in err
+    assert "Whitefield" not in err
+    if session._turn:
+        session._turn.cancel()

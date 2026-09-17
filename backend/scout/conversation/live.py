@@ -117,6 +117,7 @@ class LiveSession:
         """
         self._segments = [text]
         if self.state is TurnState.SPEAKING:  # typing is barge-in too
+            self._log_barge_in("typed")
             await self.orch.cancel_speech(self.session)
             if self._turn and not self._turn.done():
                 self._turn.cancel()
@@ -152,10 +153,12 @@ class LiveSession:
     async def _speech_started(self) -> None:
         if self.state is TurnState.IDLE:
             self.state = transition(self.state, TurnState.CAPTURING)
-        elif self.state is TurnState.SPEAKING:
-            # Barge-in (spec §6.17): the renter spoke over the reply, so stop it now.
-            # Cheap and reversible — the outcome is already on screen.
-            await self._barge_in()
+        # While SPEAKING, a sound onset alone stops nothing either (D1, production
+        # 2026-09-17): five replies were stopped 0.9-1.3 s after the renter's last words,
+        # with no TTS bytes sent and no renter words for 5-9 s after. Likely cause, not
+        # confirmed: the server is SPEAKING from the moment the outcome is sent, before the
+        # page has muted the mic, so a trailing noise's onset landed in that window. Barge-in
+        # during SPEAKING (spec §6.17) is words, in _words_arrived, or typing, in text().
         # While the assistant is still THINKING, a sound onset alone cancels nothing.
         # Deepgram's VAD fires on a breath or a chair; cancelling the turn on it and then
         # hearing no words left the page in "processing" forever (production, 2026-09-10).
@@ -179,7 +182,13 @@ class LiveSession:
         }
     )
 
-    async def _barge_in(self) -> None:
+    def _log_barge_in(self, trigger: str) -> None:
+        """One line per barge-in: what triggered it and the state it interrupted. No
+        transcript text — logs never carry what the renter said (spec §3.2, §5.3)."""
+        print(f"barge-in trigger={trigger} state={self.state.value.lower()}", file=sys.stderr)
+
+    async def _barge_in(self, trigger: str) -> None:
+        self._log_barge_in(trigger)
         await self.orch.cancel_speech(self.session)
         if self._turn and not self._turn.done():
             self._turn.cancel()
@@ -188,7 +197,7 @@ class LiveSession:
     async def _words_arrived(self, text: str) -> None:
         """Real words during a thinking or speaking turn: the renter's new sentence wins."""
         if text.strip() and self.state in self._THINKING | {TurnState.SPEAKING}:
-            await self._barge_in()
+            await self._barge_in("words")
 
     async def _interim(self, text: str) -> None:
         await self._words_arrived(text)
