@@ -163,7 +163,63 @@ HINDI_WITH_BUDGET = "mujhe Koramangala mein pachas hazaar tak chahiye"
 
 
 def unclear_with(*edits):
-    return j1(intent="unclear", edits=list(edits))
+    """Job 1's mark for a sentence in another language (spec §6.25)."""
+    return j1(intent="other_language", edits=list(edits))
+
+
+# --- A1, A4, A5 (voice fix batch 2026-09-17): English she did not follow, complaints, goodbye ---
+
+ENGLISH_ONLY = "I can only help in English"
+
+
+@pytest.mark.parametrize(
+    "said",
+    [
+        "You are not acknowledging my request.",
+        "You are giving irrelevant answers.",
+        "I think you are not picking me correctly.",
+        "Hello. Are you saying something? I did not listen from you.",
+        "Hello",
+        "I cannot listen to you.",
+        "We were already discussing about a listing. Right?",
+    ],
+)
+async def test_english_she_did_not_follow_is_not_told_to_speak_english(make, said):
+    """Production 2026-09-17: eight English sentences got the English-only line, because
+    Job 1's "unclear" meant both another language and did-not-understand."""
+    orch, s = make([j1(intent="unclear")])
+
+    o = await orch.handle_text(s, said)
+
+    assert ENGLISH_ONLY not in o.spoken
+    assert "Sorry, I didn't follow" in o.spoken
+    assert "for example" in o.spoken.lower()
+    assert s.pending is None and s.constraints.is_empty()
+    assert s.clarifying_asked == 0
+
+
+async def test_a_complaint_about_her_gets_an_apology_that_says_what_she_can_do(make):
+    """A4: "Can you be more polite?" was answered with the out-of-scope line."""
+    orch, s = make([j1(intent="feedback")])
+
+    o = await orch.handle_text(s, "I think you are bit not so polite. Can you be more polite?")
+
+    assert isinstance(o, Answered)
+    assert "sorry" in o.spoken.lower()
+    assert "not buying" not in o.spoken and ENGLISH_ONLY not in o.spoken
+    assert "book a visit" in o.spoken
+    assert s.shortlist.is_empty() and s.constraints.is_empty()
+
+
+async def test_goodbye_is_a_polite_close_and_asks_for_nothing(make):
+    """A5: "Okay. I'm ending the conversation here." asked for a confirmation code."""
+    orch, s = make([j1(intent="goodbye")])
+
+    o = await orch.handle_text(s, "Okay. I'm ending the conversation here.")
+
+    assert isinstance(o, Answered)
+    assert "code" not in o.spoken.lower() and "?" not in o.spoken
+    assert "bye" in o.spoken.lower()
 
 
 async def test_a_sentence_in_another_language_is_told_english_is_the_scope(make):

@@ -26,7 +26,7 @@ def _job1() -> Job1:
     return Job1(make_job1_client(Settings()), LOCALITIES)
 
 
-# ---- §6.25: another language is "unclear"; Indian English is not
+# ---- §6.25: another language is "other_language"; Indian English is not
 
 
 @pytest.mark.parametrize(
@@ -36,17 +36,17 @@ def _job1() -> Job1:
         "nanage Koramangala alli ondu mane beku",  # Kannada, romanised
     ],
 )
-async def test_another_language_is_unclear_and_keeps_only_the_locality(said):
+async def test_another_language_is_other_language_and_keeps_only_the_locality(said):
     res = await _job1().extract(said, ConstraintSet())
-    assert res.intent == "unclear", res.intent
+    assert res.intent == "other_language", res.intent
     assert [e.value for e in res.edits if e.field == "localities"] == ["Koramangala"], res.edits
     extra = [e for e in res.edits if e.field != "localities"]
     assert not extra, f"acted on something heard in another language: {extra}"
 
 
-async def test_another_language_with_no_locality_is_unclear_with_no_edits():
+async def test_another_language_with_no_locality_is_other_language_with_no_edits():
     res = await _job1().extract("kiraya kitna hai", ConstraintSet())
-    assert res.intent == "unclear", res.intent
+    assert res.intent == "other_language", res.intent
     assert not res.edits, res.edits
 
 
@@ -59,7 +59,7 @@ async def test_another_language_with_no_locality_is_unclear_with_no_edits():
 )
 async def test_indian_english_is_not_mistaken_for_another_language(said):
     res = await _job1().extract(said, ConstraintSet())
-    assert res.intent != "unclear", f"Indian English marked unclear: {said!r}"
+    assert res.intent not in ("unclear", "other_language"), f"Indian English misread: {said!r}"
     assert any(e.field == "localities" for e in res.edits), res.edits
 
 
@@ -109,3 +109,42 @@ async def test_i_work_in_is_a_commute_point_not_a_locality():
     assert "commute" in fields, res.edits
     assert "Whitefield" in str(fields["commute"].value), res.edits
     assert "localities" not in fields, res.edits
+
+
+# ---- Voice fix batch 2026-09-17 (A1, A4, A5): sentences heard on production
+
+
+@pytest.mark.parametrize(
+    "said",
+    [
+        "You are not acknowledging my request.",
+        "You are giving irrelevant answers.",
+        "I cannot listen to you.",
+        "Hello",
+    ],
+)
+async def test_english_is_never_marked_another_language(said):
+    res = await _job1().extract(said, ConstraintSet(localities=("Koramangala",)))
+    assert res.intent in ("unclear", "feedback"), res.intent
+
+
+async def test_a_complaint_about_manner_is_feedback():
+    res = await _job1().extract(
+        "I think you are bit not so polite. Can you be more polite?", ConstraintSet()
+    )
+    assert res.intent == "feedback", res.intent
+
+
+async def test_ending_the_conversation_is_goodbye_not_cancel():
+    res = await _job1().extract("Okay. I'm ending the conversation here.", ConstraintSet())
+    assert res.intent == "goodbye", res.intent
+
+
+async def test_a_search_across_bangalore_is_not_out_of_scope():
+    current = ConstraintSet(localities=("Koramangala",), bhk_type="2BHK", rent_max=50000)
+    res = await _job1().extract(
+        "I did not ask just about this property. I was asking about any other property in "
+        "the Bangalore has the details I mentioned.",
+        current,
+    )
+    assert res.intent != "out_of_scope", res.intent

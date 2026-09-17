@@ -166,6 +166,46 @@ async def test_cancel_with_an_unknown_code_gets_the_shared_not_found_line(make):
     assert o.spoken == NOT_FOUND_TELL
 
 
+@pytest.mark.parametrize(
+    "said",
+    [
+        "Okay. I'm ending the conversation here.",
+        "Okay, that's all, thank you.",
+        "Stop.",
+        "Forget it.",
+    ],
+)
+async def test_a_cancel_without_a_cancel_word_or_a_code_is_not_a_cancel(make, said):
+    """A5, production 2026-09-17: "Okay. I'm ending the conversation here." was read as a
+    cancel and she asked for the six-character code. A booking stays booked."""
+    orch, s, cal, _ = make(BOOK_SCRIPT + [j1(intent="cancel")])
+    await _drive_to_email_confirm(orch, s)
+    await orch.handle_text(s, "yes")
+    events = dict(cal.events)
+
+    o = await orch.handle_text(s, said)
+
+    assert "code" not in o.spoken.lower()
+    assert not (isinstance(o, NeedsInput) and o.field in ("code", "cancel_confirm"))
+    assert cal.events == events
+    assert s.pending is None
+
+
+@pytest.mark.parametrize(
+    "said",
+    [
+        "cancel my visit",
+        "I want to cancel the booking",
+        "please call off the appointment",
+        "Cancel my code.",
+    ],
+)
+async def test_a_cancel_word_with_a_visit_word_still_asks_for_the_code(make, said):
+    orch, s, _, _ = make([j1(intent="cancel")])
+    o = await orch.handle_text(s, said)
+    assert isinstance(o, NeedsInput) and o.field == "code"
+
+
 async def test_cancel_by_voice_reads_the_visit_back_and_needs_a_yes(make):
     orch, s, cal, _ = make(BOOK_SCRIPT + [j1(intent="cancel"), j1(intent="confirm_yes")])
     await _drive_to_email_confirm(orch, s)

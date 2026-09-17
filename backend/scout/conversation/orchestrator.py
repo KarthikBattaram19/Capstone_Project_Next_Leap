@@ -54,6 +54,20 @@ CONVERSATIONAL_REPLIES: dict[str, str] = {
         "'a 2BHK in Koramangala under 35,000'?"
     ),
     "english_only_locality": "I can only help in English for now. Did you mean {localities}?",
+    # A1: English that Job 1 could not turn into anything. Not a statement of scope - the
+    # renter spoke English, and telling them to was the bug (production, 2026-09-17).
+    "unclear": (
+        "Sorry, I didn't follow that. Could you say it another way — for example, "
+        "'a 2BHK in Koramangala under 35,000'?"
+    ),
+    # A4, persona P-5: a complaint about her answers is taken, then the task is offered again.
+    "feedback": (
+        "Sorry about that — I'll keep my answers short and to the point. I can find flats "
+        "to rent in Bengaluru, tell you about a listing, and book a visit. What would you "
+        "like next?"
+    ),
+    # A5: a close, never a cancel. Nothing booked is touched.
+    "goodbye": "Thank you for talking with me — goodbye, and good luck with the flat hunt.",
     "locality_in_english": "Okay. Which locality would you like? Please say it in English.",
     "no_constraints": (
         "Tell me a budget and a locality to start — for example, 'a 2BHK in Koramangala "
@@ -328,13 +342,20 @@ class TurnOrchestrator:
             return self._say(session, CONVERSATIONAL_REPLIES["out_of_scope"])
         if res.intent == "owner_contact":
             return self._say(session, CONVERSATIONAL_REPLIES["owner_contact"])
+        if res.intent == "feedback":
+            return self._say(session, CONVERSATIONAL_REPLIES["feedback"])
+        if res.intent == "goodbye":
+            return self._say(session, CONVERSATIONAL_REPLIES["goodbye"])
+        if res.intent == "unclear":
+            return self._not_followed()
 
-        # Spec §6.25: Job 1 marks a sentence in another language, or mixed with one, "unclear".
+        # Spec §6.25: Job 1 marks a sentence in another language, or mixed with one,
+        # "other_language".
         # Nothing in it is acted on. A locality that came through recognisably is named back
         # for a yes before it is used; anything else heard - a budget, a bedroom count - is
         # dropped, never guessed. This is a statement of scope, not a clarifying question, so
         # it does not spend the §6.29 budget.
-        if res.intent == "unclear":
+        if res.intent == "other_language":
             places = [e for e in res.edits if e.field == "localities" and e.op in ("add", "set")]
             if places:
                 session.pending = ConfirmLocality(edits=places)
@@ -347,6 +368,9 @@ class TurnOrchestrator:
         booked = await self.booking_flow.handle(session, res, text)
         if booked is not None:
             return booked
+        if res.intent == "cancel":
+            # The booking flow declined it: no cancel word with a visit word, and no code (A5).
+            return self._not_followed()
 
         if res.reference is not None:
             return self._resolve_reference(session, res.reference)
@@ -462,6 +486,13 @@ class TurnOrchestrator:
                 question=applied.question, field=applied.field, spoken=applied.question
             )
         return applied
+
+    @staticmethod
+    def _not_followed() -> NeedsInput:
+        """English that could not be read (A1). Not a clarifying question about a field, so it
+        does not spend the §6.29 budget."""
+        q = CONVERSATIONAL_REPLIES["unclear"]
+        return NeedsInput(question=q, field="unclear", spoken=q)
 
     def _say(self, session: Session, sentence: str) -> Answered:
         return Answered(view_model=self._view(session, notices=[sentence]), spoken=sentence)

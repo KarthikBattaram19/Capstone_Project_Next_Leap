@@ -27,6 +27,9 @@ def test_every_conversational_reply_fits_the_sentence_cap():
     # length is set by the facts that resolved, not by the persona.
     from scout.conversation.orchestrator import CONVERSATIONAL_REPLIES
 
+    # The lines added by the 2026-09-17 voice fix batch (A1, A4, A5) are in the dict, so the
+    # cap covers them.
+    assert {"unclear", "feedback", "goodbye"} <= set(CONVERSATIONAL_REPLIES)
     for name, text in CONVERSATIONAL_REPLIES.items():
         assert len(split_sentences(text)) <= persona.MAX_REPLY_SENTENCES, name
 

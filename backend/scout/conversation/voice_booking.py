@@ -32,6 +32,20 @@ from scout.domain.booking import IST, Slot
 
 _EMAIL = re.compile(r"^[^@\s]+@[^@\s]+\.[a-z]{2,}$", re.IGNORECASE)
 
+_CANCEL_WORD = re.compile(r"\b(?:cancel\w*|call(?:ing|ed)?\s+(?:\w+\s+)?off)\b", re.IGNORECASE)
+_BOOKING_WORD = re.compile(r"\b(?:visits?|bookings?|appointments?|codes?)\b", re.IGNORECASE)
+
+
+def _asks_to_cancel(res: Job1Result, text: str) -> bool:
+    """A cancel needs a cancel word about a visit, booking, appointment or code - or a code.
+
+    Production, 2026-09-17: "Okay. I'm ending the conversation here." came back from Job 1 as
+    a cancel, and she asked for the six-character confirmation code.
+    """
+    if len((res.code or "").upper().replace(" ", "")) == 6:
+        return True
+    return bool(_CANCEL_WORD.search(text) and _BOOKING_WORD.search(text))
+
 
 _WORD_NUMBERS = {
     w: i + 1
@@ -264,6 +278,8 @@ class VoiceBookingFlow:
             )
 
         if res.intent == "cancel":
+            if not _asks_to_cancel(res, text):
+                return None
             session.reschedule_code = None
             code = (res.code or "").upper().replace(" ", "")
             if len(code) != 6:
