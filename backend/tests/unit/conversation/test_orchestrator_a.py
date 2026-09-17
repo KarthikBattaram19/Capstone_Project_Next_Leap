@@ -80,7 +80,8 @@ async def test_constraints_are_read_back_before_any_shortlist(make):
 
 async def test_empty_is_a_result_and_names_the_binding_constraint(make):
     orch, s = make([j1(edits=[ConstraintEdit("rent_max", "set", 5000)]), j1(intent="confirm_yes")])
-    await orch.handle_text(s, "anything under five thousand")
+    # F1: "anywhere" settles where to search, so no area question comes first.
+    await orch.handle_text(s, "anything under five thousand, anywhere")
     o = await orch.handle_text(s, "yes")
     assert isinstance(o, Empty)
     assert o.unmet[0].field == "rent_max"
@@ -96,11 +97,17 @@ async def test_job1_down_is_a_failed_error_not_an_empty_result(make):
 async def test_contradiction_asks_and_counts_against_the_budget(make):
     orch, s = make(
         [
-            j1(edits=[ConstraintEdit("rent_min", "set", 30000)]),
+            j1(
+                edits=[
+                    ConstraintEdit("localities", "add", "Koramangala"),
+                    ConstraintEdit("rent_min", "set", 30000),
+                ]
+            ),
             j1(edits=[ConstraintEdit("rent_max", "set", 25000)]),
         ]
     )
-    await orch.handle_text(s, "only above 30k")
+    # A place, so F1's area question is not asked first and spent from the budget.
+    await orch.handle_text(s, "only above 30k in Koramangala")
     o = await orch.handle_text(s, "under 25k")
     assert isinstance(o, NeedsInput)
     assert s.clarifying_asked == 1

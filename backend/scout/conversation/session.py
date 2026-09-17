@@ -53,6 +53,13 @@ class AwaitCode:
 
 
 @dataclass
+class AwaitArea:
+    """ "Bengaluru is big — is there an area you prefer, or somewhere you commute to?" was
+    asked before the first shortlist (F1). "Anywhere" is read in code; a place or a commute
+    point goes to Job 1 as an ordinary sentence."""
+
+
+@dataclass
 class AwaitSlotChoice:
     listing_id: str
     slots: list  # list[Slot] (Task 3.1)
@@ -82,6 +89,7 @@ PendingAction = (
     | ConfirmLocality
     | AwaitLocalityChoice
     | AwaitCode
+    | AwaitArea
     | AwaitSlotChoice
     | AwaitEmail
     | ConfirmEmail
@@ -103,6 +111,11 @@ class Session:
     reschedule_code: str | None = None
     # E2: "the listings don't state the kind of parking" is said once per conversation.
     parking_kind_explained: bool = False
+    # F1: where to search has been asked about, or she said anywhere. Asked once.
+    area_settled: bool = False
+    # F1: how the shortlist is ordered: "cheapest" (the engine's rank), "largest", "metro"
+    # or "commute" once she asks for another order.
+    order_by: str = "cheapest"
     speaker_factory: Callable[[], object] | None = None  # set per live session (Task 2.10)
     speaker: object | None = None
     speaking: asyncio.Task | None = None

@@ -132,6 +132,13 @@ _REQUIREMENT = re.compile(
     r"\bat\s+least\b",
     re.IGNORECASE,
 )
+
+
+def mentions_requirement(text: str) -> bool:
+    """Whether the words carry a requirement marker anywhere, question or not (F1)."""
+    return bool(_REQUIREMENT.search(text))
+
+
 _QUESTION_START = re.compile(
     r"^(?:(?:so|and|but|okay|ok|well|then|also|enough)[,\s]+)*"
     r"(?:why|what|when|where|who|which|how|is|are|was|does|do|did|can|could|will|would)\b",

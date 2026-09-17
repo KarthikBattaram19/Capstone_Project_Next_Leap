@@ -201,6 +201,18 @@ def refine(
     )
 
 
+def reorder(previous: Shortlist, key: Callable[[str], float | None]) -> Shortlist:
+    """The same listings in another order she asked for (F1): ascending `key`, a listing
+    with no value last, ties kept in their current order. Nothing is added or dropped."""
+    current = previous.order
+    order = sorted(current, key=lambda i: (key(i) is None, key(i) or 0))
+    return Shortlist(
+        matched=tuple(ShortlistEntry(i, n + 1) for n, i in enumerate(order)),
+        unknown=previous.unknown,
+        excluded=previous.excluded,
+    )
+
+
 def binding_constraints(s: Shortlist, c: ConstraintSet) -> list[UnmetConstraint]:
     counts: dict[str, int] = {}
     for x in s.excluded:

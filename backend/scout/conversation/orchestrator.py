@@ -13,8 +13,14 @@ from scout.contract.outcome import Answered, Degraded, Empty, Failed, NeedsInput
 from scout.contract.viewmodels import AnsweredViewModel
 from scout.conversation.booking_flow import BookingFlow, BookingNotWired
 from scout.conversation.job1 import Job1, Job1Down, Job1Result
-from scout.conversation.router import classify_turn, normalise_ordinals, parse_ordinal
+from scout.conversation.router import (
+    classify_turn,
+    mentions_requirement,
+    normalise_ordinals,
+    parse_ordinal,
+)
 from scout.conversation.session import (
+    AwaitArea,
     AwaitCode,
     AwaitLocalityChoice,
     ConfirmConstraints,
@@ -28,6 +34,7 @@ from scout.domain.constraints import ConstraintEdit, ConstraintSet
 from scout.domain.listing import Parking
 from scout.domain.locality_names import one_per_place, squash, variant_key
 from scout.domain.money import rupees
+from scout.domain.osm import OsmQuery
 from scout.domain.shortlist import Shortlist
 from scout.engines import shortlist as engine
 from scout.engines.availability import AvailabilityRegister
@@ -93,6 +100,18 @@ CONVERSATIONAL_REPLIES: dict[str, str] = {
     ),
     # B3: the last locality was removed, or none of the names offered was the one.
     "which_locality": "Which locality would you like instead?",
+    # F1: no place and no commute point. One question before the first shortlist.
+    "which_area": "Bengaluru is big — is there an area you prefer, or somewhere you commute to?",
+    # F1: the listings carry no rating, and rent is a generated placeholder
+    # (data/SOURCE_NOTES.md), so "better" is answered with the order they are in and the
+    # orders the data supports.
+    "better_listings": (
+        "The listings carry no rating or review, so I can't rank one as better. They're in "
+        "order {order}. I can put them {offers} instead."
+    ),
+    "no_commute_point": (
+        "I don't know where you commute to yet. Tell me, and I can put the nearest first."
+    ),
     "no_constraints": (
         "Tell me a budget and a locality to start — for example, 'a 2BHK in Koramangala "
         "under 35,000'."
@@ -136,6 +155,69 @@ def _with_notes(out: TurnOutcome, notes: list[str]) -> TurnOutcome:
         vm = out.view_model
         update["view_model"] = vm.model_copy(update={"notices": [*notes, *vm.notices]})
     return out.model_copy(update=update)
+
+
+# F1: "anywhere" in any sentence settles where to search; the looser answers count only as
+# an answer to "is there an area you prefer?".
+_ANYWHERE = re.compile(
+    r"\banywhere\b|\b(?:whole|entire)\s+(?:of\s+)?(?:the\s+)?(?:city|bengaluru|bangalore)\b|"
+    r"\ball\s+(?:over|across)\s+(?:the\s+city|bengaluru|bangalore)\b|"
+    r"\bany\s+(?:area|locality|location)\b",
+    re.IGNORECASE,
+)
+_NO_AREA = re.compile(
+    r"^\W*(?:no|nope|not really|no preference|(?:it\s+)?does(?:n'?t| not) matter|any|"
+    r"whatever|you (?:choose|decide|pick)|(?:it'?s\s+)?up to you|i leave it to you|"
+    r"no particular (?:area|place|preference))(?:\s+(?:is fine|works|is ok(?:ay)?))?\W*$",
+    re.IGNORECASE,
+)
+# F1: asking for another order, or asking why these and not better ones.
+_ORDER_WORDS = {
+    "largest": re.compile(
+        r"\b(?:largest|biggest|larger|bigger)(?:\s+(?:ones?|flats?|listings?))?\s+first\b|"
+        r"\bsort(?:ed)?\s+(?:them\s+)?by\s+(?:size|area|square\s+f\w+)\b",
+        re.IGNORECASE,
+    ),
+    "metro": re.compile(
+        r"\b(?:nearest|closest)\s+(?:to\s+)?(?:the\s+|a\s+)?metro(?:\s+station)?\s+first\b|"
+        r"\bsort(?:ed)?\s+(?:them\s+)?by\s+(?:the\s+)?metro\b",
+        re.IGNORECASE,
+    ),
+    "commute": re.compile(
+        r"\b(?:nearest|closest)\s+to\s+(?:my\s+|the\s+)?(?:work|office|workplace|commute)"
+        r"\s+first\b|\bsort(?:ed)?\s+(?:them\s+)?by\s+(?:my\s+)?commute\b",
+        re.IGNORECASE,
+    ),
+    "cheapest": re.compile(
+        r"\bcheapest\s+first\b|\bsort(?:ed)?\s+(?:them\s+)?by\s+(?:rent|price)\b",
+        re.IGNORECASE,
+    ),
+}
+_BETTER = re.compile(
+    r"\b(?:better|best)\s+(?:listings?|options?|flats?|ones?|propert(?:y|ies)|places?|homes?|"
+    r"houses?|apartments?|choices?|locations?|matches)\b|\b(?:anything|something)\s+better\b|"
+    r"\bin what order\b|"
+    r"\bhow (?:are|did you) (?:they|these|them|you)\s+(?:sorted|ordered|sort|order)\b",
+    re.IGNORECASE,
+)
+_ORDER_SAID = {
+    "cheapest": "of rent, cheapest first, with a deposit of up to three months' rent ranked ahead",
+    "largest": "of size, largest first",
+    "metro": "of distance to the metro, nearest first",
+    "commute": "of distance to where you commute, nearest first",
+}
+_ORDER_OFFER = {
+    "cheapest": "cheapest first",
+    "largest": "largest first",
+    "metro": "nearest the metro first",
+    "commute": "nearest to where you commute first",
+}
+_ORDER_BUTTON = {
+    "cheapest": "cheapest first",
+    "largest": "largest first",
+    "metro": "nearest metro first",
+    "commute": "nearest to work first",
+}
 
 
 def _wanted(c: ConstraintSet) -> str:
@@ -280,7 +362,10 @@ class TurnOrchestrator:
 
     async def _dispatch(self, session: Session, text: str, turn_type: str) -> TurnOutcome:
         async with session.lock:  # one lock per session
-            if turn_type == "B":
+            ordered = self._order_turn(session, text)
+            if ordered is not None:
+                outcome = ordered
+            elif turn_type == "B":
                 outcome = await self._lane_b(session, text)
             else:
                 outcome = await self._lane_a(session, text)
@@ -442,6 +527,8 @@ class TurnOrchestrator:
         return out
 
     async def _lane_a(self, session: Session, text: str) -> TurnOutcome:
+        if _ANYWHERE.search(text):
+            session.area_settled = True  # F1: "anywhere in Bengaluru" needs no area question
         # B1: an answer to a question she was just asked is read in code, before Job 1,
         # which is not told what was asked and read "The 2nd 1, T C" and "9VR7JP." cold.
         answered = self._answer_to_pending(session, text)
@@ -609,6 +696,7 @@ class TurnOrchestrator:
             if lost_place and session.clarifying_asked < self.settings.max_clarifying_questions:
                 session.clarifying_asked += 1
                 session.pending = None
+                session.area_settled = True  # the place was just asked about (F1)
                 return self._which_locality()
 
         if session.constraints.is_empty():
@@ -618,9 +706,24 @@ class TurnOrchestrator:
             )
 
         if session.shortlist.is_empty():
+            c = session.constraints
+            whole_city = not c.localities and c.commute is None
+            # F1: "I leave it to you to give me the best location" searched 431 localities
+            # (production, 2026-09-17). With no place and no commute point, ask once.
+            if (
+                whole_city
+                and not session.area_settled
+                and session.clarifying_asked < self.settings.max_clarifying_questions
+            ):
+                session.area_settled = True
+                session.clarifying_asked += 1
+                session.pending = AwaitArea()
+                q = CONVERSATIONAL_REPLIES["which_area"]
+                return NeedsInput(question=q, field="locality", spoken=q)
             # First shortlist: read everything back and wait for a yes (spec §2.1)
             session.pending = ConfirmConstraints()
-            rb = "; ".join(session.constraints.readback())
+            parts = c.readback() + (["anywhere in Bengaluru"] if whole_city else [])
+            rb = "; ".join(parts)
             q = CONVERSATIONAL_REPLIES["readback"].format(readback=rb)
             return NeedsInput(
                 question=q, field="constraints_readback", options=["yes", "no"], spoken=q
@@ -630,6 +733,74 @@ class TurnOrchestrator:
         return await self._shortlist_turn(session)
 
     # ---- helpers
+
+    def _order_turn(self, session: Session, text: str) -> TurnOutcome | None:
+        """F1: "largest first" re-orders the shortlist; "any better listings?" says how it is
+        ordered and what else it can be ordered by. Read in code, before either lane: "nearest
+        metro first" would otherwise be explained, and "better" is not a requirement."""
+        if session.shortlist.is_empty() or session.pending is not None:
+            return None
+        if re.search(r"\d", text) or mentions_requirement(text) or self._names_place(text):
+            return None  # "better ones under 30,000 in HSR" is a search
+        asked = next((k for k, rx in _ORDER_WORDS.items() if rx.search(text)), None)
+        if asked is not None:
+            return self._reordered(session, asked)
+        if not _BETTER.search(text):
+            return None
+        kinds = ["cheapest", "largest", "metro"] + (
+            ["commute"] if session.constraints.commute else []
+        )
+        others = [k for k in kinds if k != session.order_by]
+        offers = [_ORDER_OFFER[k] for k in others]
+        said = ", ".join(offers[:-1]) + f" or {offers[-1]}"
+        q = CONVERSATIONAL_REPLIES["better_listings"].format(
+            order=_ORDER_SAID[session.order_by], offers=said
+        )
+        return NeedsInput(
+            question=q, field="order", options=[_ORDER_BUTTON[k] for k in others], spoken=q
+        )
+
+    def _names_place(self, text: str) -> bool:
+        said = squash(text)
+        return any(len(k) >= 4 and k in said for k in map(squash, self.store.localities))
+
+    def _reordered(self, session: Session, kind: str) -> TurnOutcome:
+        point = session.constraints.commute
+        if kind == "commute" and point is None:
+            q = CONVERSATIONAL_REPLIES["no_commute_point"]
+            return NeedsInput(question=q, field="commute", spoken=q)
+        listings = self.store.listings
+
+        def size(i: str):
+            sqft = listings[i].field("square_footage").value
+            return -sqft if sqft is not None else None
+
+        def metro(i: str):
+            return self.store.osm(i, OsmQuery.NEAREST_METRO).distance_m
+
+        def commute(i: str):
+            d = self.commute.to_point(i, point).value
+            return d.metres if d is not None else None
+
+        if kind == "cheapest":
+            ranked = engine.build(
+                list(listings.values()), session.constraints, self.availability.is_available
+            ).order
+            rank = {i: n for n, i in enumerate(ranked)}
+            key = rank.get
+        else:
+            key = {"largest": size, "metro": metro, "commute": commute}[kind]
+        session.shortlist = engine.reorder(session.shortlist, key)
+        session.order_by = kind
+        order = session.shortlist.order
+        session.last_read_order = order
+        vm = self._view(session)
+        first = self.vm.card(order[0], 1, point)
+        spoken = (
+            f"Here they are, {_ORDER_OFFER[kind]}. First is a {first.bhk_type} in "
+            f"{first.locality} at {first.rent}, {first.transit.spoken}."
+        )
+        return Answered(view_model=vm, spoken=spoken)
 
     def _nobody_states(self, name: str) -> bool:
         return all(x.field(name).value is None for x in self.store.listings.values())
@@ -666,6 +837,13 @@ class TurnOrchestrator:
         """What the words alone answer to the question pending, standing in for Job 1's
         result; a question to ask again; or None to run Job 1 as usual."""
         p = session.pending
+        if isinstance(p, AwaitArea):
+            session.pending = None
+            if _NO_AREA.match(text) or _ANYWHERE.search(text):
+                session.area_settled = True
+                if not re.search(r"\d", text) and len(text.split()) <= 8:
+                    return _result("set_preferences")  # the whole city, nothing else said
+            return None  # a place, a commute point or more: Job 1 reads it
         if isinstance(p, AwaitLocalityChoice):
             return self._locality_choice(session, p, text)
         if isinstance(p, AwaitCode):
@@ -857,8 +1035,14 @@ class TurnOrchestrator:
         vm = self._view(session, notices=notices)
         first = self.vm.card(new.order[0], 1, session.constraints.commute)
         n = len(new.order)
+        found = f"I found {n} listing{'s' if n > 1 else ''}"
+        c = session.constraints
+        if previous.is_empty():
+            session.order_by = "cheapest"
+            if not c.localities and c.commute is None:  # F1: say how the city is ordered
+                found += " across Bengaluru, cheapest first"
         spoken = (
-            f"I found {n} listing{'s' if n > 1 else ''}. First is a {first.bhk_type} in "
+            f"{found}. First is a {first.bhk_type} in "
             f"{first.locality} at {first.rent}, {first.transit.spoken}."
         )
         for u in vm.shortlist.unknown_on:
