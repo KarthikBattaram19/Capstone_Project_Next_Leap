@@ -299,7 +299,7 @@ class TurnOrchestrator:
     async def _lane_b(self, session: Session, text: str) -> TurnOutcome:
         from scout.contract.viewmodels import ClaimVM, ExplanationVM, SnapshotVM
         from scout.conversation.job2 import Job2Down
-        from scout.grounding.assembler import ClaimAssembler
+        from scout.grounding.assembler import ClaimAssembler, worth_saying
         from scout.grounding.opener import build_opener
         from scout.grounding.resolvers import ResolverRegistry
         from scout.grounding.retrieval import Retrieval
@@ -363,15 +363,33 @@ class TurnOrchestrator:
         bound_facts: dict = {}
         job2_failed = False
         job2_why = ""
+        # E1: a "why this one?" answer was a 57 s monologue on production (2026-09-17). She
+        # hears the opener, at most three short claims (two when a gap line follows) and at
+        # most one line about gaps; everything else is on screen.
+        max_spoken = 2 if assembler.gap_summary(text) else 3
+        spoken_claims: list[str] = []
+        seen: set[str] = set()
+        summary: str | None = None
         try:
             session.job2_task = asyncio.current_task()
             async for s in self.job2.explain(bundle, text):
                 claim = assembler.bind(s)
                 if claim is None:
                     continue  # dropped: no resolvable citation
+                key = " ".join(claim.text.lower().split())
+                if key in seen:
+                    continue  # the same sentence twice is said and shown once
+                seen.add(key)
                 claims.append(ClaimVM(text=claim.text, citation_refs=claim.refs))
                 bound_facts.update(claim.facts)
-                await queue.put(claim.text)  # released only once its citation resolved
+                if len(spoken_claims) < max_spoken and worth_saying(claim, lid):
+                    spoken_claims.append(claim.text)
+                    await queue.put(claim.text)  # released only once its citation resolved
+            summary = assembler.gap_summary(text, getattr(self.job2, "last_gaps", []))
+            if summary is not None and len(spoken_claims) < 3:
+                await queue.put(summary)
+            else:
+                summary = None
         except Job2Down as e:
             job2_failed = True
             # The provider's own words (status and message, never prose, never a key: the
@@ -395,7 +413,7 @@ class TurnOrchestrator:
                 file=sys.stderr,
             )
 
-        gaps = assembler.render_gaps() + [g for g in getattr(self.job2, "last_gaps", []) if g]
+        gaps = assembler.all_gaps(getattr(self.job2, "last_gaps", []))
         sources = [self.vm.citation(f, lid) for f in bound_facts.values()]
         vm = self._view(session)
 
@@ -418,7 +436,7 @@ class TurnOrchestrator:
             )
             out = Answered(
                 view_model=vm,
-                spoken=" ".join([opener] + [c.text for c in claims] + gaps),
+                spoken=" ".join([opener, *spoken_claims, *([summary] if summary else [])]),
             )
         object.__setattr__(out, "_already_spoken", True)  # lane B spoke as it went
         return out

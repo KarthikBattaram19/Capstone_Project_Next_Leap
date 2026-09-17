@@ -7,6 +7,7 @@ from dataclasses import dataclass
 from typing import Any
 
 from scout.conversation.job2 import Job2Sentence
+from scout.domain.money import rupees
 from scout.domain.provenance import Provenanced
 from scout.grounding.resolvers import FactBundle
 from scout.grounding.support import supports
@@ -39,10 +40,12 @@ _META_GAP = re.compile(
 
 
 # The field names the renter hears. "I don't have a available from figure" is not a
-# sentence anyone says out loud; the gap lines are humanised (spec §3.5).
+# sentence anyone says out loud; the gap lines are humanised (spec §3.5). The two
+# maintenance fields are one gap to the renter: on production (2026-09-17) she heard "I
+# don't have a maintenance charge figure ... I don't have a maintenance figure" back to back.
 _GAP_LABELS = {
     "available_from": "move-in date",
-    "maintenance_charges": "maintenance charge",
+    "maintenance_charges": "maintenance",
     "maintenance_included": "maintenance",
     "square_footage": "size",
     "area_basis": "carpet-or-built-up",
@@ -50,7 +53,51 @@ _GAP_LABELS = {
     "society_name": "society name",
     "total_floors": "total floors",
     "property_type": "property type",
+    "restaurants_within_500m": "restaurants within 500 m",
 }
+
+# A sentence of at most this many words is short enough to say; a longer one stays on screen.
+_SPOKEN_WORDS = 30
+
+
+def speakable(text: str) -> bool:
+    """E1: a raw field name ("maintenance_charges", "semi_furnished") is never said aloud."""
+    return "_" not in text
+
+
+_MONEY_FIELDS = ("rent", "deposit", "maintenance_charges")
+
+
+def format_money(text: str, facts: dict[str, Provenanced[Any]]) -> str:
+    """A cited amount said as "30000" or "Rs 30000" becomes "₹30,000" (E1).
+
+    FACTS already hands Job 2 the formatted amount; this is the net for when it does not copy it.
+    """
+    for ref, f in facts.items():
+        if ref.split(":")[-1] in _MONEY_FIELDS and isinstance(f.value, int) and f.value >= 1000:
+            text = re.sub(
+                rf"(?<![\d,])(?:₹\s*|Rs\.?\s*|INR\s*)?{f.value}(?![\d,])",
+                rupees(f.value),
+                text,
+            )
+    return text
+
+
+def worth_saying(claim: BoundClaim, listing_id: str) -> bool:
+    """Whether a bound claim is one of the few said aloud (E1); every claim is on screen."""
+    if not speakable(claim.text) or len(claim.text.split()) > _SPOKEN_WORDS:
+        return False
+    if all(f.value is None for f in claim.facts.values()):
+        return False  # a gap in prose: the one spoken gap line covers it
+    # The opener already said the rent and the BHK.
+    said = {f"dataset:{listing_id}:rent", f"dataset:{listing_id}:bhk_type"}
+    return not set(claim.refs) <= said
+
+
+def gap_label(name: str) -> str:
+    """The words for a field or map query: `nearest_metro` -> "nearest metro"."""
+    name = name.split(":")[-1].strip()
+    return _GAP_LABELS.get(name, name.replace("_", " "))
 
 
 @dataclass(frozen=True)
@@ -109,21 +156,82 @@ class ClaimAssembler:
             self._drop("unsupported")
             return None
         self.bound += 1
-        return BoundClaim(text=s.text, refs=list(s.fact_refs), facts=facts)
+        return BoundClaim(text=format_money(s.text, facts), refs=list(s.fact_refs), facts=facts)
 
-    def render_gaps(self) -> list[str]:
-        lines: list[str] = []
+    def _gap_items(self) -> list[tuple[str, str]]:
+        """(label, screen line) per gap in the facts, one per label, in bundle order."""
+        items: list[tuple[str, str]] = []
+        seen: set[str] = set()
         for ref in self._b.gaps():
             kind, _, rest = ref.partition(":")
-            name = _GAP_LABELS.get(rest.split(":")[-1], rest.split(":")[-1].replace("_", " "))
+            field = rest.split(":")[-1]
+            name = gap_label(field)
+            if name in seen:
+                continue
             if kind == "dataset":
                 article = "an" if name[0].lower() in "aeiou" else "a"
-                lines.append(f"I don't have {article} {name} figure for this listing.")
-            elif kind == "osm":
-                lines.append(
+                line = f"I don't have {article} {name} figure for this listing."
+            elif kind == "osm" and field.startswith("nearest_"):
+                line = (
                     f"No {name.replace('nearest ', '')} found in the map data within the "
                     "search radius."
                 )
+            elif kind == "osm":
+                line = f"No {name} found in the map data."
+            else:
+                continue
+            seen.add(name)
+            items.append((name, line))
+        return items
+
+    def render_gaps(self) -> list[str]:
+        lines = [line for _, line in self._gap_items()]
         if not self._b.chunks:
             lines.append("Limited neighbourhood data available for this locality.")
         return lines
+
+    def _extra_gaps(self, job2_gaps: list[str]) -> list[tuple[str, str]]:
+        """Job 2's own gaps list, minus what the facts already declare, in words.
+
+        On production it returned raw names ("maintenance_charges maintenance_included
+        parking lift ...") and they were read out as they stood.
+        """
+        known = {name.lower() for name, _ in self._gap_items()}
+        out: list[tuple[str, str]] = []
+        for g in job2_gaps:
+            g = g.strip()
+            if not g:
+                continue
+            if " " not in g:  # a field name or a ref
+                name = gap_label(g)
+                line = f"Not stated: {name}."
+            else:
+                name = g.replace("_", " ").rstrip(".")
+                line = name[0].upper() + name[1:] + "."
+            if name.lower() in known:
+                continue
+            known.add(name.lower())
+            out.append((name, line))
+        return out
+
+    def all_gaps(self, job2_gaps: list[str]) -> list[str]:
+        """Every gap for the screen, once each, never a raw field name."""
+        return self.render_gaps() + [line for _, line in self._extra_gaps(job2_gaps)]
+
+    def gap_summary(self, question: str, extra: list[str] | None = None) -> str | None:
+        """The one spoken line about gaps (E1). The rest are on screen.
+
+        It says "don't have": Suite C's null-row case listens for those words.
+        """
+        names = [n for n, _ in self._gap_items()]
+        names += [n for n, _ in self._extra_gaps(extra or []) if len(n.split()) <= 4]
+        if not names:
+            return None
+        q = question.lower()
+        asked = [n for n in names if any(w in q for w in n.lower().split() if len(w) > 3)]
+        ordered = asked + [n for n in names if n not in asked]
+        if len(ordered) == 1:
+            return f"I don't have the {ordered[0]} for this listing."
+        return (
+            f"I don't have some details for this listing, like the {ordered[0]} and {ordered[1]}."
+        )

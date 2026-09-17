@@ -288,3 +288,77 @@ async def test_this_2nd_listing_is_explained_not_selected(make):
     assert isinstance(out, Answered), f"got {out.kind}: {out.spoken}"
     assert out.view_model.explanation.listing_id == "kor-002"
     assert session.focus_listing_id == "kor-002"
+
+
+class GappyJob2(RecordingJob2):
+    """What Job 2 did on production (2026-09-17, conv 4): an unformatted rent, gap sentences,
+    the same gap twice, and raw field names in its gaps list."""
+
+    def __init__(self):
+        super().__init__(
+            lambda lid: [
+                Job2Sentence(
+                    "The rent is 42000 a month.",
+                    [f"dataset:{lid}:rent"],
+                ),
+                Job2Sentence("It is a 2BHK.", [f"dataset:{lid}:bhk_type"]),
+                Job2Sentence(
+                    "I don't have a maintenance figure for this listing.",
+                    [f"dataset:{lid}:maintenance_charges"],
+                ),
+                Job2Sentence(
+                    "I don't have a maintenance figure for this listing.",
+                    [f"dataset:{lid}:maintenance_included"],
+                ),
+                Job2Sentence("It is in the Sobha Iris society.", [f"dataset:{lid}:society_name"]),
+                Job2Sentence("The building has 6 floors.", [f"dataset:{lid}:total_floors"]),
+                Job2Sentence("It has 2 bathrooms.", [f"dataset:{lid}:bathrooms"]),
+            ]
+        )
+
+    async def explain(self, bundle, question):
+        async for s in super().explain(bundle, question):
+            yield s
+        self.last_gaps = [
+            "maintenance_charges",
+            "maintenance_included",
+            "lift",
+            "floor",
+            "available_from",
+            "amenities",
+            "area_basis",
+            "restaurants_within_500m",
+        ]
+
+
+async def test_why_the_first_one_is_a_short_answer_with_no_field_names(make):
+    """E1, conv 4 on production (2026-09-17): "why the first one?" was a 57 s monologue that
+    read every gap aloud, twice for maintenance, with raw field names and "30000"."""
+    from scout.conversation.speaker import split_sentences
+
+    job2 = GappyJob2()
+    orch, session, speaker, _ = make(job2)
+    session.last_read_order = ["kor-001"]
+
+    out = await orch.handle_text(session, "why the first one?")
+    await session.speaking
+
+    assert isinstance(out, Answered), f"got {out.kind}: {out.spoken}"
+    exp = out.view_model.explanation
+    spoken_after_opener = out.spoken[len(exp.opener) :].strip()
+    assert len(split_sentences(spoken_after_opener)) <= 3, out.spoken
+    assert len(split_sentences(out.spoken)) <= 4, out.spoken
+    assert "_" not in out.spoken, out.spoken
+    assert all("_" not in s for s in speaker.said), speaker.said
+    assert " ".join(speaker.said) == out.spoken
+    assert "42000" not in out.spoken and "₹42,000" in out.spoken, out.spoken
+    assert any("₹42,000" in c.text for c in exp.claims), [c.text for c in exp.claims]
+    assert all("42000" not in c.text for c in exp.claims), [c.text for c in exp.claims]
+    assert out.spoken.count("maintenance") <= 1, out.spoken
+    assert out.spoken.count("don't have") == 1, out.spoken
+    # The gaps are on screen: every one, once, in words.
+    assert all("_" not in g for g in exp.gaps), exp.gaps
+    assert len(exp.gaps) == len({g.lower() for g in exp.gaps}), exp.gaps
+    assert sum("maintenance" in g for g in exp.gaps) == 1, exp.gaps
+    assert any("lift" in g for g in exp.gaps), exp.gaps
+    assert any("restaurants" in g for g in exp.gaps), exp.gaps

@@ -190,3 +190,46 @@ def test_a_locality_with_no_guide_chunks_carries_the_limited_data_disclaimer():
 def test_the_disclaimer_is_absent_when_the_locality_does_have_a_guide_chunk():
     """The other half of §6.2: a disclaimer that always appeared would say nothing."""
     assert DISCLAIMER not in ClaimAssembler(bundle_with_a_chunk()).render_gaps()
+
+
+def _nulls(b: FactBundle, *names: str) -> FactBundle:
+    for n in names:
+        ref = f"dataset:a:{n}"
+        b.facts[ref] = Provenanced(
+            None, Source.DATASET, Timing.PRECOMPUTED, as_of=date(2026, 9, 1), citation_ref=ref
+        )
+    return b
+
+
+def test_maintenance_is_one_gap_not_two():
+    """E1: "I don't have a maintenance charge figure ... I don't have a maintenance figure"."""
+    lines = ClaimAssembler(
+        _nulls(bundle(), "maintenance_charges", "maintenance_included")
+    ).render_gaps()
+    assert sum("maintenance" in ln for ln in lines) == 1, lines
+
+
+def test_job2_gaps_in_field_names_become_words_and_are_not_repeated():
+    a = ClaimAssembler(_nulls(bundle(), "maintenance_charges", "maintenance_included", "lift"))
+    lines = a.all_gaps(["maintenance_charges", "dataset:a:lift", "restaurants_within_500m", "lift"])
+    assert all("_" not in ln for ln in lines), lines
+    assert sum("maintenance" in ln for ln in lines) == 1, lines
+    assert sum("lift" in ln for ln in lines) == 1, lines
+    assert any("restaurants" in ln for ln in lines), lines
+
+
+def test_the_spoken_gap_summary_is_one_sentence_naming_at_most_two():
+    a = ClaimAssembler(_nulls(bundle(), "maintenance_charges", "maintenance_included", "parking"))
+    line = a.gap_summary("why this one?")
+    assert line == "I don't have some details for this listing, like the deposit and maintenance."
+    assert a.gap_summary("is there a lift?", extra=["lift"]).startswith(
+        "I don't have some details for this listing, like the lift"
+    )
+    assert ClaimAssembler(FactBundle(listing_id="a", locality="K")).gap_summary("why?") is None
+
+
+def test_a_raw_field_name_is_never_speakable():
+    from scout.grounding.assembler import speakable
+
+    assert not speakable("maintenance_charges maintenance_included parking lift")
+    assert speakable("It's ₹42,000 a month.")
