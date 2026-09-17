@@ -167,8 +167,10 @@ export default function Page() {
     starting.current = true;
     setConnecting(true);
     dispatch({ type: "mic_error", error: null });
-    // Whatever a previous attempt left behind goes first: never two sessions per page.
+    // Whatever a previous attempt left behind goes first: never two sessions per page,
+    // and never the last conversation's shortlist on the new one's screen.
     stopSession();
+    dispatch({ type: "reset" });
     try {
       // Unlock audio inside the click, not after an await on the socket (spec §6.15).
       player.current ??= new PcmPlayer(24000);
@@ -279,6 +281,7 @@ export default function Page() {
 
   const endSession = useCallback(() => {
     stopSession();
+    dispatch({ type: "reset" });
     setStarted(false);
     reloadFlag.clear();
     setBookingListingId(null);

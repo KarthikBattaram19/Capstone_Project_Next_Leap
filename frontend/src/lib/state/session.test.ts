@@ -9,6 +9,34 @@ const shortlist = {
 };
 
 describe("session reducer", () => {
+  // Production, 2026-09-17: after "End conversation" a new session opened with the last
+  // one's shortlist on screen, before the renter had said anything.
+  it("a new conversation starts from a clean screen", () => {
+    const slot = { start_ist: "2026-09-15T10:00:00+05:30", end_ist: "2026-09-15T11:00:00+05:30", spoken: "Mon 10 am" };
+    let s = reduce(initial, {
+      type: "outcome",
+      outcome: {
+        kind: "answered",
+        spoken: "I found 1 listing.",
+        view_model: { constraints_readback: ["in Koramangala"], shortlist, notices: ["x"] },
+      },
+    });
+    s = reduce(s, { type: "offered", slots: [slot] });
+    s = reduce(s, { type: "outcome", outcome: { kind: "needs_input", spoken: "", question: "Which?", field: "slot", options: ["a"] } });
+    s = reduce(s, { type: "transcript", text: "the first one", final: true });
+
+    const fresh = reduce(s, { type: "reset" });
+    expect(fresh).toEqual(initial);
+
+    // The greeting of the next session carries no shortlist and must not bring one back.
+    const greeted = reduce(fresh, {
+      type: "outcome",
+      outcome: { kind: "answered", spoken: "Hello", view_model: { constraints_readback: [], shortlist: null, notices: [] } },
+    });
+    expect(greeted.shortlist).toBeNull();
+    expect(greeted.offeredSlots).toEqual([]);
+  });
+
   it("a failed outcome keeps the last shortlist on screen", () => {
     const s1 = reduce(initial, {
       type: "outcome",

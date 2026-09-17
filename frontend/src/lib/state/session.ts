@@ -65,6 +65,8 @@ export const initial: SessionState = {
 };
 
 export type Action =
+  /** A conversation ended or a new one is starting: nothing from the last one stays on screen. */
+  | { type: "reset" }
   | { type: "open" }
   | { type: "closed"; reason: string }
   | { type: "transcript"; text: string; final: boolean }
@@ -91,6 +93,8 @@ function closedConnection(reason: string): Connection {
 
 export function reduce(s: SessionState, a: Action): SessionState {
   switch (a.type) {
+    case "reset":
+      return initial;
     case "open":
       return { ...s, connection: "open" };
     case "closed":
