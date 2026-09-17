@@ -226,3 +226,81 @@ async def test_an_abandoned_reschedule_does_not_hijack_the_next_booking(make):
     assert s.reschedule_code is None
     o2 = await orch.handle_text(s, "the first one")
     assert isinstance(o2, NeedsInput) and o2.field == "email"  # a booking, not a move
+
+
+# Production, 2026-09-17: the renter said an offered slot back as a time, the words the slot
+# chips also send, and Job 1, which is not told a slot choice is pending, called it a
+# reschedule with no code. "What's the six-character confirmation code?" followed.
+@pytest.mark.parametrize("misread", ["reschedule", "cancel", "set_preferences"])
+@pytest.mark.parametrize(
+    "said",
+    [
+        "{offered}",  # the chip's own text
+        "{offered}.",
+        "11 am",
+        "11 a.m. please",
+        "eleven AM",
+        "the one at 11",
+        "11:00",
+        "Tuesday at 11 o'clock",
+        "1st September, 11 am",
+    ],
+)
+async def test_a_spoken_slot_time_picks_that_slot_whatever_job1_made_of_it(make, misread, said):
+    orch, s, _cal, _sender = make([j1(intent="book", reference=2), j1(intent=misread)])
+    o1 = await orch.handle_text(s, "book the second one")
+    assert o1.options[1] == "Tuesday 1 September at 11 am"
+    offered = s.pending.slots
+
+    o2 = await orch.handle_text(s, said.format(offered=o1.options[1]))
+    assert isinstance(o2, NeedsInput) and o2.field == "email"
+    assert s.pending.slot == offered[1] and s.pending.listing_id == SECOND
+
+
+@pytest.mark.parametrize("said", ["4 pm", "Wednesday at 11 am", "3rd September at 10 am"])
+async def test_a_spoken_time_that_was_not_offered_re_offers_the_three(make, said):
+    orch, s, _cal, _sender = make([j1(intent="book", reference=2), j1(intent="reschedule")])
+    o1 = await orch.handle_text(s, "book the second one")
+    offered = s.pending.slots
+
+    o2 = await orch.handle_text(s, said)
+    assert isinstance(o2, NeedsInput) and o2.field == "slot"
+    assert o2.options == o1.options  # the chips come back with the question
+    assert all(opt in o2.spoken for opt in o1.options)
+    assert s.pending.slots == offered
+
+
+async def test_a_spoken_time_completes_a_reschedule_too(make):
+    orch, s, _cal, _sender = make(BOOK_SCRIPT + [j1(intent="reschedule"), j1(intent="cancel")])
+    await _drive_to_email_confirm(orch, s)
+    code = (await orch.handle_text(s, "yes")).view_model.booking.code
+    await asyncio.sleep(0)
+
+    orch.job1.results[0] = j1(intent="reschedule", code=code)
+    o = await orch.handle_text(s, "move my visit")
+    assert isinstance(o, NeedsInput) and o.field == "slot"
+    new = s.pending.slots[2]
+
+    o2 = await orch.handle_text(s, o.options[2])
+    assert isinstance(o2, Answered) and "Rescheduled" in o2.spoken
+    assert o2.view_model.booking.code == code
+    assert o2.view_model.booking.slot.start_ist == new.start.isoformat()
+
+
+def test_match_offered_reads_days_and_leaves_distances_and_budgets_alone():
+    from datetime import timedelta
+
+    from scout.conversation.voice_booking import match_offered
+    from scout.engines.slots import IST, Slot
+
+    today_11 = datetime(2026, 9, 1, 11, tzinfo=IST)  # NOW is Tuesday 1 September, 09:00 IST
+    offered = [
+        Slot(today_11, today_11 + timedelta(hours=1)),
+        Slot(today_11 + timedelta(days=1), today_11 + timedelta(days=1, hours=1)),
+    ]
+    assert match_offered("tomorrow at 11", offered, NOW) == offered[1]
+    assert match_offered("today, 11 am", offered, NOW) == offered[0]
+    assert match_offered("11 am", offered, NOW) is False  # two days offer 11: say which
+    assert match_offered("September 2nd at eleven a.m.", offered, NOW) == offered[1]
+    for not_a_time in ("anything at 5 km from the metro", "at 40k please", "the first one", ""):
+        assert match_offered(not_a_time, offered, NOW) is None

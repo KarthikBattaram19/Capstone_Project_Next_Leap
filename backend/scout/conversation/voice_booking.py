@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import asyncio
 import re
+from datetime import datetime, timedelta
 
 from scout.api.http import NOT_FOUND_TELL
 from scout.booking.service import (
@@ -27,8 +28,97 @@ from scout.conversation.session import (
     ConfirmEmail,
     Session,
 )
+from scout.domain.booking import IST, Slot
 
 _EMAIL = re.compile(r"^[^@\s]+@[^@\s]+\.[a-z]{2,}$", re.IGNORECASE)
+
+
+_WORD_NUMBERS = {
+    w: i + 1
+    for i, w in enumerate(
+        ["one", "two", "three", "four", "five", "six"]
+        + ["seven", "eight", "nine", "ten", "eleven", "twelve"]
+    )
+}
+_N = r"\b(\d{1,2}|" + "|".join(_WORD_NUMBERS) + r")"
+_MERIDIEM = re.compile(_N + r"(?::\d{2})?\s*([ap])\.?\s*m\b\.?", re.IGNORECASE)
+_CLOCK = re.compile(r"\b(\d{1,2}):\d{2}\b")
+_BARE = re.compile(  # "at 11", "11 o'clock" — never "at 5 km" or "at 40k"
+    r"\bat\s+" + _N[2:] + r"\b(?!\s*(?:st|nd|rd|th|k|km|lakh|minutes?|mins?)\b)"
+    r"|" + _N + r"\s*o'?\s*clock\b",
+    re.IGNORECASE,
+)
+_MONTHS = "january february march april may june july august september october november december"
+_MONTH = "(" + "|".join(_MONTHS.split()) + ")"
+_DATE = re.compile(
+    r"\b(\d{1,2})(?:st|nd|rd|th)?\s+(?:of\s+)?" + _MONTH + r"\b"
+    r"|\b" + _MONTH + r"\s+(\d{1,2})(?:st|nd|rd|th)?\b",
+    re.IGNORECASE,
+)
+_WEEKDAY = re.compile(
+    r"\b(monday|tuesday|wednesday|thursday|friday|saturday|sunday)\b", re.IGNORECASE
+)
+_RELATIVE = re.compile(r"\b(today|tomorrow)\b", re.IGNORECASE)
+
+
+def _number(tok: str) -> int:
+    return int(tok) if tok.isdigit() else _WORD_NUMBERS[tok.lower()]
+
+
+def match_offered(text: str, slots: list[Slot], now: datetime) -> Slot | None | bool:
+    """Which offered slot a spoken time names, in code, before anything Job 1 made of it.
+
+    Job 1 is not told a slot choice is pending, and on production (2026-09-17) it called
+    "Thursday 17 September at 10 am" — the renter reading an offered slot back, and the very
+    words the slot chips send — a reschedule with no code. Returns the one slot named; False
+    when a day or hour was said that names no single offered slot; None when no time was said.
+    """
+    hours: set[int] = set()
+    for m in _MERIDIEM.finditer(text):
+        hours.add(_number(m.group(1)) % 12 + (12 if m.group(2).lower() == "p" else 0))
+    for m in _CLOCK.finditer(text):
+        hours.add(int(m.group(1)))
+    for m in _BARE.finditer(text):
+        hours.add(_number(m.group(1) or m.group(2)))
+    # Visits run 10:00-18:00, so a bare "at 2" or "2:00" can only mean 2 pm.
+    hours = {h + 12 if 1 <= h < 8 else h for h in hours}
+
+    weekdays = {m.group(1).lower() for m in _WEEKDAY.finditer(text)}
+    dates = {
+        (int(m.group(1) or m.group(4)), (m.group(2) or m.group(3)).lower())
+        for m in _DATE.finditer(text)
+    }
+    today = now.astimezone(IST).date()
+    relative = {
+        today + timedelta(days=1 if m.group(1).lower() == "tomorrow" else 0)
+        for m in _RELATIVE.finditer(text)
+    }
+
+    if not (hours or weekdays or dates or relative):
+        return None
+    if len(hours) > 1:
+        return False
+
+    def said(slot: Slot) -> bool:
+        s = slot.start.astimezone(IST)
+        return (
+            (not hours or s.hour in hours)
+            and weekdays <= {s.strftime("%A").lower()}
+            and dates <= {(s.day, s.strftime("%B").lower())}
+            and relative <= {s.date()}
+        )
+
+    named = [s for s in slots if said(s)]
+    return named[0] if len(named) == 1 else False
+
+
+def _which_of_those(slots: list[Slot]) -> NeedsInput:
+    return NeedsInput(
+        question="Which of those slots?",
+        field="slot",
+        options=[s.spoken() for s in slots],
+        spoken="I can offer " + ", ".join(s.spoken() for s in slots) + ". Which one suits you?",
+    )
 
 
 def spell(email: str) -> str:
@@ -49,31 +139,25 @@ class VoiceBookingFlow:
         if p is None and res.intent not in BOOKING_INTENTS:
             return None  # nothing pending and not a booking sentence: not ours
 
+        chosen = None
+        if isinstance(p, AwaitSlotChoice):
+            # A spoken time outranks Job 1's reading: "the one at 11" is not "the first one".
+            chosen = match_offered(text, p.slots, self.booking.now())
+            if chosen is False:
+                return _which_of_those(p.slots)
+            if chosen is None and (res.slot_choice or res.reference):
+                n = res.slot_choice or res.reference
+                if not 1 <= n <= len(p.slots):
+                    return _which_of_those(p.slots)
+                chosen = p.slots[n - 1]
+
         # Reschedule completion: the code is already known and the address is already on
         # the event, so the choice goes straight to the calendar — no email step.
-        if (
-            isinstance(p, AwaitSlotChoice)
-            and session.reschedule_code
-            and (res.slot_choice or res.reference)
-        ):
-            n = res.slot_choice or res.reference
-            if not 1 <= n <= len(p.slots):
-                return NeedsInput(
-                    question="Which of those slots?",
-                    field="slot",
-                    spoken="Which of those slots — first, second or third?",
-                )
-            return await self._reschedule_to(session, session.reschedule_code, p.slots[n - 1])
+        if chosen is not None and session.reschedule_code:
+            return await self._reschedule_to(session, session.reschedule_code, chosen)
 
-        if isinstance(p, AwaitSlotChoice) and (res.slot_choice or res.reference):
-            n = res.slot_choice or res.reference
-            if not 1 <= n <= len(p.slots):
-                return NeedsInput(
-                    question="Which of those slots?",
-                    field="slot",
-                    spoken="Which of those slots — first, second or third?",
-                )
-            session.pending = AwaitEmail(p.listing_id, p.slots[n - 1])
+        if chosen is not None:
+            session.pending = AwaitEmail(p.listing_id, chosen)
             return NeedsInput(
                 question="What email should I send the confirmation to?",
                 field="email",
