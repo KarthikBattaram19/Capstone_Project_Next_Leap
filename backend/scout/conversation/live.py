@@ -136,6 +136,15 @@ class LiveSession:
         if self.state in (TurnState.SPEAKING, TurnState.IDLE):
             self._log_barge_in("stop")
             await self.orch.cancel_speech(self.session)
+            return
+        # A "why this one?" answer is spoken while Job 2 is still writing it, so the long
+        # replies Stop exists for are mostly heard in TYPE_B (batch review, 2026-09-17). Only
+        # the speech stops: the turn runs on and its explanation still reaches the screen.
+        speaking = getattr(self.session, "speaking", None)
+        speaker = getattr(self.session, "speaker", None)
+        if self.state is TurnState.TYPE_B and speaker and speaking and not speaking.done():
+            self._log_barge_in("stop")
+            await speaker.cancel()
 
     def _keepalive_due(self) -> bool:
         """IDLE and SPEAKING as before, and ANY state once no frame has flowed for a while.

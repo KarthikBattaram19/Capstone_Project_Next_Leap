@@ -461,3 +461,50 @@ async def test_a_late_stop_never_cancels_the_next_turn(live):
         await session.stop()
         assert session.orch.cancelled == 0, state
         assert session.state is state
+
+
+async def test_stop_while_an_explanation_is_being_spoken_stops_it_without_losing_the_turn(live):
+    """Batch review, 2026-09-17. A "why this one?" answer (lane B) is spoken while Job 2 is
+    still writing it, so the server is in TYPE_B, not SPEAKING, for most of it - the 57 s
+    monologue D2 was about. A Stop tapped then must stop the speech; it must not cancel the
+    turn, whose explanation still has to reach the screen."""
+    session, _ = live()
+
+    class Speaker:
+        cancelled = 0
+
+        async def cancel(self):
+            Speaker.cancelled += 1
+
+    session.state = TurnState.TYPE_B
+    session.session.speaker = Speaker()
+    never = asyncio.get_running_loop().create_future()
+    session.session.speaking = asyncio.ensure_future(never)  # still speaking
+
+    await session.stop()
+
+    assert Speaker.cancelled == 1, "the explanation kept talking after Stop"
+    assert session.orch.cancelled == 0, "the turn itself must not be cancelled"
+    assert session.state is TurnState.TYPE_B
+    session.session.speaking.cancel()
+
+
+async def test_a_stop_in_type_b_before_this_turn_speaks_touches_nothing(live):
+    # The previous reply's speech is over: nothing of this turn is playing yet.
+    session, _ = live()
+
+    class Speaker:
+        cancelled = 0
+
+        async def cancel(self):
+            Speaker.cancelled += 1
+
+    session.state = TurnState.TYPE_B
+    session.session.speaker = Speaker()
+    done = asyncio.get_running_loop().create_future()
+    done.set_result(None)
+    session.session.speaking = done
+
+    await session.stop()
+
+    assert Speaker.cancelled == 0 and session.orch.cancelled == 0
