@@ -70,11 +70,11 @@ def test_suites_a_and_b_have_twenty_cases_each_with_known_keys():
     assert [c["id"] for c in a] == [f"a-{n:03d}" for n in range(1, 21)]
     assert [c["id"] for c in b] == [f"b-{n:03d}" for n in range(1, 21)]
     for case in a:
-        assert set(case) == {"id", "turns", "expect"}, case["id"]
+        assert set(case) - {"note"} == {"id", "turns", "expect"}, case["id"]
         assert case["turns"] and all(isinstance(t, str) for t in case["turns"]), case["id"]
         assert set(case["expect"]) <= A_KEYS, f"{case['id']}: unknown expect key"
     for case in b:
-        assert set(case) == {"id", "before_turns", "edit_turn", "expect"}, case["id"]
+        assert set(case) - {"note"} == {"id", "before_turns", "edit_turn", "expect"}, case["id"]
         # The readback is confirmed somewhere in the setup; b-016..b-019 then carry the
         # first of two sequential edits, so "yes" is not always the last turn.
         assert "yes" in case["before_turns"], f"{case['id']}: before_turns never confirm"
