@@ -195,6 +195,13 @@ class Job1Down(RuntimeError):
 
 
 AMOUNT_FIELDS = {"rent_max", "rent_min", "deposit_max"}
+# How an amount is named in a spoken question: never the field name ("for rent max" was
+# built here until the batch review, 2026-09-17).
+_AMOUNT_WORDS = {
+    "rent_max": "your budget",
+    "rent_min": "the lowest rent",
+    "deposit_max": "the deposit",
+}
 
 # "Koramangala or HSR Layout" is two localities, and the model sometimes hands them back as
 # one value. Matched against the covered list it resolves to nothing, so the turn asked
@@ -323,7 +330,7 @@ class Job1:
                         Ambiguity(
                             field=e.field,
                             heard=r.heard,
-                            question=f"Did you mean {opts} for {e.field.replace('_', ' ')}?",
+                            question=f"Did you mean {opts} for {_AMOUNT_WORDS[e.field]}?",
                         )
                     )
                 continue

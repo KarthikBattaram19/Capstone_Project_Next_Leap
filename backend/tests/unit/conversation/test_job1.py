@@ -289,3 +289,17 @@ async def test_a_misheard_place_is_offered_once_not_once_per_spelling():
     options = res.ambiguities[0].options
     assert len([o for o in options if o in ("T.C Palya", "TC Palya")]) == 1, options
     assert len(options) == len(set(options))
+
+
+@pytest.mark.parametrize(
+    ("field", "words"),
+    [("rent_max", "your budget"), ("rent_min", "the lowest rent"), ("deposit_max", "the deposit")],
+)
+async def test_an_unclear_amount_is_asked_about_without_a_field_name(field, words):
+    """Batch review, 2026-09-17: the question built for a bare "35" said "for rent max" -
+    a field name, spoken aloud."""
+    raw = dict(GOOD, edits=[{"field": field, "op": "set", "value": "35"}])
+    res = await Job1(FakeGroq([raw]), localities=["Koramangala"]).extract("35", ConstraintSet())
+    q = res.ambiguities[0].question
+    assert q.startswith("Did you mean ") and q.endswith(f" for {words}?"), q
+    assert "_" not in q and field.replace("_", " ") not in q
