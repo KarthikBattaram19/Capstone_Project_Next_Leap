@@ -168,7 +168,7 @@ def test_a_16khz_mono_recording_is_passed_through_unresampled(tmp_path):
 def test_a_pause_long_enough_to_split_the_sentence_writes_nothing(tmp_path, capsys):
     src, out = tmp_path / "recorded", tmp_path / "out"
     says = make_set(src)
-    write_wav(src / "brief-2.wav", recording(says["brief-2.wav"], pause_s=1.1))
+    write_wav(src / "brief-2.wav", recording(says["brief-2.wav"], pause_s=1.6))
 
     assert pr.main([str(src), "--out", str(out)]) == 1
     assert not out.exists() or not any(out.iterdir()), "a partial set was written"

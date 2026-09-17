@@ -87,7 +87,7 @@ class Settings(BaseSettings):
     stt_min_confidence: float = 0.6
     deepgram_endpointing_ms: int = 400
     hold_extra_ms: int = 400
-    utterance_end_ms: int = 1000
+    utterance_end_ms: int = 1500  # the user's call, 2026-09-17: a 1 s pause split sentences
     audio_sample_rate: int = 16000
     smallest_voice_id: str = ""
     smallest_model: str = "lightning_v3.1_pro"

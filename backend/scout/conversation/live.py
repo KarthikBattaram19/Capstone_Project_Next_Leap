@@ -217,7 +217,7 @@ class LiveSession:
         else:
             await self._finalize()
 
-    async def _utterance_end(self) -> None:  # hard stop (~1 s)
+    async def _utterance_end(self) -> None:  # hard stop (~1.5 s)
         if self._segments:
             await self._finalize()
 

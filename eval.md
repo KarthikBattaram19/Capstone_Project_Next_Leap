@@ -140,7 +140,7 @@
 | EC-WS-07 | Typed-text fallback used while the session is `IDLE` (the normal case) | `text()` cancels any speech in flight and transitions to `CAPTURING` before finalising, so the typed fallback actually produces a turn (§16.2 · add. 2.10) | FIXED |
 | EC-WS-08 | Interim ends in a continuation word ("…under") | P3b: wait up to a further 400 ms before finalising | SPEC |
 | EC-WS-09 | Hold expires with no further speech | Finalise on what was heard (≈400 ms later) | SPEC |
-| EC-WS-10 | Deepgram `UtteranceEnd` fires during a hold | Finalise immediately — the ~1 s hard stop | SPEC |
+| EC-WS-10 | Deepgram `UtteranceEnd` fires during a hold | Finalise immediately — the ~1.5 s hard stop | SPEC |
 | EC-WS-11 | The hold timer fires at the same moment as a new `_final` | Two `_finalize` tasks race; the second finds empty `_segments` and a non-`CAPTURING` state — behaviour depends on ordering, and is not asserted anywhere | ⚠ |
 | EC-WS-12 | Renter speaks for more than 30 s without pausing | Runaway cap forces finalisation — but only while `audio()` is being called **and** the state is `CAPTURING` | SPEC (narrow) |
 | EC-WS-13 | Mic open, no words (silence, background noise) | One re-prompt: "I didn't hear any words. Try: …" | SPEC |

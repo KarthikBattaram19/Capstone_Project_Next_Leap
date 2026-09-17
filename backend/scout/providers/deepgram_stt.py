@@ -132,7 +132,7 @@ class DeepgramStream:
             numerals=True,
             vad_events=True,
             endpointing=self._s.deepgram_endpointing_ms,  # P3: 400, no shorter
-            utterance_end_ms=self._s.utterance_end_ms,  # P3b hard stop ~1 s
+            utterance_end_ms=self._s.utterance_end_ms,  # P3b hard stop ~1.5 s
             keyterm=self._keyterms,  # every locality name
         )
         self._conn = await self._cm.__aenter__()
@@ -145,7 +145,7 @@ class DeepgramStream:
         if kind == "SpeechStarted":
             await self._on_speech_started()
         elif kind == "UtteranceEnd":
-            # P3b, the ~1 s hard stop. If endpointing never fired, whatever was heard
+            # P3b, the ~1.5 s hard stop. If endpointing never fired, whatever was heard
             # is still a complete thought and must be delivered, not stranded.
             await self._flush()
             await self._on_utterance_end()
@@ -171,7 +171,7 @@ class DeepgramStream:
                 # a number — makes Deepgram endpoint and set speech_final, so
                 # "two BHK in Koramangala <breath> under forty thousand" arrived as
                 # two complete utterances and the second had lost the locality. Only
-                # UtteranceEnd (utterance_end_ms, ~1 s) means the speaker stopped.
+                # UtteranceEnd (utterance_end_ms, ~1.5 s) means the speaker stopped.
                 # Show the words as they land; just do not act on them yet.
                 telemetry.mark(telemetry.STT_INTERIM)
                 await self._on_interim(" ".join(self._segments))

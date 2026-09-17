@@ -75,7 +75,7 @@ async def test_the_whole_utterance_is_delivered_once_speech_ends():
 
 
 async def test_utterance_end_flushes_what_was_heard():
-    # P3b: if endpointing never fires, the 1 s hard stop must still deliver the turn
+    # P3b: if endpointing never fires, the 1.5 s hard stop must still deliver the turn
     # rather than leaving the renter's sentence stranded.
     finals, interims = [], []
     st = stream(finals, interims)
@@ -109,7 +109,7 @@ async def test_a_natural_pause_does_not_end_the_utterance():
 
     Both carry speech_final, so endpointing alone splits one request into two turns,
     and the second has lost the locality. Deepgram's UtteranceEnd (utterance_end_ms,
-    ~1 s) is the signal that the speaker actually stopped. This is the false
+    ~1.5 s) is the signal that the speaker actually stopped. This is the false
     end-of-speech risk the spec names, seen on real speech.
     """
     finals, interims, ends = [], [], []

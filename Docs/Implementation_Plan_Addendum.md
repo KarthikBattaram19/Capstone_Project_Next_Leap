@@ -26,7 +26,7 @@ Copied from the spec and architecture. Every task's requirements implicitly incl
 - Scored **separately per turn type**; cold start measured and reported **separately**, never inside the budget
 
 **Preconditions P1–P8 (spec §5.2) — the targets are void without them:**
-- P1 warm process (Railway app sleeping **off**; nothing on Vercel serverless) · P2 connection reuse (persistent Deepgram WebSocket; HTTP keep-alive to Groq, Anthropic, Google, Smallest.ai) · P3 Deepgram endpointing **400 ms, no shorter** · P3b content-aware hold: interim ending in *under, above, near, with, and, about, around, to* or a bare number → wait **up to a further 400 ms**; Deepgram utterance-end at **~1 s** is the hard stop · P4 TTS starts on the **first sentence** · P5 OSM facts **precomputed** · P6 calendar writes **in parallel** · P7 Job 2 `output_config: {effort: "low"}` set explicitly · P8 Type B first sentence is a **code-built opener** from facts already resolved
+- P1 warm process (Railway app sleeping **off**; nothing on Vercel serverless) · P2 connection reuse (persistent Deepgram WebSocket; HTTP keep-alive to Groq, Anthropic, Google, Smallest.ai) · P3 Deepgram endpointing **400 ms, no shorter** · P3b content-aware hold: interim ending in *under, above, near, with, and, about, around, to* or a bare number → wait **up to a further 400 ms**; Deepgram utterance-end at **~1.5 s** is the hard stop (1 s until 2026-09-17) · P4 TTS starts on the **first sentence** · P5 OSM facts **precomputed** · P6 calendar writes **in parallel** · P7 Job 2 `output_config: {effort: "low"}` set explicitly · P8 Type B first sentence is a **code-built opener** from facts already resolved
 
 **Models (spec §5.1):**
 - Job 1: Groq `openai/gpt-oss-120b`, `temperature=0`, strict JSON schema output; retry once on schema violation, then treat as Job 1 down (§6.32); may drop to a lighter Groq tier if it misses L1/L2 at Gate L
@@ -905,7 +905,7 @@ It defines `class Settings(BaseSettings)` with `model_config = SettingsConfigDic
 | `deepgram_model` | `str` | `"nova-3"` | Voice (P3, P3b) |
 | `deepgram_endpointing_ms` | `int` | `400` | Voice (P3, P3b) |
 | `hold_extra_ms` | `int` | `400` | Voice (P3, P3b) |
-| `utterance_end_ms` | `int` | `1000` | Voice (P3, P3b) |
+| `utterance_end_ms` | `int` | `1500` | Voice (P3, P3b) |
 | `audio_sample_rate` | `int` | `16000` | Voice (P3, P3b) |
 | `smallest_voice_id` | `str` | `""` | |
 | `smallest_model` | `str` | `"lightning_v3.1"` | |
@@ -2939,7 +2939,7 @@ Module docstring: `"""Deepgram in, P3b hold, ack before any model, barge-in, run
 - `async def _speech_started(self) -> None` — if `self.state is TurnState.IDLE`, simply `self.state = transition(self.state, TurnState.CAPTURING)`. Otherwise, if the state is anything other than `CAPTURING` — that is, `TRANSCRIBING`, `ACK`, `CLASSIFYING`, `TYPE_A`, `TYPE_B` or `SPEAKING` — it is **barge-in** (spec §6.17): `await self.orch.cancel_speech(self.session)`; if `self._turn` exists and is not done, `self._turn.cancel()`; then `self.state = transition(self.state, TurnState.CAPTURING)`. The renter's new sentence always wins, whether the assistant was speaking or still thinking. In every case, `self._speech_started_at = self._speech_started_at or time.monotonic()` (records the first speech-start time only).
 - `async def _interim(self, text: str) -> None` — if `self.state is TurnState.IDLE`, `self.state = transition(self.state, TurnState.CAPTURING)`; then `await self.sink.transcript(" ".join(self._segments + [text]), final=False)` (comment: `L0`).
 - `async def _final(self, text: str) -> None` — appends `text` to `self._segments`; if `self._hold` is set, `self._hold.cancel()`; if `looks_unfinished(" ".join(self._segments))` (comment: `P3b: wait up to 400 ms more`): `loop = asyncio.get_running_loop()` and `self._hold = loop.call_later(self.s.hold_extra_ms / 1000, lambda: asyncio.create_task(self._finalize()))`; otherwise `await self._finalize()` immediately.
-- `async def _utterance_end(self) -> None` (comment: `hard stop (~1 s)`) — if `self._segments` is non-empty, `await self._finalize()`.
+- `async def _utterance_end(self) -> None` (comment: `hard stop (~1.5 s)`) — if `self._segments` is non-empty, `await self._finalize()`.
 - `async def _finalize(self) -> None`:
   - If `self._hold` is set: `self._hold.cancel()` and `self._hold = None`.
   - `text = " ".join(self._segments).strip()`; `self._segments = []`; `self._speech_started_at = None`.

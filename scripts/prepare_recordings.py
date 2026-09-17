@@ -18,7 +18,7 @@ end of the file, after a real gap. Left in, it counts as speech and the gap befo
 inside the timed window.
 
 Nothing is written unless every file passes: a clipped recording, or a mid-sentence pause long
-enough to split the utterance (utterance_end_ms is 1000), is fixed by re-recording, not by
+enough to split the utterance (utterance_end_ms is 1500), is fixed by re-recording, not by
 editing. The originals are never modified. The output folder, data/raw/recordings, is
 gitignored: a voice is personal data.
 """
@@ -47,8 +47,8 @@ FAINT_DB = 25  # a burst peaking this far below the loudest speech is breath or 
 CLICK_MAX_S = 0.2  # a Stop press is short...
 CLICK_GAP_S = 0.4  # ...follows a real gap...
 CLICK_END_FRAMES = 3  # ...and ends at the very end of the file
-SPLIT_S = 1.0  # utterance_end_ms: a pause this long ends the utterance
-SPLIT_RISK_S = 0.8
+SPLIT_S = 1.5  # utterance_end_ms: a pause this long ends the utterance
+SPLIT_RISK_S = 1.3
 RATE_WPS = (1.2, 5.0)  # outside this, the file probably holds a different sentence
 YES_MAX_S = 1.5
 
