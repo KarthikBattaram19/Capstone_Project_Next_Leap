@@ -427,12 +427,41 @@ b {
   color: var(--text);
 }
 
-.voice__stop {
+/* The Stop button's seat, reserved whether or not the button is in it: one pill
+   button tall (10px + 20px line + 10px + 2px border). Production 2026-09-18 —
+   the button unmounted the moment she stopped, "End conversation" jumped up into
+   this space, and a tap aimed at Stop ended the conversation. */
+.voice__stop-slot {
   margin-top: 20px;
+  min-height: 42px;
+  display: flex;
+  align-items: center;
 }
 
 .voice__end {
   margin-top: 28px;
+}
+
+/* The "are you sure?" sits below End, never over it, so a stray second click
+   lands on End again rather than on the confirmation. */
+.voice__end-confirm {
+  width: 100%;
+  max-width: 380px;
+  margin-top: 14px;
+  display: grid;
+  gap: 10px;
+  justify-items: center;
+}
+
+.voice__end-ask {
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--text-2);
+}
+
+.voice__end-answers {
+  display: flex;
+  gap: 10px;
 }
 
 .voice__extras {

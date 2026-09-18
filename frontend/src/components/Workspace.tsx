@@ -1,3 +1,5 @@
+import { useState } from "react";
+
 import type { SessionState } from "@/lib/state/session";
 import type { CardVM, SlotVM } from "@/lib/viewmodels/contract";
 
@@ -66,8 +68,10 @@ function findCard(s: SessionState, id: string | null | undefined): CardVM | unde
 }
 
 /**
- * Everything on screen once a conversation has started. Pure: it draws the
- * session state and calls handlers; it works nothing out (AD-5).
+ * Everything on screen once a conversation has started. It draws the session state
+ * and calls handlers; it works nothing out about the conversation (AD-5). The one
+ * piece of state it owns is whether the "end this?" question is showing, which is
+ * about this screen and nothing else.
  */
 export function Workspace({
   s,
@@ -78,6 +82,7 @@ export function Workspace({
   h: WorkspaceHandlers;
   x?: WorkspaceExtras;
 }) {
+  const [confirmingEnd, setConfirmingEnd] = useState(false);
   const explainedId = s.explanation?.listing_id ?? null;
   const bookingCard = findCard(s, x.bookingListingId ?? s.booking?.listing_id);
   const bookingLabel = bookingCard ? `${bookingCard.society_name} · ${bookingCard.locality}` : undefined;
@@ -101,16 +106,49 @@ export function Workspace({
         </p>
         <TranscriptLine transcript={s.transcript} final={s.transcriptFinal} reply={s.reply} />
         {/* The mic is muted while she speaks (so her voice never reaches speech recognition),
-            which means the renter cannot interrupt by voice; this is how they interrupt. */}
-        {s.listening === "speaking" ? (
-          <button type="button" className="btn btn--accent btn--pill voice__stop" onClick={h.onStopSpeaking}>
-            Stop speaking
-          </button>
-        ) : null}
-        <button type="button" className="btn btn--ghost btn--pill voice__end" onClick={h.onEnd}>
+            which means the renter cannot interrupt by voice; this is how they interrupt.
+            The slot is always here, empty or not: when the button came and went, "End
+            conversation" jumped up into its place and a late tap ended the conversation
+            (2026-09-18). Nothing below it may ever move. */}
+        <div className="voice__stop-slot">
+          {s.listening === "speaking" ? (
+            <button type="button" className="btn btn--accent btn--pill voice__stop" onClick={h.onStopSpeaking}>
+              Stop speaking
+            </button>
+          ) : null}
+        </div>
+        <button
+          type="button"
+          className="btn btn--ghost btn--pill voice__end"
+          aria-expanded={confirmingEnd}
+          aria-controls="end-confirm"
+          onClick={() => setConfirmingEnd(true)}
+        >
           <EndCallIcon className="btn__icon" />
           End conversation
         </button>
+        {/* One click asks; the answer sits BELOW the button, so a second stray click
+            lands on "End conversation" again and not on the confirmation. */}
+        {confirmingEnd ? (
+          <div className="voice__end-confirm" id="end-confirm" role="group" aria-label="End this conversation?">
+            <p className="voice__end-ask">End this conversation? The shortlist and what was said go away.</p>
+            <div className="voice__end-answers">
+              <button
+                type="button"
+                className="btn btn--ghost btn--sm btn--danger"
+                onClick={() => {
+                  setConfirmingEnd(false);
+                  h.onEnd();
+                }}
+              >
+                Yes, end it
+              </button>
+              <button type="button" className="btn btn--ghost btn--sm" onClick={() => setConfirmingEnd(false)}>
+                Keep talking
+              </button>
+            </div>
+          </div>
+        ) : null}
         <div className="voice__extras">
           {s.voiceOut !== "on" ? <VoiceOutNotice state={s.voiceOut} onEnable={h.onEnableVoice} /> : null}
           <MicErrorHelp error={s.micError} />
