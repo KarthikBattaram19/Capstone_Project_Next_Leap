@@ -441,3 +441,43 @@ async def test_job2_down_leaves_no_dangling_heading(make):
     assert isinstance(out, Degraded)
     assert "On the neighbourhood" not in out.spoken, out.spoken
     assert not _dangling(" ".join(speaker.said)), speaker.said
+
+
+async def test_when_nothing_binds_she_says_so_and_offers_what_she_can_do(make):
+    """Production 2026-09-18: `job2 assembler: 0 bound, 1 dropped (no_refs=1)`.
+
+    With nothing bound the renter heard the code-built opener and no answer at all. She
+    now says she could not answer it and what she can still do — no invented fact.
+    """
+    orch, session, speaker, _lid = make(ScriptedJob2([]))
+    orch.job2 = ScriptedJob2([Job2Sentence("It's a lovely place to live.", [])])
+
+    out = await orch.handle_text(session, "why did you pick this one?")
+    await session.speaking
+
+    assert isinstance(out, Answered), f"got {out.kind}: {out.spoken}"
+    exp = out.view_model.explanation
+    assert exp is not None and exp.claims == []
+    said = " ".join(speaker.said)
+    assert said.startswith(exp.opener), said
+    rest = said[len(exp.opener) :].strip()
+    assert "couldn't answer" in rest, f"nothing beyond the opener answered it: {speaker.said}"
+    assert "_" not in rest, rest  # E1: never a raw field name
+    assert "On the neighbourhood —" not in said, said  # E1: no dangling heading
+    assert rest in out.spoken, (rest, out.spoken)
+    assert any("couldn't answer" in n for n in out.view_model.notices), out.view_model.notices
+    assert said.count(".") <= 4, said  # E1: at most ~4 sentences
+
+
+async def test_a_bound_claim_leaves_the_nothing_bound_line_unsaid(make):
+    """The line is for the empty case only: one bound claim IS an answer."""
+    orch, session, speaker, lid = make(ScriptedJob2([]))
+    orch.job2 = ScriptedJob2(
+        [Job2Sentence("The deposit is two months' rent.", [f"dataset:{lid}:rent"])]
+    )
+
+    out = await orch.handle_text(session, "why did you pick this one?")
+    await session.speaking
+
+    assert isinstance(out, Answered), f"got {out.kind}: {out.spoken}"
+    assert "couldn't answer" not in " ".join(speaker.said), speaker.said

@@ -495,6 +495,7 @@ class TurnOrchestrator:
         spoken_claims: list[str] = []
         seen: set[str] = set()
         summary: str | None = None
+        nothing: str | None = None
         headed = False
         try:
             session.job2_task = asyncio.current_task()
@@ -516,6 +517,12 @@ class TurnOrchestrator:
                         said = with_neighbourhood_heading(said)
                     spoken_claims.append(said)
                     await queue.put(said)  # released only once its citation resolved
+            # Nothing bound at all: on production (2026-09-18) two turns logged
+            # `0 bound, 1 dropped` and the renter heard the code-built opener and no answer
+            # to what she asked. Say so, and offer what this listing really holds.
+            if assembler.bound == 0:
+                nothing = assembler.nothing_bound_line(text)
+                await queue.put(nothing)
             summary = assembler.gap_summary(text, getattr(self.job2, "last_gaps", []))
             if summary is not None and len(spoken_claims) < 3:
                 await queue.put(summary)
@@ -565,9 +572,20 @@ class TurnOrchestrator:
             vm.snapshot = SnapshotVM(
                 listing_id=lid, claims=claims, gaps=gaps, limited=not bundle.chunks
             )
+            if nothing is not None:
+                # It is not a claim: it cites nothing, and an uncited claim never reaches
+                # the renter's Explanation. The screen carries it as a notice instead.
+                vm.notices = [nothing, *vm.notices]
             out = Answered(
                 view_model=vm,
-                spoken=" ".join([opener, *spoken_claims, *([summary] if summary else [])]),
+                spoken=" ".join(
+                    [
+                        opener,
+                        *spoken_claims,
+                        *([nothing] if nothing else []),
+                        *([summary] if summary else []),
+                    ]
+                ),
             )
         object.__setattr__(out, "_already_spoken", True)  # lane B spoke as it went
         return out

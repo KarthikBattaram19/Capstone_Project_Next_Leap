@@ -233,3 +233,32 @@ def test_a_raw_field_name_is_never_speakable():
 
     assert not speakable("maintenance_charges maintenance_included parking lift")
     assert speakable("It's ₹42,000 a month.")
+
+
+def test_nothing_bound_names_what_is_held_and_never_offers_a_gap():
+    """0 bound: the renter heard only the opener on production (2026-09-18).
+
+    The offer is built from facts the listing actually has a value for. A field that is
+    null is a gap, and offering to tell her a gap would be inventing.
+    """
+    b = bundle()  # rent 35,000 (the opener already said it), deposit null
+    for name, value in (("bedrooms", 2), ("square_footage", 950)):
+        ref = f"dataset:a:{name}"
+        b.facts[ref] = Provenanced(
+            value, Source.DATASET, Timing.PRECOMPUTED, as_of=date(2026, 9, 1), citation_ref=ref
+        )
+    line = ClaimAssembler(b).nothing_bound_line("is there a lift?")
+
+    assert "couldn't answer" in line, line
+    assert "size" in line, line  # square_footage, in words
+    assert "deposit" not in line, line  # null: it is a gap, not an offer
+    assert "rent" not in line, line  # the opener already said it
+    assert "bedrooms" not in line, line  # the opener's "2BHK" restated
+    assert "_" not in line, line  # E1: never a raw field name
+    assert len(line.split()) <= 30, line
+
+
+def test_nothing_bound_with_nothing_to_offer_still_offers_a_search():
+    line = ClaimAssembler(FactBundle(listing_id="a", locality="K")).nothing_bound_line("why?")
+
+    assert "couldn't answer" in line and "search" in line, line

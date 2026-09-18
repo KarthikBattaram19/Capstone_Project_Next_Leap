@@ -59,6 +59,11 @@ _GAP_LABELS = {
 # A sentence of at most this many words is short enough to say; a longer one stays on screen.
 _SPOKEN_WORDS = 30
 
+# What the opener's own words already cover, so none of it is offered as something still
+# untold. Bedrooms and bathrooms are the BHK restated: after "a 2BHK", "I can tell you the
+# bedrooms and the bathrooms" is an offer of nothing.
+_ALREADY_SAID = ("rent", "bhk_type", "bedrooms", "bathrooms")
+
 
 def speakable(text: str) -> bool:
     """E1: a raw field name ("maintenance_charges", "semi_furnished") is never said aloud."""
@@ -217,6 +222,43 @@ class ClaimAssembler:
     def all_gaps(self, job2_gaps: list[str]) -> list[str]:
         """Every gap for the screen, once each, never a raw field name."""
         return self.render_gaps() + [line for _, line in self._extra_gaps(job2_gaps)]
+
+    def _held_items(self) -> list[str]:
+        """The words for the listing facts that DO have a value, in bundle order.
+
+        Only `dataset:` rows: the opener has already spoken the metro row, and a map query
+        reads as a field ("nearest metro") rather than as something to offer.
+        """
+        names: list[str] = []
+        seen: set[str] = set()
+        for ref, f in self._b.facts.items():
+            field = ref.split(":")[-1]
+            if f.value is None or not ref.startswith("dataset:") or field in _ALREADY_SAID:
+                continue
+            name = gap_label(field)
+            if name in seen or len(name.split()) > 4:
+                continue
+            seen.add(name)
+            names.append(name)
+        return names
+
+    def nothing_bound_line(self, question: str) -> str:
+        """The one line spoken when NO sentence bound (E1).
+
+        On production (2026-09-18) two turns logged `0 bound` and `1 dropped`: the renter
+        heard the code-built opener and nothing that answered what she asked. This says
+        plainly that it could not be answered, then offers only facts this listing really
+        holds — a null field is a gap, never an offer — or a fresh search.
+        """
+        held = self._held_items()
+        q = question.lower()
+        asked = [n for n in held if any(w in q for w in n.lower().split() if len(w) > 3)]
+        ordered = asked + [n for n in held if n not in asked]
+        opening = "I couldn't answer that from what I have on this listing"
+        if not ordered:
+            return f"{opening}, but I can search for other listings if you'd like."
+        what = ordered[0] if len(ordered) == 1 else f"{ordered[0]} and the {ordered[1]}"
+        return f"{opening}, but I can tell you the {what}, or search for other listings."
 
     def gap_summary(self, question: str, extra: list[str] | None = None) -> str | None:
         """The one spoken line about gaps (E1). The rest are on screen.
