@@ -243,3 +243,82 @@ async def test_an_unclear_turn_during_the_readback_keeps_it_pending(make):
     assert isinstance(s.pending, ConfirmConstraints)
     done = await orch.handle_text(s, "yes")
     assert isinstance(done, Answered), f"got {done.kind}: {done.spoken}"
+
+
+# Production walkthrough (2026-09-18): with a shortlist of 2 on screen, "which listing is
+# better for me?" and "which one should I pick?" both fell through to "Sorry, I didn't follow
+# that." Asking her to judge or recommend gets the same answer as "any better listings?".
+JUDGE = [
+    "which listing is better for me?",
+    "which one should I pick?",
+    "which one is better?",
+    "which one should I choose?",
+    "which one should I take?",
+    "which one should I go for?",
+    "what do you recommend?",
+    "which do you recommend?",
+    "which one do you recommend?",
+    "what would you recommend?",
+    "which is the best one?",
+    "which is the best?",
+    "what's the best one for me?",
+    "which one is good for me?",
+]
+
+
+@pytest.mark.parametrize("said", JUDGE)
+async def test_asking_her_to_judge_says_the_order_instead_of_sorry(make, said):
+    orch, s, job1 = await _city_shortlist(make)
+    before = list(s.shortlist.order)
+    o = await orch.handle_text(s, said)
+    assert isinstance(o, NeedsInput), f"got {o.kind}: {o.spoken}"
+    assert "didn't follow" not in o.spoken, o.spoken
+    assert o.field == "order"
+    assert "no rating or review" in o.spoken, o.spoken
+    assert "cheapest first" in o.spoken, o.spoken
+    assert "largest first" in o.spoken and "nearest the metro" in o.spoken, o.spoken
+    assert o.options == ["largest first", "nearest metro first"]
+    assert len(job1.calls) == 2  # read in code, not by Job 1
+    assert s.shortlist.order == before
+
+
+@pytest.mark.parametrize("said", ["which listing is better for me?", "what do you recommend?"])
+async def test_asking_her_to_judge_during_the_readback_asks_the_readback_again(make, said):
+    orch, s, job1, rb = await _city_readback(make, extra=[j1(intent="confirm_yes")])
+    o = await orch.handle_text(s, said)
+    assert isinstance(o, NeedsInput), f"got {o.kind}: {o.spoken}"
+    assert "didn't follow" not in o.spoken, o.spoken
+    assert "no rating or review" in o.spoken and "cheapest first" in o.spoken, o.spoken
+    assert o.spoken.endswith(rb.question), o.spoken
+    assert o.field == "constraints_readback" and o.options == ["yes", "no"]
+    assert o.question == o.spoken
+    assert isinstance(s.pending, ConfirmConstraints)
+    assert len(job1.calls) == 1  # read in code, not by Job 1
+    assert s.shortlist.is_empty()
+
+    done = await orch.handle_text(s, "yes")
+    assert isinstance(done, Answered), f"got {done.kind}: {done.spoken}"
+
+
+@pytest.mark.parametrize(
+    ("said", "edit"),
+    [
+        ("which one is under 40,000?", ConstraintEdit("rent_max", "set", 40000)),
+        ("which one is in Koramangala?", ConstraintEdit("localities", "add", "Koramangala")),
+    ],
+)
+async def test_a_number_or_a_place_in_the_question_is_still_a_search(make, said, edit):
+    """The guards stay: a question carrying a number or a locality is a refinement, not a
+    request to be judged."""
+    orch, s, job1 = await _city_shortlist(make, extra=[j1(intent="refine", edits=[edit])])
+    await orch.handle_text(s, said)
+    assert len(job1.calls) == 3 and job1.calls[-1] == said
+
+
+async def test_the_best_ones_near_the_metro_still_says_the_order(make):
+    """Unchanged by the broader wording: it is still answered with the order, not a re-sort."""
+    orch, s, _ = await _city_shortlist(make)
+    before = list(s.shortlist.order)
+    o = await orch.handle_text(s, "show me the best ones near the metro")
+    assert isinstance(o, NeedsInput) and o.field == "order"
+    assert s.shortlist.order == before

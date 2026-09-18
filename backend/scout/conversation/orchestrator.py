@@ -197,7 +197,20 @@ _BETTER = re.compile(
     r"\b(?:better|best)\s+(?:listings?|options?|flats?|ones?|propert(?:y|ies)|places?|homes?|"
     r"houses?|apartments?|choices?|locations?|matches)\b|\b(?:anything|something)\s+better\b|"
     r"\bin what order\b|"
-    r"\bhow (?:are|did you) (?:they|these|them|you)\s+(?:sorted|ordered|sort|order)\b",
+    r"\bhow (?:are|did you) (?:they|these|them|you)\s+(?:sorted|ordered|sort|order)\b|"
+    # Walkthrough 2026-09-18: "which listing is better for me?" and "which one should I
+    # pick?" fell through to "Sorry, I didn't follow that." Asking her to judge or to
+    # recommend is the same question — the listings carry no rating, so she says the order.
+    # The guards in _order_turn (a number, a requirement word, a place name) still send
+    # "which one is under 40,000" and "which one is in Koramangala" to a search.
+    r"\b(?:which|what)(?:'?s|\s+is|\s+are)\s+(?:the\s+)?(?:better|best)\b|"
+    r"\bwhich\s+(?:\w+\s+){1,2}(?:is|are|looks?|seems?|would\s+be)\s+(?:the\s+)?"
+    r"(?:better|best)\b|"
+    r"\bwhich\s+(?:\w+\s+){1,2}(?:is|are)\s+(?:good|right|suitable|ideal)\s+for\s+me\b|"
+    r"\b(?:which|what)\b[^.?!]{0,20}\bshould\s+i\s+"
+    r"(?:pick|choose|take|select|go\s+(?:for|with))\b|"
+    r"\b(?:do|would|can|could|will)\s+you\s+recommend\b|"
+    r"\bwhat\s+do\s+you\s+suggest\b|\byour\s+recommendation\b",
     re.IGNORECASE,
 )
 _ORDER_SAID = {
