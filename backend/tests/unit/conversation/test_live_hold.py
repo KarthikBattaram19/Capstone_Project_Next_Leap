@@ -81,7 +81,7 @@ class FakeOrch:
             return await self._handler(session, text)
         return Answered(view_model=AnsweredViewModel(), spoken="ok")
 
-    async def cancel_speech(self, session):
+    async def cancel_speech(self, session, turn=None):
         self.cancelled += 1
 
 
@@ -396,9 +396,14 @@ async def test_a_sound_onset_alone_does_not_stop_the_reply_but_words_do(live, ca
     """D1, production 2026-09-17: `audio_out stop` 0.9-1.3 s after the renter's last words, no
     TTS bytes, and no renter words for 5-9 s after (conv 1-4). Likely cause, not confirmed: the
     server is SPEAKING from the moment the outcome is sent, before the page mutes the mic, so
-    a trailing noise's onset stopped the reply. While SPEAKING only words barge in."""
+    a trailing noise's onset stopped the reply. While SPEAKING only words barge in.
+
+    Amended 2026-09-18: "while SPEAKING" now means while the reply is actually going out.
+    The reply here is playing (`speaker.started`); the leading-edge window, where the outcome
+    is out but no byte is, is test_live_barge_in.py's."""
     session, _ = live()
     session.state = TurnState.SPEAKING
+    session.session.speaker = types.SimpleNamespace(started=True)
 
     await session._speech_started()  # a breath after "...in Domlur."
     assert session.orch.cancelled == 0, "an onset alone stopped the reply"

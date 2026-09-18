@@ -45,6 +45,10 @@ class Speaker:
         self._tts, self._sink = tts, sink
         self._first_byte_s, self._idle_s = first_byte_s, idle_s
         self._cancel = asyncio.Event()
+        # True from the first audio byte on. The page mutes the mic on `audio_out start` and
+        # un-mutes only when playback finishes, so before this the renter can still be heard
+        # and cannot yet have heard a word of this reply (production, 2026-09-18).
+        self.started = False
 
     async def cancel(self) -> None:
         self._cancel.set()
@@ -53,7 +57,6 @@ class Speaker:
     async def speak(self, sentences: AsyncIterator[str] | Iterable[str]) -> SpeechResult:
         self._cancel.clear()
         res = SpeechResult()
-        started = False
         it = sentences if hasattr(sentences, "__aiter__") else _aiter(sentences)
         try:
             async for sentence in it:
@@ -65,9 +68,9 @@ class Speaker:
                         if self._cancel.is_set():
                             res.cancelled = True
                             break
-                        if not started:
+                        if not self.started:
                             await self._sink.audio_start()
-                            started = True
+                            self.started = True
                         await self._sink.audio_chunk(chunk)
                 except Exception:  # noqa: BLE001 -- the answer still renders as text (§6.53)
                     res.tts_failed = True
@@ -75,7 +78,7 @@ class Speaker:
                 if res.cancelled:
                     break
         finally:
-            if started and not res.cancelled:
+            if self.started and not res.cancelled:
                 await self._sink.audio_end()
         return res
 

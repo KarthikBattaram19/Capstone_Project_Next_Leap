@@ -119,6 +119,9 @@ class Session:
     speaker_factory: Callable[[], object] | None = None  # set per live session (Task 2.10)
     speaker: object | None = None
     speaking: asyncio.Task | None = None
+    # Which reply the speech in flight belongs to. Bumped every time new speech starts, so a
+    # cancel can name the speech it was aimed at and never silence a newer turn's reply.
+    speech_turn: int = 0
     job2_task: asyncio.Task | None = None
     # What the claim assembler bound and dropped over this session's lane B turns.
     # Per session means per eval case: a fresh case starts empty (Docs/JOB2_SCORES.md).

@@ -363,7 +363,12 @@ class TurnOrchestrator:
             if close is not None:
                 await close()
 
-    async def cancel_speech(self, session: Session) -> None:
+    async def cancel_speech(self, session: Session, turn: int | None = None) -> None:
+        """Stop the speech in flight. `turn` names the reply the caller meant (Session.
+        speech_turn read before it awaited anything); a cancel aimed at an older reply is
+        dropped rather than silencing the turn that has started speaking since."""
+        if turn is not None and turn != getattr(session, "speech_turn", turn):
+            return
         sp = getattr(session, "speaker", None)
         if sp:
             await sp.cancel()
@@ -388,11 +393,30 @@ class TurnOrchestrator:
     def _speak_later(self, session: Session, outcome: TurnOutcome) -> None:
         if getattr(outcome, "_already_spoken", False):
             return
+        self._start_speech(session, split_sentences(outcome.spoken))
+
+    def _start_speech(self, session: Session, sentences) -> None:
+        """One speaker at a time, and the new one carries its own turn number.
+
+        The server leaves SPEAKING when it has finished SENDING, while the page plays on for
+        seconds. If the next reply simply started, the page would queue it behind audio the
+        renter had already moved past — two replies travelling together on one socket. So
+        whatever is still going out is stopped first, which is also the page's cue to drop
+        what it is playing.
+        """
+        previous, previous_task = session.speaker, session.speaking
         session.speaker = (session.speaker_factory or self.speaker_factory)()
+        session.speech_turn += 1
         # Speech is a background task: the result returns without waiting for audio.
         session.speaking = asyncio.create_task(
-            session.speaker.speak(split_sentences(outcome.spoken))
+            self._speak(session.speaker, previous, previous_task, sentences)
         )
+
+    @staticmethod
+    async def _speak(speaker, previous, previous_task, sentences):
+        if previous is not None and previous_task is not None and not previous_task.done():
+            await previous.cancel()
+        return await speaker.speak(sentences)
 
     async def _lane_b(self, session: Session, text: str) -> TurnOutcome:
         from scout.contract.viewmodels import ClaimVM, ExplanationVM, SnapshotVM
@@ -458,8 +482,7 @@ class TurnOrchestrator:
                     return
                 yield s
 
-        session.speaker = (session.speaker_factory or self.speaker_factory)()
-        session.speaking = asyncio.create_task(session.speaker.speak(sentences()))
+        self._start_speech(session, sentences())
 
         claims: list[ClaimVM] = []
         bound_facts: dict = {}

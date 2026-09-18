@@ -79,6 +79,7 @@ class LiveSession:
         )
         await self.sink.outcome({"outcome": greeting.model_dump()})
         self.session.speaker = self.session.speaker_factory()
+        self.session.speech_turn += 1
         self.session.speaking = asyncio.create_task(
             self.session.speaker.speak(split_sentences(persona.GREETING))
         )
@@ -118,7 +119,7 @@ class LiveSession:
         self._segments = [text]
         if self.state is TurnState.SPEAKING:  # typing is barge-in too
             self._log_barge_in("typed")
-            await self.orch.cancel_speech(self.session)
+            await self.orch.cancel_speech(self.session, self.session.speech_turn)
             if self._turn and not self._turn.done():
                 self._turn.cancel()
         if self.state is not TurnState.CAPTURING:
@@ -135,7 +136,7 @@ class LiveSession:
         """
         if self.state in (TurnState.SPEAKING, TurnState.IDLE):
             self._log_barge_in("stop")
-            await self.orch.cancel_speech(self.session)
+            await self.orch.cancel_speech(self.session, self.session.speech_turn)
             return
         # A "why this one?" answer is spoken while Job 2 is still writing it, so the long
         # replies Stop exists for are mostly heard in TYPE_B (batch review, 2026-09-17). Only
@@ -210,14 +211,36 @@ class LiveSession:
 
     async def _barge_in(self, trigger: str) -> None:
         self._log_barge_in(trigger)
-        await self.orch.cancel_speech(self.session)
+        # The reply this barge-in is aimed at, read before the first await: a cancel must not
+        # land on a newer turn's speech if one has started in the meantime.
+        await self.orch.cancel_speech(self.session, self.session.speech_turn)
         if self._turn and not self._turn.done():
             self._turn.cancel()
         self.state = transition(self.state, TurnState.CAPTURING)
 
+    def _reply_playing(self) -> bool:
+        """Has one byte of the reply in flight actually gone out?
+
+        The page mutes the mic on `audio_out start` and un-mutes only when playback finishes
+        (`frontend/src/app/page.tsx`), so the one window in which Deepgram can hear the renter
+        while the server counts itself SPEAKING is between the outcome and the first TTS byte.
+        """
+        return bool(getattr(self.session.speaker, "started", False))
+
     async def _words_arrived(self, text: str) -> None:
-        """Real words during a thinking or speaking turn: the renter's new sentence wins."""
-        if text.strip() and self.state in self._THINKING | {TurnState.SPEAKING}:
+        """Real words during a thinking or speaking turn: the renter's new sentence wins.
+
+        Except in that leading-edge window. A reply that has not sent a byte cannot be the
+        thing the renter is interrupting — the words there are the tail of the utterance that
+        produced this very reply. Production, 2026-09-18: a turn drew its cards and said
+        nothing, with `barge-in trigger=words state=speaking` beside it, twice in two
+        conversations. From the first byte on, words still win.
+        """
+        if not text.strip():
+            return
+        if self.state in self._THINKING or (
+            self.state is TurnState.SPEAKING and self._reply_playing()
+        ):
             await self._barge_in("words")
 
     async def _interim(self, text: str) -> None:

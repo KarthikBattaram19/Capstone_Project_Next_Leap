@@ -72,7 +72,7 @@ class TypedOrch:
         self.heard.append(text)
         return Answered(view_model=AnsweredViewModel(), spoken="ok")
 
-    async def cancel_speech(self, session):
+    async def cancel_speech(self, session, turn=None):
         pass
 
 
