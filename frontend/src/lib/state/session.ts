@@ -130,7 +130,12 @@ export function reduce(s: SessionState, a: Action): SessionState {
       const o = a.outcome;
       const base: SessionState = {
         ...s,
-        listening: "idle",
+        // The outcome ends the TURN, not the speech. On a lane-B reply the opener is
+        // already playing when it lands, and "speaking" is what keeps the Stop control
+        // on screen — dropping to idle here took the renter's only way to interrupt
+        // away in the middle of the reply (2026-09-18). Playback itself says when she
+        // has stopped: the un-mute timer after `audio_out end`, or `audio_out stop`.
+        listening: s.listening === "speaking" ? "speaking" : "idle",
         reply: o.spoken,
         question: null,
         lastFailure: null,

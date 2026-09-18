@@ -134,6 +134,9 @@ export default function Page() {
   const stallTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   // Set when the stream stalled: late chunks of that reply are dropped, not played.
   const stalled = useRef(false);
+  // True while the server is still sending this reply: `audio_out start` to `end`/`stop`.
+  // With nothing queued in the player either, there is nothing left for a Stop to stop.
+  const streaming = useRef(false);
   const voiceTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   // True from an ack until `audio_out start`: the outcome then decides whether to wait for voice.
   const awaitingVoice = useRef(false);
@@ -182,6 +185,7 @@ export default function Page() {
         clearTimeout(stallTimer.current);
         stallTimer.current = setTimeout(() => {
           stalled.current = true;
+          streaming.current = false;
           player.current?.stop();
           clearTimeout(unmuteTimer.current);
           mic.current?.unmute();
@@ -207,6 +211,7 @@ export default function Page() {
         clearTimeout(unmuteTimer.current);
         mic.current?.mute();
         stalled.current = false;
+        streaming.current = true;
         armStallGuard();
       };
       client.onAudioChunk = (pcm) => {
@@ -216,6 +221,7 @@ export default function Page() {
       };
       client.onAudioEnd = () => {
         clearTimeout(stallTimer.current);
+        streaming.current = false;
         if (stalled.current) return;
         // Un-mute when playback finishes, not when the server stops sending.
         const wait = (player.current?.remainingMs() ?? 0) + 150;
@@ -225,9 +231,13 @@ export default function Page() {
           dispatch({ type: "speaking", on: false });
         }, wait);
       };
-      // Barge-in: the renter spoke over the reply; stop playing at once.
+      // Barge-in, or one speaker at a time: the server cancelled this reply. Stop playing
+      // at once AND drop its tail — a chunk already on its way would otherwise play over
+      // the reply that replaced it. The next `audio_out start` clears the flag.
       client.onAudioStop = () => {
         clearTimeout(stallTimer.current);
+        streaming.current = false;
+        stalled.current = true;
         player.current?.stop();
         clearTimeout(unmuteTimer.current);
         mic.current?.unmute();
@@ -299,13 +309,18 @@ export default function Page() {
    * next `audio_out start` clears that), un-mute, and tell the server to stop sending.
    */
   const stopSpeaking = useCallback(() => {
+    // Is there anything to stop? The server may still be sending, or the browser may
+    // still have seconds of her queued. If neither, the tap only takes the control off
+    // screen: the server has nothing to cancel, and it logs such a frame as a barge-in.
+    const audible = streaming.current || (player.current?.remainingMs() ?? 0) > 0;
     clearTimeout(stallTimer.current);
     clearTimeout(unmuteTimer.current);
     stalled.current = true;
+    streaming.current = false;
     player.current?.stop();
     mic.current?.unmute();
     dispatch({ type: "speaking", on: false });
-    ws.current?.sendStop();
+    if (audible) ws.current?.sendStop();
   }, []);
 
   const sendText = useCallback((text: string) => {

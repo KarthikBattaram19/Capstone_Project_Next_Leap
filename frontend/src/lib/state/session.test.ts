@@ -157,6 +157,20 @@ describe("session reducer", () => {
     expect(s2.shortlist).toEqual(shortlist);
   });
 
+  // Production, 2026-09-18: on a "why this one?" turn the opener is spoken while Job 2 is
+  // still writing, so the outcome lands mid-reply. Going idle there took the Stop control
+  // off screen while the renter could still hear her — their only way to interrupt.
+  it("an outcome that lands while she is speaking does not end the speaking phase", () => {
+    const answered = { kind: "answered" as const, spoken: "Because it is a 2 BHK.", view_model: {} };
+    const mid = reduce({ ...initial, listening: "speaking" }, { type: "outcome", outcome: answered });
+    expect(mid.listening).toBe("speaking");
+    // Playback says when she has stopped, not the outcome.
+    expect(reduce(mid, { type: "speaking", on: false }).listening).toBe("idle");
+    // A turn answered before any audio still lands the screen back at idle.
+    const quiet = reduce({ ...initial, listening: "processing" }, { type: "outcome", outcome: answered });
+    expect(quiet.listening).toBe("idle");
+  });
+
   it("transcript interim marks listening; final does not change the phase", () => {
     const s1 = reduce({ ...initial, listening: "idle" }, { type: "transcript", text: "two b", final: false });
     expect(s1.listening).toBe("listening");
